@@ -24,7 +24,7 @@
 ### 🏅 Tournament Brackets
 
 - **Olympic system** (playoff) with third-place match support
-- **Round Robin** for multi-round tournaments
+- **Swiss system** for multi-round tournaments
 - Automatic "strong vs weak" pair generation
 - Clear bracket visualization with winner color indication
 - Progressive bracket narrowing toward the final
