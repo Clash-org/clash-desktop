@@ -94,7 +94,7 @@ export default function FightViewerWindow() {
   // Если нет имен бойцов, показываем загрузку
   if (!fightData.fighter1 && !fightData.fighter2) {
     return (
-      <div className={styles.viewerContainer}>
+      <div className={styles.viewerContainer} style={{ flexDirection: "row" }}>
         <div className={styles.viewerCenter}>
           <div className={styles.viewerVS}>{t('waitingForFight')}</div>
         </div>
