@@ -5,7 +5,7 @@ import Button from '@/components/Button';
 import { useTranslation } from 'react-i18next';
 import styles from './index.module.css';
 import { useAtom } from 'jotai';
-import { playoffAtom, playoffIndexAtom, playoffMatchIndexAtom } from '@/store';
+import { doubleHitsAtom, historyAtom, playoffAtom, playoffIndexAtom, playoffMatchIndexAtom, protests1Atom, protests2Atom, score1Atom, score2Atom, warnings1Atom, warnings2Atom } from '@/store';
 import { Save } from 'lucide-react';
 import { exportExcel } from '@/utils/exportExcel';
 
@@ -24,6 +24,14 @@ export default function Playoff({
   const [champion, setChampion] = useState<ParticipantPlayoffType | null>(null);
   const [, setPlayoffIndex] = useAtom(playoffIndexAtom)
   const [, setPlayoffMatchIndex] = useAtom(playoffMatchIndexAtom)
+  const [, setDoubleHits] = useAtom(doubleHitsAtom);
+  const [, setProtests1] = useAtom(protests1Atom);
+  const [, setProtests2] = useAtom(protests2Atom);
+  const [, setWarnings1] = useAtom(warnings1Atom);
+  const [, setWarnings2] = useAtom(warnings2Atom);
+  const [, setScore1] = useAtom(score1Atom);
+  const [, setScore2] = useAtom(score2Atom);
+  const [, setHistory] = useAtom(historyAtom)
   const [podium, setPodium] = useState<{
     first: ParticipantPlayoffType | null;
     second: ParticipantPlayoffType | null;
@@ -327,6 +335,14 @@ export default function Playoff({
                       onClick={() => {
                         setPlayoffIndex(roundIndex);
                         setPlayoffMatchIndex(matchIndex);
+                        setScore1(0);
+                        setScore2(0);
+                        setDoubleHits(0);
+                        setProtests1(0);
+                        setProtests2(0);
+                        setWarnings1(0);
+                        setWarnings2(0);
+                        setHistory([])
                         fightActivate();
                       }}
                     >

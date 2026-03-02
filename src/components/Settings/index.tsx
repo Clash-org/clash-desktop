@@ -26,6 +26,7 @@ import {
   fighterPairsAtom,
   fightTimeAtom,
   fightTimeDefault,
+  historyAtom,
   hitZonesAtom,
   hitZonesDefault,
   HitZonesType,
@@ -239,6 +240,7 @@ function App() {
   const [, setWarnings2] = useAtom(warnings2Atom);
   const [, setScore1] = useAtom(score1Atom);
   const [, setScore2] = useAtom(score2Atom);
+  const [, setHistory] = useAtom(historyAtom)
 
   /* ---------- состояние ---------- */
   const [newName, setNewName] = useState("");
@@ -360,6 +362,7 @@ function App() {
     setProtests2(0);
     setWarnings1(0);
     setWarnings2(0);
+    setHistory([])
   }
 
   const addParticipant = () => {
