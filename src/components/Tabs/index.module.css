@@ -1,0 +1,31 @@
+.tabs {
+  display: flex;
+  gap: 4px;
+  margin-bottom: 16px;
+  background: var(--accent-transparent);
+  padding: 4px;
+  border-radius: 10px;
+  border: 1px solid var(--accent);
+}
+
+.tab {
+  flex: 1;
+  padding: 12px;
+  background: transparent;
+  border: none;
+  color: var(--fg);
+  font-family: "OnestMedium", sans-serif;
+  font-size: 16px;
+  cursor: pointer;
+  border-radius: 8px;
+  transition: all 0.2s ease;
+}
+
+.tab:hover {
+  background: rgba(var(--accent-rgb), 0.1);
+}
+
+.activeTab {
+  background: var(--accent) !important;
+  color: white;
+}

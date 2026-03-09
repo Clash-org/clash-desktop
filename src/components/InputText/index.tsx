@@ -8,11 +8,12 @@ interface InputTextProps {
   value?: string | undefined;
   placeholder?: string | undefined;
   style?: React.CSSProperties;
-  keyboardType?: React.HTMLInputTypeAttribute | undefined;
+  type?: React.HTMLInputTypeAttribute | undefined;
   multiline?: boolean | undefined;
   className?: string;
   rows?: number;
   maxLength?: number;
+  disabled?: boolean;
 }
 
 export default function InputText({
@@ -21,10 +22,11 @@ export default function InputText({
   value,
   placeholder,
   style,
-  keyboardType = "text",
+  type = "text",
   multiline = false,
   className = "",
   rows = 3,
+  disabled=false,
   maxLength
 }: InputTextProps) {
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
@@ -61,8 +63,9 @@ export default function InputText({
     // @ts-ignore
     <input
       {...commonProps}
-      type={keyboardType}
+      type={type}
       style={commonProps.style}
+      disabled={disabled}
     />
   );
 }

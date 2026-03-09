@@ -1,0 +1,25 @@
+.socialLinks {
+  display: flex;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+
+.socialLink {
+  width: 44px;
+  height: 44px;
+  border-radius: 50%;
+  background: var(--accent-transparent);
+  border: 1px solid var(--accent);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--accent);
+  transition: all 0.2s ease;
+  cursor: pointer;
+}
+
+.socialLink:hover {
+  background: var(--accent);
+  color: white;
+  transform: translateY(-2px);
+}

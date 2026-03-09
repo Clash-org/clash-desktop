@@ -1,0 +1,217 @@
+.container {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  width: 100%;
+}
+
+.dropZone {
+  border: 2px dashed var(--accent-transparent);
+  border-radius: 12px;
+  background: var(--surface-2);
+  transition: all 0.3s ease;
+  cursor: pointer;
+  overflow: hidden;
+  min-height: 200px;
+  position: relative;
+}
+
+.dropZone:hover:not(.disabled):not(.hasImage) {
+  border-color: var(--accent);
+  background: rgba(var(--accent-rgb), 0.05);
+  transform: translateY(-2px);
+}
+
+.dropZone.dragging {
+  border-color: var(--accent);
+  background: rgba(var(--accent-rgb), 0.1);
+  transform: scale(1.02);
+}
+
+.dropZone.hasImage {
+  border-style: solid;
+  border-color: var(--accent);
+  cursor: default;
+  padding: 0;
+}
+
+.dropZone.disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+  pointer-events: none;
+}
+
+.placeholder {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 32px;
+  gap: 12px;
+  min-height: 200px;
+}
+
+.placeholderIcon {
+  color: var(--placeholder);
+  opacity: 0.5;
+}
+
+.placeholderText {
+  color: var(--fg);
+  font-family: "OnestRegular", sans-serif;
+  font-size: 16px;
+  text-align: center;
+  margin: 0;
+}
+
+.placeholderHint {
+  color: var(--placeholder);
+  font-family: "OnestRegular", sans-serif;
+  font-size: 14px;
+  text-align: center;
+  margin: 0;
+}
+
+.previewContainer {
+  position: relative;
+  width: 100%;
+  overflow: hidden;
+  background: var(--bg);
+  border-radius: 10px;
+}
+
+.preview {
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+  display: block;
+  transition: transform 0.3s ease;
+}
+
+.preview:hover {
+  transform: scale(1.05);
+}
+
+.controls {
+  position: absolute;
+  top: 12px;
+  right: 12px;
+  display: flex;
+  gap: 8px;
+  opacity: 0;
+  transform: translateY(-10px);
+  transition: all 0.3s ease;
+}
+
+.previewContainer:hover .controls {
+  opacity: 1;
+  transform: translateY(0);
+}
+
+.controlButton {
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  background: var(--surface-2);
+  border: 1px solid var(--accent);
+  color: var(--fg);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  backdrop-filter: blur(4px);
+}
+
+.controlButton:hover {
+  background: var(--accent);
+  color: white;
+  transform: scale(1.1);
+}
+
+.removeButton:hover {
+  background: #ff4444;
+  border-color: #ff4444;
+}
+
+.selectButton {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  padding: 12px !important;
+}
+
+/* Модальное окно */
+.modalContent {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+  padding: 20px;
+  max-height: 80vh;
+  overflow-y: auto;
+}
+
+.fullImage {
+  width: 100%;
+  height: auto;
+  max-height: 70vh;
+  object-fit: contain;
+  border-radius: 8px;
+}
+
+.modalControls {
+  display: flex;
+  justify-content: center;
+}
+
+.modalButton {
+  min-width: 150px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+}
+
+/* Адаптивность */
+@media (max-width: 768px) {
+  .placeholder {
+    padding: 24px;
+  }
+
+  .placeholderIcon {
+    width: 36px;
+    height: 36px;
+  }
+
+  .placeholderText {
+    font-size: 14px;
+  }
+
+  .placeholderHint {
+    font-size: 12px;
+  }
+
+  .controls {
+    opacity: 1;
+    transform: none;
+    top: 8px;
+    right: 8px;
+  }
+
+  .controlButton {
+    width: 32px;
+    height: 32px;
+  }
+}
+
+/* Reduced motion support */
+@media (prefers-reduced-motion: reduce) {
+  .dropZone,
+  .preview,
+  .controls,
+  .controlButton {
+    transition: none;
+  }
+}

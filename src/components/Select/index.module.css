@@ -1,0 +1,248 @@
+/* components/ui/Select/index.module.css */
+.wrapper {
+  position: relative;
+  display: inline-block;
+}
+
+.wrapper.fullWidth {
+  width: 100%;
+}
+
+.wrapper.disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+.trigger {
+  position: relative;
+  display: flex;
+  align-items: center;
+  cursor: pointer;
+  outline: none;
+}
+
+.trigger:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
+  border-radius: 8px;
+}
+
+.input {
+  cursor: pointer;
+  padding-right: 36px !important; /* Место для иконки */
+  user-select: none;
+}
+
+.inputOpen {
+  border-color: var(--accent) !important;
+  box-shadow: 0 0 0 2px rgba(0, 122, 255, 0.1) !important;
+}
+
+.icon {
+  position: absolute;
+  right: 12px;
+  top: 50%;
+  transform: translateY(-50%);
+  color: var(--placeholder);
+  pointer-events: none;
+  transition: all 0.2s ease;
+}
+
+.iconOpen {
+  transform: translateY(-50%) rotate(180deg);
+  color: var(--accent);
+}
+
+.error .input {
+  border-color: #ff4444 !important;
+}
+
+.error .input:focus {
+  box-shadow: 0 0 0 2px rgba(255, 68, 68, 0.1) !important;
+}
+
+.dropdown {
+  position: absolute;
+  top: calc(100% + 4px);
+  left: 0;
+  right: 0;
+  background-color: var(--surface-2);
+  border-radius: 8px;
+  border: 1px solid var(--surface-2);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+  max-height: 250px;
+  overflow-y: auto;
+  z-index: 1000;
+  padding: 4px 0;
+}
+
+.option {
+  padding: 10px 12px;
+  color: var(--fg);
+  font-family: "OnestRegular", sans-serif;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  outline: none;
+}
+
+.option:hover,
+.option:focus-visible {
+  background-color: var(--accent);
+  color: white;
+}
+
+.option.selected {
+  background-color: var(--accent-transparent);
+  color: var(--accent);
+  font-weight: 500;
+}
+
+.option.selected:hover {
+  background-color: var(--accent);
+  color: white;
+}
+
+.noOptions {
+  padding: 12px;
+  color: var(--placeholder);
+  text-align: center;
+  font-family: "OnestRegular", sans-serif;
+  font-style: italic;
+}
+
+/* Скроллбар для dropdown */
+.dropdown::-webkit-scrollbar {
+  width: 8px;
+}
+
+.dropdown::-webkit-scrollbar-track {
+  background: var(--surface-2);
+  border-radius: 4px;
+}
+
+.dropdown::-webkit-scrollbar-thumb {
+  background: var(--placeholder);
+  border-radius: 4px;
+}
+
+.dropdown::-webkit-scrollbar-thumb:hover {
+  background: var(--accent);
+}
+
+/* Reduced motion support */
+@media (prefers-reduced-motion: reduce) {
+  .icon,
+  .option {
+    transition: none;
+  }
+}
+
+.multiple .trigger {
+  flex-wrap: wrap;
+  padding: 8px 36px 8px 8px !important;
+  min-height: 44px;
+}
+
+.selectedTags {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin-right: 4px;
+  /* margin-bottom: 10px; */
+}
+
+.tag {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 4px 8px;
+  background: var(--accent);
+  color: white;
+  border-radius: 16px;
+  font-size: 12px;
+  font-family: "OnestMedium", sans-serif;
+  animation: tagAppear 0.2s ease;
+}
+
+.tagRemove {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: none;
+  border: none;
+  color: white;
+  cursor: pointer;
+  padding: 2px;
+  border-radius: 50%;
+  transition: all 0.2s ease;
+}
+
+.tagRemove:hover {
+  background: rgba(255, 255, 255, 0.2);
+  transform: scale(1.1);
+}
+
+.tagLimit {
+  font-size: 12px;
+  color: var(--placeholder);
+  padding: 4px 8px;
+}
+
+.clearAll {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: none;
+  border: none;
+  color: var(--placeholder);
+  cursor: pointer;
+  padding: 4px;
+  border-radius: 4px;
+  transition: all 0.2s ease;
+}
+
+.clearAll:hover {
+  color: #ff4444;
+  background: rgba(255, 68, 68, 0.1);
+}
+
+.option.multipleOption {
+  padding-left: 32px !important;
+  position: relative;
+}
+
+.checkbox {
+  position: absolute;
+  left: 8px;
+  width: 18px;
+  height: 18px;
+  border: 2px solid var(--accent);
+  border-radius: 4px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.selected .checkbox {
+  background: var(--accent);
+}
+
+.checkmark {
+  color: white;
+  font-size: 12px;
+}
+
+.optionLabel {
+  flex: 1;
+}
+
+@keyframes tagAppear {
+  from {
+    opacity: 0;
+    transform: scale(0.8);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1);
+  }
+}

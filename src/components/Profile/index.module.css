@@ -1,0 +1,234 @@
+.container {
+  padding: 24px;
+  max-width: 1200px;
+  margin: 0 auto;
+  color: var(--fg);
+}
+
+.header {
+  display: flex;
+  gap: 24px;
+  margin-bottom: 32px;
+  background: var(--accent-transparent);
+  padding: 24px;
+  border-radius: 16px;
+  border: 1px solid var(--accent);
+}
+
+.avatar {
+  width: 100px;
+  height: 100px;
+  border-radius: 50%;
+  background: linear-gradient(135deg, var(--accent) 0%, var(--accent-dark) 100%);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 48px;
+  font-weight: bold;
+  color: white;
+  text-transform: uppercase;
+  border: 3px solid var(--bg);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+}
+
+.headerInfo {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+}
+
+.username {
+  font-family: "OnestBold", sans-serif;
+  font-size: 32px;
+  margin: 0 0 8px 0;
+  color: var(--fg);
+}
+
+.userMeta {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 20px;
+}
+
+.metaItem {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  color: var(--placeholder);
+  font-size: 14px;
+}
+
+.metaItem span {
+  color: var(--fg);
+}
+
+.statsGrid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 16px;
+  margin-bottom: 32px;
+}
+
+.statCard {
+  background: var(--accent-transparent);
+  border-radius: 12px;
+  padding: 20px;
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  border: 1px solid var(--accent);
+  transition: all 0.2s ease;
+}
+
+.statCard:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+}
+
+.statInfo {
+  display: flex;
+  flex-direction: column;
+}
+
+.statValue {
+  font-family: "OnestBold", sans-serif;
+  font-size: 28px;
+  color: var(--accent);
+  line-height: 1.2;
+}
+
+.statLabel {
+  font-size: 14px;
+  color: var(--placeholder);
+}
+
+.actionButtons {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 12px;
+  margin-bottom: 32px;
+}
+
+.actionButton {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  padding: 14px !important;
+  font-size: 16px !important;
+}
+
+.actionButton span {
+  font-family: "OnestMedium", sans-serif;
+}
+
+.infoContent {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  padding: 8px 0;
+}
+
+.infoRow {
+  display: flex;
+  padding: 12px 0;
+  border-bottom: 1px solid var(--accent-transparent);
+}
+
+.infoRow:last-child {
+  border-bottom: none;
+}
+
+.infoLabel {
+  width: 140px;
+  color: var(--placeholder);
+  font-family: "OnestMedium", sans-serif;
+}
+
+.infoValue {
+  flex: 1;
+  color: var(--fg);
+  word-break: break-word;
+}
+
+.tournamentsList {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  padding: 12px 0;
+}
+
+.tournamentIds {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px;
+  background: var(--accent-transparent);
+  padding: 12px;
+  border-radius: 8px;
+}
+
+.tournamentId {
+  color: var(--accent);
+  font-family: monospace;
+  font-size: 14px;
+}
+
+.statsContent {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  padding: 8px 0;
+}
+
+.statRow {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 12px 0;
+  border-bottom: 1px solid var(--accent-transparent);
+}
+
+.statRow:last-child {
+  border-bottom: none;
+}
+
+.statNumber {
+  font-family: "OnestBold", sans-serif;
+  font-size: 20px;
+  color: var(--accent);
+}
+
+/* Адаптивность */
+@media (max-width: 768px) {
+  .container {
+    padding: 16px;
+  }
+
+  .header {
+    flex-direction: column;
+    align-items: center;
+    text-align: center;
+  }
+
+  .userMeta {
+    justify-content: center;
+  }
+
+  .statsGrid {
+    grid-template-columns: 1fr;
+  }
+
+  .actionButtons {
+    grid-template-columns: 1fr;
+  }
+
+  .infoRow {
+    flex-direction: column;
+    gap: 4px;
+  }
+
+  .infoLabel {
+    width: auto;
+  }
+}

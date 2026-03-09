@@ -1,0 +1,125 @@
+.container {
+  display: flex;
+  gap: 16px;
+}
+
+.container.horizontal {
+  flex-direction: row;
+  flex-wrap: wrap;
+}
+
+.container.vertical {
+  flex-direction: column;
+}
+
+.container.disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+.radioLabel {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  cursor: pointer;
+  padding: 8px 12px;
+  border-radius: 8px;
+  transition: all 0.2s ease;
+  background: var(--surface-2);
+  border: 1px solid transparent;
+  user-select: none;
+}
+
+.radioLabel:hover:not(.optionDisabled) {
+  background: rgba(var(--accent-rgb), 0.1);
+  border-color: var(--accent);
+  transform: translateY(-2px);
+}
+
+.radioLabel.checked {
+  background: var(--accent);
+  border-color: var(--accent);
+}
+
+.radioLabel.checked .radioText {
+  color: var(--fg);
+}
+
+.radioLabel.optionDisabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+  pointer-events: none;
+}
+
+.hiddenInput {
+  position: absolute;
+  opacity: 0;
+  width: 0;
+  height: 0;
+}
+
+.radioCustom {
+  width: 20px;
+  height: 20px;
+  border-radius: 50%;
+  border: 2px solid var(--placeholder);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.2s ease;
+  background: var(--bg);
+}
+
+.radioLabel:hover .radioCustom {
+  border-color: var(--accent);
+}
+
+.radioLabel.checked .radioCustom {
+  border-color: white;
+  background: white;
+}
+
+.radioDot {
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  background: var(--accent);
+  animation: popIn 0.2s ease;
+}
+
+@keyframes popIn {
+  from {
+    transform: scale(0);
+  }
+  to {
+    transform: scale(1);
+  }
+}
+
+.radioText {
+  color: var(--fg);
+  font-family: "OnestRegular", sans-serif;
+  font-size: 16px;
+  transition: color 0.2s ease;
+}
+
+/* Адаптивность */
+@media (max-width: 768px) {
+  .container.horizontal {
+    flex-direction: column;
+  }
+
+  .radioLabel {
+    width: 100%;
+  }
+}
+
+/* Reduced motion support */
+@media (prefers-reduced-motion: reduce) {
+  .radioLabel,
+  .radioCustom,
+  .radioDot {
+    transition: none;
+    animation: none;
+  }
+}

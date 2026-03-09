@@ -15,9 +15,9 @@
   },
   "dependencies": {
     "@tauri-apps/api": "^2.10.1",
-    "@tauri-apps/plugin-dialog": "^2.3.3",
+    "@tauri-apps/plugin-dialog": "^2.6.0",
     "@tauri-apps/plugin-fs": "^2.4.2",
-    "@tauri-apps/plugin-opener": "^2",
+    "@tauri-apps/plugin-opener": "^2.5.3",
     "@tauri-apps/plugin-store": "^2.4.2",
     "@types/howler": "^2.2.12",
     "buffer": "^6.0.3",
@@ -35,6 +35,8 @@
     "react-dom": "^19.1.0",
     "react-hot-toast": "^2.6.0",
     "react-i18next": "^15.7.1",
+    "react-markdown": "^10.1.0",
+    "remark-gfm": "^4.0.1",
     "simple-peer": "^9.11.1",
     "xlsx": "^0.18.5"
   },

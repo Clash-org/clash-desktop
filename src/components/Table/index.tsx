@@ -4,12 +4,14 @@ import styles from './index.module.css';
 interface TableProps {
   data: string[][];
   headers?: string[];
+  titles?: string[][];
   className?: string;
 }
 
 export default function Table({
   data,
   headers,
+  titles,
   className = ''
 }: TableProps) {
   return (
@@ -35,7 +37,7 @@ export default function Table({
                     <span className={styles.hint}>{cell.split('\n')[1]}</span>
                   </>
                 ) : (
-                  <span className={styles.text}>{cell}</span>
+                  <span className={styles.text} title={titles ? titles[rowIndex][cellIndex] : undefined}>{cell}</span>
                 )}
               </div>
             ))}

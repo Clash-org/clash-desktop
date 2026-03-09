@@ -5,32 +5,49 @@
   "windows": [
     "*"
   ],
-  "platforms": ["linux", "macOS", "windows"],
+  "platforms": [
+    "linux",
+    "macOS",
+    "windows"
+  ],
   "permissions": [
     "dialog:allow-open",
     "fs:allow-copy-file",
     "fs:read-all",
     "fs:write-all",
     "store:default",
+    "opener:allow-open-url",
     {
       "identifier": "fs:allow-copy-file",
       "allow": [
-        { "path": "$APPDATA/**" }
+        {
+          "path": "$APPDATA/**"
+        }
       ]
     },
     {
       "identifier": "fs:allow-write-file",
       "allow": [
-        { "path": "$APPDATA/**" }
+        {
+          "path": "$APPDATA/**"
+        }
       ]
     },
     {
       "identifier": "fs:allow-mkdir",
-      "allow": [{ "path": "$APPDATA/**" }]
+      "allow": [
+        {
+          "path": "$APPDATA/**"
+        }
+      ]
     },
     {
       "identifier": "fs:allow-remove",
-      "allow": [{ "path": "$APPDATA/**" }]
+      "allow": [
+        {
+          "path": "$APPDATA/**"
+        }
+      ]
     },
     "core:webview:allow-internal-toggle-devtools",
     "core:path:allow-resolve-directory",
@@ -50,6 +67,7 @@
     "core:event:allow-listen",
     "core:event:allow-emit",
     "core:event:allow-unlisten",
-    "core:event:default"
+    "core:event:default",
+    "opener:default"
   ]
 }

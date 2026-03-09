@@ -60,6 +60,7 @@ html, body {
   height: 100%;
   width: 100%;
   overflow: hidden;
+  scroll-behavior: smooth;
 }
 
 body {
@@ -69,6 +70,11 @@ body {
   line-height: 1.5;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
+}
+
+main {
+  overflow-y: auto;
+  height: 100vh;
 }
 
 /* Глобальные стили для Tauri */
@@ -97,6 +103,10 @@ body {
   opacity: 0.8;
 }
 
+::-moz-reveal {
+  filter: invert(100%);
+}
+
 /* Убираем стандартные стили для кнопок и инпутов */
 button, input, textarea, select {
   font-family: inherit;
@@ -114,4 +124,36 @@ button {
 button:disabled {
   cursor: not-allowed;
   opacity: 0.5;
+}
+
+.title {
+  font-family: "OnestBold", sans-serif;
+  font-size: 48px;
+  margin: 0 0 16px 0;
+  color: var(--fg);
+    background: linear-gradient(
+    135deg,
+    var(--fg) 0%,
+    var(--accent) 25%,
+    var(--fg) 50%,
+    var(--accent) 75%,
+    var(--fg) 100%
+  );
+  background-size: 200% 200%;
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+  animation: gradientShift 5s ease infinite;
+}
+
+@keyframes gradientShift {
+  0% {
+    background-position: 0% 0%;
+  }
+  50% {
+    background-position: 100% 100%;
+  }
+  100% {
+    background-position: 0% 0%;
+  }
 }

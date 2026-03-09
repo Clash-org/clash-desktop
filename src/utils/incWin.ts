@@ -19,7 +19,7 @@ export function incWin(
       buf[poolIndex] = buf[poolIndex].map((pair, i) =>{
             if (pairIndex === i) {
                 return pair.map(p =>
-                    p.id === winnerId ? { ...p, wins: (isLosse && !draws) ? p.wins : p.wins + 1, scores, losses: (isLosse && !draws) ? p.losses + 1: p.losses, draws: p.draws + draws, opponents: [...p.opponents, opponent], warnings, protests, doubleHits } : p
+                    p.id === winnerId ? { ...p, wins: (isLosse && !draws) ? 0 : 1, scores, losses: (isLosse && !draws) ? 1: 0, draws: p.draws + draws, opponents: [...p.opponents, opponent], warnings, protests, doubleHits } : p
                 )
             }
             return pair

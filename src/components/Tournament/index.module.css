@@ -1,0 +1,362 @@
+/* components/Tournament/index.module.css */
+.container {
+  padding: 24px;
+  max-width: 1200px;
+  height: 100vh;
+  min-height: calc(100% + 350px);
+  margin: 0 auto;
+  color: var(--fg);
+}
+
+.header {
+  margin-bottom: 24px;
+  background: var(--accent-transparent);
+  padding: 24px;
+  border-radius: 16px;
+  border: 1px solid var(--accent);
+}
+
+.title {
+  font-family: "OnestBold", sans-serif;
+  font-size: 32px;
+  margin: 0 0 16px 0;
+  color: var(--fg);
+}
+
+.metaInfo {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 20px;
+}
+
+.metaItem {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  color: var(--placeholder);
+  font-size: 14px;
+}
+
+.metaItem span {
+  color: var(--fg);
+}
+
+.content {
+  padding: 24px;
+}
+
+/* Турнир */
+.tournamentContent {
+  display: flex;
+  flex-direction: column;
+  gap: 32px;
+}
+
+.description h3,
+.actionBlock h3,
+.socialBlock h3 {
+  font-family: "OnestBold", sans-serif;
+  font-size: 20px;
+  margin: 0 0 16px 0;
+  color: var(--fg);
+}
+
+.description p {
+  line-height: 1.6;
+  color: var(--fg);
+  opacity: 0.9;
+}
+
+.actionButtons {
+  display: flex;
+  gap: 12px;
+}
+
+.applyButton {
+  background: var(--accent) !important;
+  color: white !important;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex: 1;
+}
+
+.viewButton {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex: 1;
+}
+
+/* Номинации */
+.nominationsGrid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+  gap: 16px;
+}
+
+.nominationCard {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  padding: 16px;
+  background: var(--bg);
+  border-radius: 12px;
+  border: 1px solid var(--accent-transparent);
+  transition: all 0.2s ease;
+  cursor: pointer;
+}
+
+.nominationCard:hover {
+  transform: translateY(-2px);
+  border-color: var(--accent);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+}
+
+.nominationImage {
+  width: 60px;
+  height: 60px;
+  border-radius: 10px;
+  background: var(--accent-transparent);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 32px;
+}
+
+.weaponEmoji {
+  filter: drop-shadow(0 2px 4px rgba(0, 0, 0, 0.2));
+}
+
+.nominationInfo {
+  flex: 1;
+}
+
+.nominationInfo h4 {
+  font-family: "OnestBold", sans-serif;
+  font-size: 18px;
+  margin: 0 0 8px 0;
+  color: var(--fg);
+}
+
+.nominationStats {
+  display: flex;
+  gap: 12px;
+}
+
+.stat {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  color: var(--placeholder);
+  font-size: 13px;
+}
+
+.stat span {
+  color: var(--fg);
+}
+
+.nominationArrow {
+  color: var(--placeholder);
+  transition: all 0.2s ease;
+}
+
+.nominationCard:hover .nominationArrow {
+  color: var(--accent);
+  transform: translateX(4px);
+}
+
+/* Заявки */
+.applicationsContent {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.nominationsList {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.nominationItem {
+  width: 100%;
+}
+
+.nominationButton {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 16px;
+  background: var(--bg);
+  border: 1px solid var(--accent-transparent);
+  border-radius: 10px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  color: var(--fg);
+  font-family: "OnestMedium", sans-serif;
+}
+
+.nominationButton:hover {
+  border-color: var(--accent);
+  transform: translateX(4px);
+}
+
+.nominationName {
+  font-size: 16px;
+  width: 100px;
+}
+
+.participantsCount {
+  border: 1px solid var(--accent);
+  color: var(--fg);
+  padding: 4px 8px;
+  border-radius: 20px;
+  font-size: 14px;
+  min-width: 30px;
+  text-align: center;
+  display: flex;
+  align-items: center;
+  gap: 5px;
+}
+
+.applicationsList {
+  padding: 16px 0;
+}
+
+.applicationsList h4 {
+  font-family: "OnestBold", sans-serif;
+  font-size: 18px;
+  margin: 0 0 16px 0;
+  color: var(--fg);
+}
+
+.applicationItem {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 12px;
+  border-bottom: 1px solid var(--accent-transparent);
+}
+
+.applicationItem:last-child {
+  border-bottom: none;
+}
+
+.userInfo {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.userName {
+  font-family: "OnestMedium", sans-serif;
+  color: var(--fg);
+}
+
+.userClub {
+  font-size: 13px;
+  color: var(--placeholder);
+}
+
+.paidIcon {
+  color: #4caf50;
+}
+
+.unpaidIcon {
+  color: var(--placeholder);
+}
+
+/* Регистрация */
+.registrationContent {
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
+}
+
+.registrationContent h3 {
+  font-family: "OnestBold", sans-serif;
+  font-size: 20px;
+  margin: 0;
+  color: var(--fg);
+}
+
+.nominationsCheckboxList {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.nominationTitle {
+  font-family: "OnestMedium", sans-serif;
+  color: var(--fg);
+}
+
+.nominationDetails {
+  display: flex;
+  gap: 16px;
+  color: var(--placeholder);
+  font-size: 14px;
+}
+
+.nominationDetails span {
+  color: var(--fg);
+}
+
+.totalPrice {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 16px;
+  background: var(--accent-transparent);
+  border-radius: 10px;
+  font-family: "OnestBold", sans-serif;
+  font-size: 18px;
+}
+
+.price {
+  color: var(--accent);
+  font-size: 24px;
+}
+
+.submitButton {
+  width: 100%;
+  padding: 16px !important;
+  font-size: 18px !important;
+}
+
+/* Адаптивность */
+@media (max-width: 768px) {
+  .container {
+    padding: 16px;
+  }
+
+  .title {
+    font-size: 24px;
+  }
+
+  .metaInfo {
+    flex-direction: column;
+    gap: 12px;
+  }
+
+  .actionButtons {
+    flex-direction: column;
+  }
+
+  .nominationsGrid {
+    grid-template-columns: 1fr;
+  }
+
+  .checkboxInfo {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 8px;
+  }
+
+  .nominationDetails {
+    width: 100%;
+    justify-content: space-between;
+  }
+}

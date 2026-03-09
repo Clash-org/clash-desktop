@@ -1,0 +1,70 @@
+.genderRow {
+  display: flex;
+  flex-direction: row;
+  margin: 8px 0;
+  justify-content: center;
+  align-items: center;
+  gap: 8px;
+}
+
+.genderBtn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 12px;
+  border-radius: 6px;
+  border: none;
+  background-color: transparent;
+  color: var(--fg);
+  cursor: pointer;
+  transition: all 0.2s ease;
+  width: 52px;
+  height: 52px;
+}
+
+.genderBtn:hover {
+  background-color: var(--surface);
+  transform: translateY(-1px);
+}
+
+.genderBtn:active {
+  transform: translateY(0);
+}
+
+.genderBtn:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
+}
+
+.genderActive {
+  background-color: var(--accent) !important;
+}
+
+.genderActive:hover {
+  background-color: var(--accent);
+  opacity: 0.9;
+}
+
+/* Reduced motion support */
+@media (prefers-reduced-motion: reduce) {
+  .genderBtn {
+    transition: none;
+  }
+
+  .genderBtn:hover {
+    transform: none;
+  }
+}
+
+/* Touch device optimizations */
+@media (hover: none) {
+  .genderBtn:hover {
+    background-color: transparent;
+    transform: none;
+  }
+
+  .genderActive:hover {
+    background-color: var(--accent);
+    opacity: 1;
+  }
+}

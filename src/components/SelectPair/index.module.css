@@ -20,7 +20,6 @@
     cursor: grabbing;
 }
 
-/* components/SelectPair/index.module.css */
 .pairItem {
     width: 100%;
     margin-bottom: 8px;
@@ -122,6 +121,7 @@
     color: var(--accent);
     text-transform: uppercase;
     letter-spacing: 2px;
+    user-select: none;
 }
 
 /* Адаптивность для мобильных устройств */

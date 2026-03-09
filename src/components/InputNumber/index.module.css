@@ -1,5 +1,6 @@
 .container {
-  display: inline-flex;
+  display: flex;
+  width: fit-content;
   align-items: center;
   border: 1px solid #ccc;
   border-radius: 6px;

@@ -75,3 +75,11 @@ export function isPoolEndByDuels(duels: ParticipantType[][][][], poolIndex: numb
     return false
   }
 }
+
+export const formatDate = (dateString: string) => {
+  return new Date(dateString).toLocaleDateString('ru-RU', {
+    day: 'numeric',
+    month: 'long',
+    year: 'numeric'
+  });
+};

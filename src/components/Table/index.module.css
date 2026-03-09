@@ -17,6 +17,7 @@
   padding: 16px 12px;
   text-align: center;
   font-weight: 600;
+  width: 100px;
 }
 
 .headerText {
@@ -48,6 +49,7 @@
   align-items: center;
   text-align: center;
   min-height: 60px;
+  width: 100px;
 }
 
 .text {

@@ -1,0 +1,195 @@
+/* components/ui/DatePicker/index.module.css */
+.wrapper {
+  position: relative;
+  display: inline-block;
+  width: 100%;
+}
+
+.input {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  background-color: var(--surface-2);
+  color: var(--fg);
+  border-radius: 8px;
+  padding: 12px;
+  font-family: "OnestRegular", sans-serif;
+  border: 1px solid transparent;
+  outline: none;
+  transition: all 0.2s ease;
+  width: 100%;
+  box-sizing: border-box;
+  cursor: pointer;
+}
+
+.input:hover:not(.disabled) {
+  border-color: var(--surface-2);
+}
+
+.input:focus-within {
+  border-color: var(--accent);
+  box-shadow: 0 0 0 2px rgba(0, 122, 255, 0.1);
+}
+
+.input.disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+.icon {
+  color: var(--placeholder);
+  flex-shrink: 0;
+}
+
+.value {
+  flex: 1;
+  color: var(--fg);
+  font-size: 14px;
+}
+
+.dropdown {
+  position: absolute;
+  top: calc(100% + 8px);
+  left: 0;
+  right: 0;
+  background-color: var(--surface-2);
+  border-radius: 12px;
+  border: 1px solid var(--accent);
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.15);
+  padding: 16px;
+  z-index: 1000;
+  animation: slideDown 0.2s ease;
+}
+
+@keyframes slideDown {
+  from {
+    opacity: 0;
+    transform: translateY(-10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 16px;
+}
+
+.monthNav {
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  background: transparent;
+  border: 1px solid var(--accent-transparent);
+  color: var(--fg);
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.2s ease;
+}
+
+.monthNav:hover {
+  background: var(--accent);
+  color: white;
+  border-color: var(--accent);
+}
+
+.monthYear {
+  font-family: "OnestBold", sans-serif;
+  font-size: 16px;
+  color: var(--fg);
+}
+
+.weekDays {
+  display: grid;
+  grid-template-columns: repeat(7, 1fr);
+  gap: 4px;
+  margin-bottom: 8px;
+}
+
+.weekDay {
+  text-align: center;
+  font-size: 12px;
+  color: var(--placeholder);
+  padding: 8px 0;
+  font-family: "OnestMedium", sans-serif;
+}
+
+.days {
+  display: grid;
+  grid-template-columns: repeat(7, 1fr);
+  gap: 4px;
+  margin-bottom: 16px;
+}
+
+.day {
+  aspect-ratio: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: transparent;
+  border: 1px solid transparent;
+  border-radius: 6px;
+  color: var(--fg);
+  font-size: 14px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  font-family: "OnestRegular", sans-serif;
+}
+
+.day:hover:not(.disabledDay) {
+  background: var(--accent-transparent);
+  border-color: var(--accent);
+}
+
+.selectedDay {
+  background: var(--accent) !important;
+  color: white !important;
+  border-color: var(--accent) !important;
+}
+
+.today {
+  border: 1px solid var(--accent);
+  font-weight: bold;
+}
+
+.disabledDay {
+  opacity: 0.3;
+  cursor: not-allowed;
+  pointer-events: none;
+}
+
+.emptyDay {
+  aspect-ratio: 1;
+}
+
+.footer {
+  display: flex;
+  justify-content: center;
+  border-top: 1px solid var(--accent-transparent);
+  padding-top: 16px;
+}
+
+.todayButton {
+  min-width: 100px !important;
+  padding: 8px 16px !important;
+  font-size: 14px !important;
+}
+
+/* Reduced motion support */
+@media (prefers-reduced-motion: reduce) {
+  .dropdown {
+    animation: none;
+  }
+
+  .input,
+  .monthNav,
+  .day {
+    transition: none;
+  }
+}

@@ -8,29 +8,30 @@ import {
   fighterPairsAtom,
   isPlayoffAtom,
   isPoolRatingAtom,
-  isSwissAtom,
   playoffAtom,
   poolCountDeleteAtom,
   protests1Atom,
   protests2Atom,
   score1Atom,
   score2Atom,
+  tournamentSystemAtom,
   warnings1Atom,
   warnings2Atom,
 } from "@/store";
 import { generatePairs } from "@/utils/generatePairs";
 import { isPoolEndByDuels, truncate } from "@/utils/helpers";
 import { useAtom } from "jotai";
-import { Save } from "lucide-react";
+import { ChartColumn, Save } from "lucide-react";
 import { useState } from "react";
 
 import styles from "./index.module.css";
-import { ParticipantType } from "@/typings";
+import { ParticipantType, TournamentSystem } from "@/typings";
 import { useTranslation } from "react-i18next";
-import { getTopThreeFighters } from "@/utils/getTopThreeFighters";
+import { calculateAllSD, getAllInOneParticipants, getTopThreeFighters, getWinnersRobin, getWinnersSwiss } from "@/utils/matchesHandlers";
 import { exportExcel } from "@/utils/exportExcel";
 import { generatePlayoffPairs } from "@/utils/generatePlayoffPairs";
 import Playoff from "../Playoff";
+import ModalWindow from "../ModalWindow";
 
 export default function TournamentGridScreen({
   fightActivate,
@@ -41,7 +42,7 @@ export default function TournamentGridScreen({
   const [poolCountDelete] = useAtom(poolCountDeleteAtom);
   const [isPoolRating] = useAtom(isPoolRatingAtom);
   const [fighterPairs, setFighterPairs] = useAtom(fighterPairsAtom);
-  const [isSwiss] = useAtom(isSwissAtom);
+  const [tournamentSystem] = useAtom(tournamentSystemAtom);
   const [winners, setWinners] = useState<string[]>([]);
   const [, setCurrentPairIndex] = useAtom(currentPairIndexAtom);
   const [currentPoolIndex] = useAtom(currentPoolIndexAtom);
@@ -54,8 +55,12 @@ export default function TournamentGridScreen({
   const [, setScore1] = useAtom(score1Atom);
   const [, setScore2] = useAtom(score2Atom);
   const [playoff, setPlayoff] = useAtom(playoffAtom);
-
   const [isEnd, setIsEnd] = useAtom(isPlayoffAtom);
+  const [showRank, setShowRank] = useState(false)
+  const [rank, setRank] = useState<ParticipantType[]>([])
+  const [idsSD, setIdsSD] = useState<Map<string, number>>(new Map<string, number>())
+
+  const isRound = tournamentSystem === TournamentSystem.HYBRID || tournamentSystem === TournamentSystem.ROBIN || tournamentSystem === TournamentSystem.SWISS
 
   const headers = [
     t("name"),
@@ -66,11 +71,42 @@ export default function TournamentGridScreen({
     t("name"),
   ];
 
-  const endTournament = () => {
-    const winnersArr = getTopThreeFighters([
-      ...duels[currentPoolIndex],
-      fighterPairs[currentPoolIndex],
-    ]);
+  const headersRank = [
+    t("name"),
+    t("win"),
+    t("losses"),
+    t("draw"),
+    t("score"),
+    "SD",
+    tournamentSystem === TournamentSystem.SWISS ? t("buchholz") : ""
+  ].filter(Boolean)
+
+  const endTournament = (endFightersBuchholz?: {[id: string]: number}) => {
+    let winnersArr: string[] = new Array(3)
+    if (tournamentSystem === TournamentSystem.ROBIN) {
+      const { winners, ranking } = getWinnersRobin(
+        getAllInOneParticipants([fighterPairs[currentPoolIndex], ...duels[currentPoolIndex]])
+      )
+      setRank(ranking)
+      winnersArr = winners
+      setIdsSD(calculateAllSD([...duels[currentPoolIndex], fighterPairs[currentPoolIndex]]))
+    } else if (tournamentSystem === TournamentSystem.SWISS) {
+      const all = getAllInOneParticipants(
+        [fighterPairs[currentPoolIndex], ...duels[currentPoolIndex]],
+        endFightersBuchholz
+      )
+      const { winners, ranking } = getWinnersSwiss(
+        all
+      )
+      setRank(ranking)
+      winnersArr = winners
+      setIdsSD(calculateAllSD([...duels[currentPoolIndex], fighterPairs[currentPoolIndex]]))
+    } else if (tournamentSystem === TournamentSystem.OLYMPIC) {
+      winnersArr = getTopThreeFighters([
+        ...duels[currentPoolIndex],
+        fighterPairs[currentPoolIndex],
+      ]);
+    }
     setFighterPairs((state) => {
       const buf = JSON.parse(JSON.stringify(state));
       buf[currentPoolIndex] = [];
@@ -85,7 +121,7 @@ export default function TournamentGridScreen({
   };
 
   const genPairs = async () => {
-    const newFighters = !isSwiss
+    const newFighters = !isRound
       ? (fighterPairs[currentPoolIndex]
           .map((pair) => {
             if (pair[0]?.name === "—") {
@@ -101,11 +137,30 @@ export default function TournamentGridScreen({
           .filter(Boolean) as ParticipantType[])
       : fighterPairs[currentPoolIndex]
           .map((pair) => {
-            const buchholz1 = pair[0].buchholz + pair[0].wins;
-            const buchholz2 = pair[1].buchholz + pair[1].wins;
+            if (tournamentSystem === TournamentSystem.SWISS) {
+              const calculateBuchholz = (idx: number) => {
+                // const currentFighters = fighterPairs[currentPoolIndex].flat()
+                const allFighters = getAllInOneParticipants([fighterPairs[currentPoolIndex], ...duels[currentPoolIndex]])
+
+                if (allFighters.length) {
+                  return pair[idx].opponents
+                        .reduce((sum, opId) => {
+                          const opponent = allFighters.find(fighter=>fighter.id === opId)
+                          return sum + (opponent?.wins || 0);  // или opponent?.scores
+                        }, 0);
+                } else {
+                  return 0
+                }
+              }
+
+              return [
+                { ...pair[0], wins: 0, scores: 0, buchholz: calculateBuchholz(0) },
+                { ...pair[1], wins: 0, scores: 0, buchholz: calculateBuchholz(1) },
+              ];
+            }
             return [
-              { ...pair[0], wins: 0, scores: 0, buchholz: buchholz1 },
-              { ...pair[1], wins: 0, scores: 0, buchholz: buchholz2 },
+              { ...pair[0], wins: 0, scores: 0 },
+              { ...pair[1], wins: 0, scores: 0 },
             ];
           })
           .flat();
@@ -117,18 +172,24 @@ export default function TournamentGridScreen({
     if (newFighters.length > 1) {
       const newPairs = generatePairs(
         newFighters,
-        isSwiss,
+        tournamentSystem,
         currentPoolIndex,
         setFighterPairs,
-        setCurrentPairIndex,
+        setCurrentPairIndex
       );
-      if (isSwiss) {
+
+      if (isRound) {
         const pairs = newPairs[currentPoolIndex].flat();
         if (
           pairs.filter((pair) => pair.name === "—").length ===
           pairs.filter((pair) => pair.name !== "—").length
         ) {
-          endTournament();
+          endTournament(
+            newFighters.reduce((acc, user) => {
+          acc[user.id] = user.buchholz;
+          return acc;
+          }, {} as {[id: string]: number})
+          );
         }
       }
     } else {
@@ -144,15 +205,50 @@ export default function TournamentGridScreen({
     setScore2(0);
   };
 
-  const getDataTable = (data: ParticipantType[][]) =>
-    data.map(([f1, f2]) => [
-      truncate(f1?.name || ""),
-      f1.wins.toString(),
-      f1.scores.toString(),
-      f2.scores.toString(),
-      f2.wins.toString(),
-      truncate(f2?.name || ""),
-    ]);
+  const getDataTable = (data: ParticipantType[][]) => {
+    return {
+      data: data.map(([f1, f2]) => [
+        truncate(f1?.name || ""),
+        f1.wins.toString(),
+        f1.scores.toString(),
+        f2.scores.toString(),
+        f2.wins.toString(),
+        truncate(f2?.name || ""),
+      ]),
+      titles: data.map(([f1, f2]) => [
+        f1?.name,
+        "",
+        "",
+        "",
+        "",
+        f2?.name,
+      ])
+    }
+  }
+
+
+  const getDataRankTable = (data: ParticipantType[]) => {
+    return {
+      data: data.map((f) => [
+        truncate(f.name || ""),
+        f.wins.toString(),
+        f.losses.toString(),
+        f.draws.toString(),
+        f.scores.toString(),
+        idsSD.get(f.id)?.toString() || "",
+        tournamentSystem === TournamentSystem.SWISS ? f.buchholz.toString() : ""
+      ]).filter(Boolean),
+      titles: data.map((f) => [
+        f?.name,
+        "",
+        "",
+        "",
+        "",
+        "",
+        ""
+      ])
+    }
+  }
 
   const isPoolInProgress = !isPoolEndByDuels(duels, currentPoolIndex);
   const sections = [
@@ -162,20 +258,20 @@ export default function TournamentGridScreen({
           {
             key: "current",
             title: t("currentStage"),
-            data: getDataTable(fighterPairs[currentPoolIndex]),
+            content: getDataTable(fighterPairs[currentPoolIndex]),
           },
         ]
       : []),
     ...duels[currentPoolIndex].map((duel, i) => ({
       key: `duel-${i}`,
       title: `${i + 1} ${t("stage")}`,
-      data: getDataTable(duel),
+      content: getDataTable(duel),
     })),
   ];
 
   return !playoff.length ? (
     <div className={styles.container}>
-      {!isEnd.includes(false) && isSwiss ? (
+      {!isEnd.includes(false) && tournamentSystem === TournamentSystem.HYBRID && (
         <Button
           onClick={() =>
             setPlayoff(
@@ -185,10 +281,9 @@ export default function TournamentGridScreen({
           title={t("playoff")}
           style={{ width: "100%", marginBottom: "10px" }}
         />
-      ) : (
-        <></>
       )}
-      {!!winners.length && !isSwiss && (
+
+      {!!winners.length && tournamentSystem !== TournamentSystem.HYBRID && (
         <div className={styles.winners}>
           <span className={styles.winner}>
             <span>2</span>
@@ -202,12 +297,17 @@ export default function TournamentGridScreen({
             <span>3</span>
             <span>{winners[2]}</span>
           </span>
+          {tournamentSystem !== TournamentSystem.OLYMPIC &&
+          <Button onClick={()=>setShowRank(true)} style={{ position: "absolute", right: "25px", minWidth: "8px" }}>
+            <ChartColumn size={28} />
+          </Button>
+          }
         </div>
       )}
       {sections.map((item, index) => (
         <div key={item.key} className={styles.duelWrap}>
           <h2 className={styles.duelTitle}>{item.title}</h2>
-          <Table data={item.data} headers={headers} />
+          <Table data={item.content.data} titles={item.content.titles} headers={headers} />
 
           {index === 0 &&
           fighterPairs[currentPoolIndex].filter((p) => p.length).length &&
@@ -244,6 +344,14 @@ export default function TournamentGridScreen({
       >
         <Save size={28} />
       </Button>
+      <ModalWindow isOpen={showRank} onClose={()=>setShowRank(false)} style={{ maxWidth: "40rem" }}>
+        {(()=>{
+          const content = getDataRankTable(rank)
+          return (
+            <Table data={content.data} titles={content.titles} headers={headersRank} />
+          )
+        })()}
+      </ModalWindow>
     </div>
   ) : (
     <Playoff fightActivate={fightActivate} />

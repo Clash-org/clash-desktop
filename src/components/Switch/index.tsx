@@ -7,9 +7,10 @@ interface SwitchProps {
   value: boolean;
   setValue: React.Dispatch<React.SetStateAction<boolean>>;
   className?: string;
+  fit?: boolean
 }
 
-export default function Switch({ title, value, setValue, className = "" }: SwitchProps) {
+export default function Switch({ title, value, setValue, className = "", fit=false }: SwitchProps) {
   const handleToggle = () => {
     setValue(!value);
   };
@@ -22,7 +23,7 @@ export default function Switch({ title, value, setValue, className = "" }: Switc
   };
 
   return (
-    <div className={`${styles.switchRow} ${className}`}>
+    <div className={`${styles.switchRow} ${className}`} style={fit ? { width: "fit-content" } : {}}>
       <span className={styles.switchLabel}>{title}</span>
       <label className={styles.switch}>
         <input

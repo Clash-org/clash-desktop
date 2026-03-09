@@ -35,7 +35,7 @@ import {
   HotKeysType,
   isPlayoffAtom,
   isPoolRatingAtom,
-  isSwissAtom,
+  tournamentSystemAtom,
   languageAtom,
   pairsDefault,
   participantsAtom,
@@ -47,8 +47,9 @@ import {
   score2Atom,
   warnings1Atom,
   warnings2Atom,
+  playoffAtom,
 } from "@store";
-import { ParticipantType } from "@typings";
+import { ParticipantType, TournamentSystem } from "@typings";
 import { langLabels } from "@constants";
 import toast from "react-hot-toast";
 import Switch from "@/components/Switch";
@@ -59,6 +60,7 @@ import SelectPair from "@/components/SelectPair";
 import { importExcel } from "@/utils/importExcel";
 import { openFightViewerWindow } from "@/utils/windowManager";
 import { storage } from "@/utils/storage";
+import RadioGroup from "@/components/RadioGroup";
 
 type TrashPairProps = {
   setFighterPairs: React.Dispatch<React.SetStateAction<ParticipantType[][][]>>;
@@ -228,11 +230,12 @@ function App() {
   const [currentPairIndex, setCurrentPairIndex] = useAtom(currentPairIndexAtom);
   const [currentPoolIndex, setСurrentPoolIndex] = useAtom(currentPoolIndexAtom);
   const [language, setLanguage] = useAtom(languageAtom);
-  const [isSwiss, setisRobin] = useAtom(isSwissAtom);
+  const [tournamentSystem, setTournamentSystem] = useAtom(tournamentSystemAtom);
   const [, setDuels] = useAtom(duelsAtom);
   const [hotKeys, setHotKeys] = useAtom(hotKeysAtom);
   const [, setIsPlayoff] = useAtom(isPlayoffAtom);
   const [participants, setParticipants] = useAtom(participantsAtom);
+  const [, setPlayoff] = useAtom(playoffAtom);
   const [, setDoubleHits] = useAtom(doubleHitsAtom);
   const [, setProtests1] = useAtom(protests1Atom);
   const [, setProtests2] = useAtom(protests2Atom);
@@ -254,6 +257,24 @@ function App() {
     t("start"),
     t("viewer"),
   ];
+  const systems = [
+    {
+      label: t("hybridSystem"),
+      value: TournamentSystem.HYBRID
+    },
+    {
+      label: t("olympicSystem"),
+      value: TournamentSystem.OLYMPIC
+    },
+    {
+      label: t("roundRobin"),
+      value: TournamentSystem.ROBIN
+    },
+    {
+      label: t("swissSystem"),
+      value: TournamentSystem.SWISS
+    }
+  ]
   /* ---------- загрузка ---------- */
   useEffect(() => {
     (async () => {
@@ -326,6 +347,16 @@ function App() {
       buf[currentPoolIndex] = 0;
       return buf
     })
+
+    setScore1(0);
+    setScore2(0);
+    setDoubleHits(0);
+    setProtests1(0);
+    setProtests2(0);
+    setWarnings1(0);
+    setWarnings2(0);
+    setHistory([])
+    setPlayoff([])
     callback()
   }
 
@@ -355,14 +386,6 @@ function App() {
         return state
       }
     }))
-    setScore1(0);
-    setScore2(0);
-    setDoubleHits(0);
-    setProtests1(0);
-    setProtests2(0);
-    setWarnings1(0);
-    setWarnings2(0);
-    setHistory([])
   }
 
   const addParticipant = () => {
@@ -397,7 +420,7 @@ function App() {
     addPeopleWrap(()=>{
       const pairs = generatePairs(
         newParticipants[currentPoolIndex],
-        isSwiss,
+        tournamentSystem,
         currentPoolIndex,
         setFighterPairs,
         setCurrentPairIndex,
@@ -565,11 +588,7 @@ function App() {
                 min={1}
               />
             </div>
-            <Switch
-              title={t("swissSystem")}
-              value={isSwiss}
-              setValue={setisRobin}
-            />
+            <RadioGroup name="system" onChange={(val)=>setTournamentSystem(val)} value={tournamentSystem} options={systems} />
           </>
 
           <Button
