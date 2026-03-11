@@ -13,7 +13,7 @@
   color: var(--fg);
   border-radius: 8px;
   padding: 12px;
-  font-family: "OnestRegular", sans-serif;
+  font-family: var(--font-regular);
   border: 1px solid transparent;
   outline: none;
   transition: all 0.2s ease;
@@ -100,7 +100,7 @@
 }
 
 .monthYear {
-  font-family: "OnestBold", sans-serif;
+  font-family: var(--font-bold);
   font-size: 16px;
   color: var(--fg);
 }
@@ -117,7 +117,7 @@
   font-size: 12px;
   color: var(--placeholder);
   padding: 8px 0;
-  font-family: "OnestMedium", sans-serif;
+  font-family: var(--font-medium);
 }
 
 .days {
@@ -139,7 +139,7 @@
   font-size: 14px;
   cursor: pointer;
   transition: all 0.2s ease;
-  font-family: "OnestRegular", sans-serif;
+  font-family: var(--font-regular);
 }
 
 .day:hover:not(.disabledDay) {

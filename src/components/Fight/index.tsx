@@ -199,7 +199,7 @@ export default function FightScreen() {
         duration: 3000,
         style: {
           fontSize: '20px',
-          fontFamily: 'OnestSemiBold',
+          fontFamily: 'var(--font-semi-bold)',
           marginTop: '100px'
         }
       });

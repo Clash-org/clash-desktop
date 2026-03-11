@@ -12,7 +12,7 @@
 
 .title {
   color: var(--fg);
-  font-family: "OnestBold", sans-serif;
+  font-family: var(--font-bold);
   font-size: 20px;
   margin-bottom: 20px;
   text-align: center;

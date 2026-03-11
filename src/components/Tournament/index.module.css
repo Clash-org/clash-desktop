@@ -1,11 +1,21 @@
 /* components/Tournament/index.module.css */
 .container {
   padding: 24px;
-  max-width: 1200px;
+  max-width: 100%;
+  padding-left: 20%;
+  padding-right: 20%;
   height: 100vh;
-  min-height: calc(100% + 350px);
   margin: 0 auto;
   color: var(--fg);
+  overflow-y: auto;
+}
+
+.wait {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  height: 90%;
+  font-size: 60px;
 }
 
 .header {
@@ -17,7 +27,7 @@
 }
 
 .title {
-  font-family: "OnestBold", sans-serif;
+  font-family: var(--font-bold);
   font-size: 32px;
   margin: 0 0 16px 0;
   color: var(--fg);
@@ -55,7 +65,7 @@
 .description h3,
 .actionBlock h3,
 .socialBlock h3 {
-  font-family: "OnestBold", sans-serif;
+  font-family: var(--font-bold);
   font-size: 20px;
   margin: 0 0 16px 0;
   color: var(--fg);
@@ -121,11 +131,11 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  font-size: 32px;
 }
 
 .weaponEmoji {
-  filter: drop-shadow(0 2px 4px rgba(0, 0, 0, 0.2));
+  display: flex;
+  align-items: center;
 }
 
 .nominationInfo {
@@ -133,7 +143,7 @@
 }
 
 .nominationInfo h4 {
-  font-family: "OnestBold", sans-serif;
+  font-family: var(--font-bold);
   font-size: 18px;
   margin: 0 0 8px 0;
   color: var(--fg);
@@ -195,7 +205,7 @@
   cursor: pointer;
   transition: all 0.2s ease;
   color: var(--fg);
-  font-family: "OnestMedium", sans-serif;
+  font-family: var(--font-medium);
 }
 
 .nominationButton:hover {
@@ -226,7 +236,7 @@
 }
 
 .applicationsList h4 {
-  font-family: "OnestBold", sans-serif;
+  font-family: var(--font-bold);
   font-size: 18px;
   margin: 0 0 16px 0;
   color: var(--fg);
@@ -251,7 +261,7 @@
 }
 
 .userName {
-  font-family: "OnestMedium", sans-serif;
+  font-family: var(--font-medium);
   color: var(--fg);
 }
 
@@ -276,7 +286,7 @@
 }
 
 .registrationContent h3 {
-  font-family: "OnestBold", sans-serif;
+  font-family: var(--font-bold);
   font-size: 20px;
   margin: 0;
   color: var(--fg);
@@ -289,7 +299,7 @@
 }
 
 .nominationTitle {
-  font-family: "OnestMedium", sans-serif;
+  font-family: var(--font-medium);
   color: var(--fg);
 }
 
@@ -311,7 +321,7 @@
   padding: 16px;
   background: var(--accent-transparent);
   border-radius: 10px;
-  font-family: "OnestBold", sans-serif;
+  font-family: var(--font-bold);
   font-size: 18px;
 }
 

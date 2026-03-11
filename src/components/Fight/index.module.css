@@ -29,7 +29,7 @@
   color: var(--fg);
   font-size: 21px;
   margin-bottom: 7px;
-  font-family: "OnestBold", sans-serif;
+  font-family: var(--font-bold);
   text-align: center;
   line-height: 1.2;
   color: var(--fg);
@@ -41,7 +41,7 @@
   height: 40px;
   line-height: 35px;
   margin-bottom: 7px;
-  font-family: "OnestBold", sans-serif;
+  font-family: var(--font-bold);
 }
 
 .zoneBtn {
@@ -67,7 +67,7 @@
 .zoneTxt {
   color: var(--fg);
   font-size: 14px;
-  font-family: "OnestRegular", sans-serif;
+  font-family: var(--font-regular);
 }
 
 .bottomBar {
@@ -86,7 +86,7 @@
 .timer {
   color: var(--fg);
   font-size: 36px;
-  font-family: "OnestBold", sans-serif;
+  font-family: var(--font-bold);
   margin-bottom: 8px;
 }
 
@@ -134,7 +134,7 @@
 .winText {
   color: var(--accent);
   font-size: 20px;
-  font-family: 'OnestBold', sans-serif;
+  font-family: var(--font-bold);
   position: relative;
   left: -1px;
 }

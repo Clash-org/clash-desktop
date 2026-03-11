@@ -298,7 +298,7 @@ export default function TournamentGridScreen({
             <span>{winners[2]}</span>
           </span>
           {tournamentSystem !== TournamentSystem.OLYMPIC &&
-          <Button onClick={()=>setShowRank(true)} style={{ position: "absolute", right: "25px", minWidth: "8px" }}>
+          <Button stroke onClick={()=>setShowRank(true)} style={{ position: "absolute", right: "25px", minWidth: "8px" }}>
             <ChartColumn size={28} />
           </Button>
           }

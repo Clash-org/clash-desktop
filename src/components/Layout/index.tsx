@@ -182,10 +182,8 @@ export default function Layout() {
                     </Button>
                 </header>
             )}
-            <main>
-                {/* Рендерим только активную страницу */}
-                {renderPage()}
-            </main>
+            {/* Рендерим только активную страницу */}
+            {renderPage()}
             <ModalWindow isOpen={showP2P} onClose={()=>setShowP2P(!showP2P)} style={{ maxWidth: "38rem" }} hidden>
                 <DirectP2P />
             </ModalWindow>

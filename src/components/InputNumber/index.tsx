@@ -1,11 +1,10 @@
-// components/ui/InputNumber.tsx
 import React, { useState, useRef, useEffect } from 'react';
 import { Minus, Plus } from 'lucide-react';
 import styles from './index.module.css';
 
 interface InputNumberProps {
   value: number;
-  onChange: (value: number) => void;
+  setValue: (value: number) => void;
   min?: number;
   max?: number;
   step?: number;
@@ -13,18 +12,20 @@ interface InputNumberProps {
   className?: string;
   placeholder?: string;
   size?: 'small' | 'medium' | 'large';
+  required?: boolean;
 }
 
 export default function InputNumber({
   value,
-  onChange,
+  setValue,
   min = 0,
   max = 100,
   step = 1,
   disabled = false,
   className = '',
   placeholder = '0',
-  size = 'medium'
+  size = 'medium',
+  required
 }: InputNumberProps) {
   const [inputValue, setInputValue] = useState(value.toString());
   const [isFocused, setIsFocused] = useState(false);
@@ -58,7 +59,7 @@ export default function InputNumber({
     // Ограничиваем значение min/max
     const clampedValue = Math.min(Math.max(numericValue, min), max);
     setInputValue(clampedValue.toString());
-    onChange(clampedValue);
+    setValue(clampedValue);
   };
 
   const handleInputFocus = () => {
@@ -69,7 +70,7 @@ export default function InputNumber({
     if (!disabled) {
       const newValue = Math.min(value + step, max);
       setInputValue(newValue.toString())
-      onChange(newValue);
+      setValue(newValue);
     }
   };
 
@@ -77,7 +78,7 @@ export default function InputNumber({
     if (!disabled) {
       const newValue = Math.max(value - step, min);
       setInputValue(newValue.toString())
-      onChange(newValue);
+      setValue(newValue);
     }
   };
 
@@ -121,8 +122,9 @@ export default function InputNumber({
         onFocus={handleInputFocus}
         onKeyDown={handleKeyDown}
         disabled={disabled}
-        placeholder={placeholder}
+        placeholder={required ? `${placeholder} *` : placeholder}
         aria-label="Числовое значение"
+        required={required}
       />
 
       <button

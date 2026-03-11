@@ -1,5 +1,5 @@
 // store.ts
-import { ParticipantPlayoffType, ParticipantType, TournamentSystem, UserType } from '@/typings';
+import { LangType, ParticipantPlayoffType, ParticipantType, TournamentSystem, UserType } from '@/typings';
 import { generateId } from '@/utils/helpers';
 import { atom } from 'jotai';
 
@@ -46,7 +46,7 @@ export const pairsDefault: ParticipantType[][][] = [[
 // Основные атомы таймера
 export const fightTimeAtom = atom(fightTimeDefault); // Время боя в секундах (по умолчанию 3 минуты)
 export const isRunningAtom = atom(false); // Состояние таймера (запущен/остановлен)
-export const languageAtom = atom<"en"|"ru"|"cn">('ru'); // Язык интерфейса ('en', 'ru', 'cn')
+export const languageAtom = atom<LangType>('ru'); // Язык интерфейса ('en', 'ru', 'cn')
 export const tournamentSystemAtom = atom<TournamentSystem>(TournamentSystem.HYBRID); // Система подсчёта
 
 export const historyAtom = atom<{ score1: number, score2: number }[]>([]);

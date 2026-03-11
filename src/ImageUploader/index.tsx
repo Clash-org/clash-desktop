@@ -110,7 +110,8 @@ export default function ImageUploader({
         const formData = new FormData();
         formData.append('image', file);
         setValue?.(formData)
-        setFileName?.(file.name.split("/")[file.name.split("/").length - 1])
+        const pathArr = file.name.split("/")
+        setFileName?.(pathArr[pathArr.length - 1])
         setPreviewUrl(base64);
         onChange?.(base64);
       };
@@ -139,8 +140,8 @@ export default function ImageUploader({
 
       // Читаем файл через Tauri FS
       const fileData = await readFile(filePath);
-      const fileName = filePath.split("/")[filePath.split("/").length - 1]
-      const file = new File([fileData], fileName, { type: `image/${fileName.split(".")[1]}`  });
+      const fileName = filePath.split("\\")[filePath.split("\\").length - 1]
+      const file = new File([fileData], fileName, { type: `image/${fileName.split(".")[1]}` });
       setFileName?.(fileName)
       const formData = new FormData();
       formData.append('image', file);
@@ -194,7 +195,7 @@ export default function ImageUploader({
                   e.stopPropagation();
                   handleRemove();
                 }}
-                title={t('imageUploaderRemove')}
+                title={t('delete')}
               >
                 <Trash2 size={18} />
               </button>

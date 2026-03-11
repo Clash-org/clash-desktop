@@ -6,7 +6,8 @@ import {
   ArrowLeft,
   ArrowRight,
   CirclePlus,
-  Eye
+  Eye,
+  Trash2
 } from 'lucide-react';
 import Markdown from 'react-markdown'
 import remarkGfm from 'remark-gfm'
@@ -20,12 +21,14 @@ import Switch from '@/components/Switch';
 import styles from './index.module.css';
 import Checkbox from '../Checkbox';
 import ModalWindow from '../ModalWindow';
-import { CityType, NominationType, TournamentFormData, WeaponType } from '@/typings';
+import { CityType, NominationType, TournamentFormData, TournamentStatus, TournamentType, WeaponType } from '@/typings';
 import { citiesApi, tournamentsApi, uploadsApi, weaponsApi } from '@/utils/api';
 import ImageUploader from '@/ImageUploader';
 import toast from 'react-hot-toast';
 import { useAtomValue } from 'jotai';
-import { languageAtom } from '@/store';
+import { languageAtom, userAtom } from '@/store';
+import { SERVER_COVER_HOST } from '@/constants';
+import { translateStatus } from '@/utils/helpers';
 
 export default function CreateTournament() {
   const { t } = useTranslation();
@@ -33,10 +36,14 @@ export default function CreateTournament() {
   const [cities, setCities] = useState<CityType[]>([]);
   const [weapons, setWeapons] = useState<WeaponType[]>([]);
   const [nominations, setNominations] = useState<NominationType[]>([]);
+  const [tournaments, setTournaments] = useState<TournamentType[]>([]);
+  const [currentTournament, setCurrentTournament] = useState<TournamentType>();
   const [socialLink, setSocialLink] = useState('');
   const [showMarkdown, setShowMarkdown] = useState(false);
+  const [showDelete, setShowDelete] = useState(false);
   const [cover, setCover] = useState<FormData>(new FormData())
   const lang = useAtomValue(languageAtom)
+  const user = useAtomValue(userAtom)
 
   const defaultTournametData: TournamentFormData = {
     title: '',
@@ -44,11 +51,13 @@ export default function CreateTournament() {
     date: new Date(),
     cityId: 0,
     image: "",
+    prices: {},
     weaponsIds: [],
     nominationsIds: [],
     participantsCount: {},
     socialMedias: [],
-    isChildlike: false
+    isAdditions: {},
+    status: "pending"
   }
 
   const [formData, setFormData] = useState<TournamentFormData>(defaultTournametData);
@@ -68,8 +77,30 @@ export default function CreateTournament() {
           setNominations(resNominations)
           setWeapons(weapons)
         }
+        if (user) {
+          const resTournaments = await tournamentsApi.getTournamentsByOrganizer(user.id)
+          if (resTournaments)
+            setTournaments(resTournaments)
+        }
     })()
   }, []);
+
+  useEffect(()=>{
+    if (currentTournament) {
+      // @ts-ignore
+      handleInputChange("cityId", currentTournament.cityId)
+      handleInputChange("date", new Date(currentTournament.date))
+      handleInputChange("description", currentTournament.description)
+      handleInputChange("isAdditions", currentTournament.isAdditions)
+      handleInputChange("nominationsIds", currentTournament.nominationsIds)
+      handleInputChange("participantsCount", currentTournament.participantsCount)
+      handleInputChange("prices", currentTournament.prices)
+      handleInputChange("socialMedias", currentTournament.socialMedias)
+      handleInputChange("title", currentTournament.title)
+      handleInputChange("image", currentTournament.image)
+      handleInputChange("weaponsIds", nominations.filter(nom=>currentTournament.nominationsIds.includes(nom.id)).map(nom=>nom.weapon.id))
+    }
+  }, [currentTournament])
 
   useEffect(()=>{
     const allWeaponsIds = [...new Set(nominations.map(n=>n.weapon.id))]
@@ -82,6 +113,10 @@ export default function CreateTournament() {
   const handleInputChange = (field: keyof TournamentFormData, value: any) => {
     setFormData(prev => ({ ...prev, [field]: value }));
   };
+
+  const handleAdditions = (field: string, val: boolean) => {
+    handleInputChange('isAdditions', { ...formData.isAdditions, [field]: val })
+  }
 
   const handleAddSocialLink = () => {
     if (socialLink && !formData.socialMedias.includes(socialLink)) {
@@ -100,14 +135,33 @@ export default function CreateTournament() {
     }));
   };
 
+  const getNewImageName = (name: string) => {
+    const imageArr = name.split(".")
+    return imageArr[0] + ".webp"
+  }
+
   const handleSubmit = async () => {
-    await uploadsApi.imageLoad(cover, "covers")
-    const data = await tournamentsApi.create(formData)
-    if (data) {
-      toast.success(t("tournamentCreated"))
-      setFormData(defaultTournametData)
-      setCover(new FormData)
-      setCurrentStep(1)
+
+    if (currentTournament) {
+      if (cover.get("image"))
+        await uploadsApi.imageLoad(cover, "covers")
+      const newName = getNewImageName(formData.image)
+      const res = await tournamentsApi.update({ ...formData, image: newName }, currentTournament.id)
+      if (res) {
+        toast.success(t("dataUpdated"))
+        setCurrentTournament(res)
+      }
+    } else {
+      if (cover.get("image"))
+        await uploadsApi.imageLoad(cover, "covers")
+      const newName = getNewImageName(formData.image)
+      const data = await tournamentsApi.create({ ...formData, image: newName })
+      if (data) {
+        toast.success(t("tournamentCreated"))
+        setFormData(defaultTournametData)
+        setCover(new FormData)
+        setCurrentStep(1)
+      }
     }
   };
 
@@ -178,6 +232,33 @@ export default function CreateTournament() {
           <div className={styles.stepContent}>
             <h3 className={styles.stepTitle}>{t('basicInfo')}</h3>
 
+            {!!tournaments.length &&
+            <div className={styles.formGroup}>
+              <Select
+              placeholder={t("yourTournamets")}
+              setValue={(val)=>setCurrentTournament(JSON.parse(val))}
+              value={JSON.stringify(currentTournament)}
+              options={tournaments.map(t=>({ label: t.title, value: JSON.stringify(t) }))}
+              />
+              {!!currentTournament &&
+              <Button
+              title={t("createNewTournament")}
+              onClick={()=>{setCurrentTournament(undefined); setFormData(defaultTournametData)}}
+              />
+              }
+              <Select
+              placeholder={t("status")}
+              options={Object.values(TournamentStatus).map(s=>({ label: translateStatus(s, lang), value: s }))}
+              value={formData.status}
+              setValue={(val)=>handleInputChange("status", val)}
+              />
+              <Button
+              stroke
+              title={t("delete")}
+              onClick={()=>setShowDelete(true)}
+              />
+            </div>
+            }
             <div className={styles.formGroup}>
               <label className={styles.label}>{t('tournamentTitle')} *</label>
               <InputText
@@ -206,7 +287,7 @@ export default function CreateTournament() {
                   options={cityOptions}
                   value={formData.cityId}
                   setValue={(val) => handleInputChange('cityId', val)}
-                  placeholder={t('selectCity')}
+                  placeholder={t('city')}
                   fullWidth
                 />
               </div>
@@ -223,9 +304,38 @@ export default function CreateTournament() {
             <div className={styles.formGroup}>
               <Switch
                 title={t('childlikeTournament')}
-                value={formData.isChildlike}
-                setValue={(val) => handleInputChange('isChildlike', val)}
-                fit
+                value={formData.isAdditions["isChildlike"]}
+                setValue={(val) => handleAdditions("isChildlike", val)}
+              />
+              <Switch
+              title={t("city")}
+              value={formData.isAdditions["isCity"]}
+              setValue={(val)=> handleAdditions('isCity', val)}
+              />
+              <Switch
+              title={t("fullName")}
+              value={formData.isAdditions["isFullName"]}
+              setValue={(val)=> handleAdditions('isFullName', val)}
+              />
+              <Switch
+              title={t("phone")}
+              value={formData.isAdditions["isPhone"]}
+              setValue={(val)=> handleAdditions('isPhone', val)}
+              />
+              <Switch
+              title={t("otherContacts")}
+              value={formData.isAdditions["isOtherContacts"]}
+              setValue={(val)=> handleAdditions('isOtherContacts', val)}
+              />
+              <Switch
+              title={t("weaponsRental")}
+              value={formData.isAdditions["isWeaponsRental"]}
+              setValue={(val)=> handleAdditions('isWeaponsRental', val)}
+              />
+              <Switch
+              title={t("ruleAndPolicy")}
+              value={formData.isAdditions["isRuleAndPolicy"]}
+              setValue={(val)=> handleAdditions('isRuleAndPolicy', val)}
               />
             </div>
           </div>
@@ -264,7 +374,7 @@ export default function CreateTournament() {
               </div>
             </div>
             <div className={styles.formGroup}>
-                <label className={styles.label}>{t('expectedParticipants')}</label>
+                <label className={styles.label}>{t('expectedParticipants')} *</label>
                 {formData.nominationsIds.map((nomId, id)=>(
                   <div className={styles.row}>
                     <span>
@@ -273,10 +383,32 @@ export default function CreateTournament() {
                     <InputNumber
                     key={id}
                     value={formData.participantsCount[nomId]||0}
-                    onChange={(count)=>{
+                    setValue={(count)=>{
                       setFormData(state=>{
                         const buf = JSON.parse(JSON.stringify(state))
                         buf.participantsCount[nomId] = count
+                        return buf
+                      })
+                    }}
+                    />
+                  </div>
+                ))}
+            </div>
+            <div className={styles.formGroup}>
+                <label className={styles.label}>{t('price')} *</label>
+                {formData.nominationsIds.map((nomId, id)=>(
+                  <div className={styles.row}>
+                    <span>
+                      {nominations.find(nom=>nom.id === nomId)!.title}
+                    </span>
+                    <InputNumber
+                    key={id}
+                    max={100000}
+                    value={formData.prices[nomId]||0}
+                    setValue={(count)=>{
+                      setFormData(state=>{
+                        const buf = JSON.parse(JSON.stringify(state))
+                        buf.prices[nomId] = count
                         return buf
                       })
                     }}
@@ -292,7 +424,7 @@ export default function CreateTournament() {
           <div className={styles.stepContent}>
             <h3 className={styles.stepTitle}>{t('additionalInfo')}</h3>
 
-            <ImageUploader setFileName={(name)=>handleInputChange("image", name)} setValue={setCover} />
+            <ImageUploader value={SERVER_COVER_HOST + formData.image} setFileName={(name)=>handleInputChange("image", name)} setValue={setCover} />
             <div className={styles.formGroup}>
               <label className={styles.label}>{t('socialLinks')}</label>
               <div className={styles.socialInput}>
@@ -328,17 +460,6 @@ export default function CreateTournament() {
                 </div>
               )}
             </div>
-
-            {/* <div className={styles.row}>
-              <div className={styles.formGroup}>
-                <label className={styles.label}>{t('expectedParticipants')}</label>
-                <InputNumber
-                  value={formData.participantsCount[0]}
-                  onChange={(val) => handleInputChange('participantsCount', [val, formData.participantsCount[1]])}
-                  min={0}
-                />
-              </div>
-            </div> */}
           </div>
         )}
 
@@ -371,7 +492,7 @@ export default function CreateTournament() {
               className={styles.submitButton}
             >
               <CirclePlus size={20} />
-              <span>{t('createTournament')}</span>
+              <span>{currentTournament ? t("updateData") : t('createTournament')}</span>
             </Button>
           )}
         </div>
@@ -379,6 +500,13 @@ export default function CreateTournament() {
       <ModalWindow isOpen={showMarkdown} onClose={()=>setShowMarkdown(false)}>
           <Section title={t('description')}>
             <Markdown remarkPlugins={[remarkGfm]}>{formData.description}</Markdown>
+          </Section>
+      </ModalWindow>
+      <ModalWindow isOpen={showDelete} onClose={()=>setShowDelete(false)}>
+          <Section title={t("realyDeleteTournament")}>
+            <Button onClick={()=>{ tournamentsApi.delete(currentTournament!.id); setCurrentTournament(undefined) }}>
+              <Trash2 color="var(--fg)" />
+            </Button>
           </Section>
       </ModalWindow>
     </div>

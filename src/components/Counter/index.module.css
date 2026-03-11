@@ -19,7 +19,7 @@
   font-size: 14px;
   min-width: 70px;
   text-align: center;
-  font-family: "OnestRegular", sans-serif;
+  font-family: var(--font-regular);
 }
 
 .counterValue {
@@ -28,7 +28,7 @@
   margin: 0 8px;
   min-width: 24px;
   text-align: center;
-  font-family: "OnestRegular", sans-serif;
+  font-family: var(--font-regular);
   font-variant-numeric: tabular-nums;
 }
 

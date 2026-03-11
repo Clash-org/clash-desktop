@@ -39,7 +39,7 @@
 }
 
 .username {
-  font-family: "OnestBold", sans-serif;
+  font-family: var(--font-bold);
   font-size: 32px;
   margin: 0 0 8px 0;
   color: var(--fg);
@@ -92,7 +92,7 @@
 }
 
 .statValue {
-  font-family: "OnestBold", sans-serif;
+  font-family: var(--font-bold);
   font-size: 28px;
   color: var(--accent);
   line-height: 1.2;
@@ -120,7 +120,7 @@
 }
 
 .actionButton span {
-  font-family: "OnestMedium", sans-serif;
+  font-family: var(--font-medium);
 }
 
 .infoContent {
@@ -143,7 +143,7 @@
 .infoLabel {
   width: 140px;
   color: var(--placeholder);
-  font-family: "OnestMedium", sans-serif;
+  font-family: var(--font-medium);
 }
 
 .infoValue {
@@ -194,7 +194,7 @@
 }
 
 .statNumber {
-  font-family: "OnestBold", sans-serif;
+  font-family: var(--font-bold);
   font-size: 20px;
   color: var(--accent);
 }

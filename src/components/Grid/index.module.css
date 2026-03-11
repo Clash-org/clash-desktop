@@ -18,14 +18,14 @@
 .duelTitle {
   color: var(--fg);
   text-align: center;
-  font-family: "OnestBold", sans-serif;
+  font-family: var(--font-bold);
   font-size: 28px;
   margin: 0 0 16px 0;
 }
 
 .first, .winner {
     font-size: 28px;
-    font-family: "OnestBold";
+    font-family: var(--font-bold);
     color: var(--fg);
     display: flex;
     flex-direction: column;

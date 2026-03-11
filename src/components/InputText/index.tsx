@@ -14,6 +14,7 @@ interface InputTextProps {
   rows?: number;
   maxLength?: number;
   disabled?: boolean;
+  required?: boolean
 }
 
 export default function InputText({
@@ -27,14 +28,15 @@ export default function InputText({
   className = "",
   rows = 3,
   disabled=false,
-  maxLength
+  maxLength,
+  required
 }: InputTextProps) {
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
     setValue?.(e.target.value);
   };
 
   const commonProps = {
-    placeholder: placeholder,
+    placeholder: required ? `${placeholder} *` : placeholder,
     value: value || "",
     onChange: handleChange,
     onKeyDown: onKeyDown,
@@ -55,6 +57,7 @@ export default function InputText({
           resize: "vertical"
         }}
         className={`${styles.textarea} ${commonProps.className}`}
+        required={required}
       />
     );
   }
@@ -66,6 +69,7 @@ export default function InputText({
       type={type}
       style={commonProps.style}
       disabled={disabled}
+      required={required}
     />
   );
 }

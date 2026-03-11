@@ -13,7 +13,7 @@
   color: var(--fg);
   font-size: 18px;
   margin-bottom: 12px;
-  font-family: "OnestBold", sans-serif;
+  font-family: var(--font-bold);
   margin: 0;
 }
 

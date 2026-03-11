@@ -1,5 +1,5 @@
 import { STORAGE_PREFIX } from "@/constants";
-import { ParticipantType } from "@/typings";
+import { CurrencyType, LangType, ParticipantType, TournamentStatusType } from "@/typings";
 
 export const truncate = (str: string, max = 9) => str?.length > max ? `${str.slice(0, max-2)}…` : (str ? str: '');
 
@@ -83,3 +83,81 @@ export const formatDate = (dateString: string) => {
     year: 'numeric'
   });
 };
+
+export function getSymbolCurrencyByCode(code: CurrencyType) {
+  switch (code) {
+    case "USD":
+      return "$";
+    case "EUR":
+      return "€";
+    case "GBP":
+      return "£";
+    case "JPY":
+      return "¥";
+    case "CNY":
+      return "¥";
+    case "RUB":
+      return "₽";
+    case "CHF":
+      return "Fr";
+    case "CAD":
+      return "C$";
+    case "AUD":
+      return "A$";
+    case "INR":
+      return "₹";
+    case "BRL":
+      return "R$";
+    case "KRW":
+      return "₩";
+    case "SGD":
+      return "S$";
+    case "NZD":
+      return "NZ$";
+    case "MXN":
+      return "Mex$";
+    case "HKD":
+      return "HK$";
+    case "NOK":
+      return "kr";
+    case "SEK":
+      return "kr";
+    case "TRY":
+      return "₺";
+    case "ZAR":
+      return "R";
+    case "AED":
+      return "د.إ";
+    case "PLN":
+      return "zł";
+    case "THB":
+      return "฿";
+    case "IDR":
+      return "Rp";
+    case "SAR":
+      return "﷼";
+    case "MYR":
+      return "RM";
+    case "DKK":
+      return "kr";
+    case "CZK":
+      return "Kč";
+    case "HUF":
+      return "Ft";
+    case "ILS":
+      return "₪";
+    default:
+      return "?";
+  }
+}
+
+export function translateStatus(status: TournamentStatusType, lang: LangType) {
+  switch(status) {
+    case "active": {
+      return lang === "en" ? status : (lang === "ru" ? "активный" : "活动中")
+    }
+    case "pending": {
+      return lang === "en" ? status : (lang === "ru" ? "ожидаемый" : "预期的")
+    }
+  }
+}

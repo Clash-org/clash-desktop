@@ -8,7 +8,7 @@
 .switchLabel {
   color: var(--fg);
   flex: 1;
-  font-family: "OnestRegular", sans-serif;
+  font-family: var(--font-regular);
   font-size: 16px;
 }
 

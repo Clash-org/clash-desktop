@@ -3,7 +3,7 @@
   color: var(--fg);
   border-radius: 8px;
   padding: 12px;
-  font-family: "OnestRegular", sans-serif;
+  font-family: var(--font-regular);
   border: 1px solid transparent;
   outline: none;
   transition: all 0.2s ease;

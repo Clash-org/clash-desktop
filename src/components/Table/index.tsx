@@ -33,7 +33,7 @@ export default function Table({
               <div key={cellIndex} className={styles.cell}>
                 {cell.includes('\n') ? (
                   <>
-                    <span className={styles.text}>{cell.split('\n')[0]}</span>
+                    <span className={styles.text} title={titles ? titles[rowIndex][cellIndex] : undefined}>{cell.split('\n')[0]}</span>
                     <span className={styles.hint}>{cell.split('\n')[1]}</span>
                   </>
                 ) : (

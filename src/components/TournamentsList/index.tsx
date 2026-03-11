@@ -9,14 +9,14 @@ import { TFunction } from 'i18next';
 import { tournamentsApi } from '@/utils/api';
 import { useAtomValue } from 'jotai';
 import { languageAtom } from '@/store';
-import { TournamentType } from '@/typings';
+import { TournamentShortType, TournamentStatus } from '@/typings';
 import { formatDate } from '@/utils/helpers';
 import { SERVER_COVER_HOST } from '@/constants';
 
 type ContentProps = {
     isPast?: boolean;
     t: TFunction<"translation", undefined>;
-    tournaments: TournamentType[];
+    tournaments: TournamentShortType[];
     visibleCount: number;
 }
 
@@ -43,7 +43,7 @@ function Content({ isPast=false, t, tournaments, visibleCount }:ContentProps) {
                         (e.target as HTMLImageElement).src = '/images/cross.webp';
                     }}
                     />
-                    {!isPast && tournament.status === "active" && (
+                    {!isPast && tournament.status === TournamentStatus.ACTIVE && (
                     <div className={styles.registrationBadge}>
                         {t('registrationOpen')}
                     </div>
@@ -62,7 +62,7 @@ function Content({ isPast=false, t, tournaments, visibleCount }:ContentProps) {
                     </div>
                     <div className={styles.metaItem}>
                         <MapPin size={16} />
-                        <span>{tournament.city.title}</span>
+                        <span>{tournament.city}</span>
                     </div>
                     </div>
 
@@ -83,14 +83,14 @@ function Content({ isPast=false, t, tournaments, visibleCount }:ContentProps) {
 export default function TournamentsList() {
   const { t } = useTranslation();
   const [visibleCount, setVisibleCount] = useState(6);
-  const [tournaments, setTournaments] = useState<TournamentType[]>([]);
+  const [tournaments, setTournaments] = useState<TournamentShortType[]>([]);
   const [loading, setLoading] = useState(false);
   const lang = useAtomValue(languageAtom)
 
   // Моковые данные
   useEffect(() => {
     (async ()=>{
-      const res = await tournamentsApi.getAll(lang)
+      const res = await tournamentsApi.getAll(lang, true) as TournamentShortType[]|undefined
       if (res)
         setTournaments(res);
     })()
@@ -105,8 +105,8 @@ export default function TournamentsList() {
     }, 800);
   };
 
-  const upcomingTournaments: TournamentType[] = [];
-  const pastTournaments: TournamentType[] = [];
+  const upcomingTournaments: TournamentShortType[] = [];
+  const pastTournaments: TournamentShortType[] = [];
   tournaments.forEach(t=>{
     if (new Date(t.date) >= new Date()) {
       upcomingTournaments.push(t)

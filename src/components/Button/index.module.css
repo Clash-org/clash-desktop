@@ -5,7 +5,7 @@
   min-width: 100px;
   border: none;
   cursor: pointer;
-  font-family: "OnestSemiBold", sans-serif;
+  font-family: var(--font-semi-bold);
   font-size: 16px;
   display: inline-flex;
   align-items: center;

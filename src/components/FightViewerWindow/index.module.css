@@ -49,7 +49,7 @@
   color: var(--fg);
   max-width: 80%;
   word-wrap: break-word;
-  font-family: 'OnestBold', sans-serif;
+  font-family: var(--font-bold);
 }
 
 .viewerName span {
@@ -63,7 +63,7 @@
   margin: 20px 0;
   line-height: 1;
   color: var(--fg);
-  font-family: 'OnestBold', sans-serif;
+  font-family: var(--font-bold);
   text-shadow: 0 0 20px rgba(var(--accent-rgb), 0.3);
 }
 
@@ -92,14 +92,14 @@
   letter-spacing: 1px;
   opacity: 0.8;
   color: var(--fg);
-  font-family: 'Onest', sans-serif;
+  font-family: var(--font-regular);
 }
 
 .statValue {
   font-size: 2rem;
   font-weight: bold;
   color: var(--fg);
-  font-family: 'OnestBold', sans-serif;
+  font-family: var(--font-bold);
 }
 
 /* Центральная панель */
@@ -121,7 +121,7 @@
   font-weight: 900;
   color: var(--accent);
   margin-bottom: 30px;
-  font-family: 'OnestBold', monospace;
+  font-family: var(--font-bold);
   text-shadow: 0 0 15px rgba(var(--accent-rgb), 0.5);
 }
 
@@ -144,14 +144,14 @@
   letter-spacing: 1px;
   opacity: 0.8;
   color: var(--fg);
-  font-family: 'Onest', sans-serif;
+  font-family: var(--font-regular);
 }
 
 .doubleHitsValue {
   font-size: 2.5rem;
   font-weight: bold;
   color: var(--accent);
-  font-family: 'OnestBold', sans-serif;
+  font-family: var(--font-bold);
 }
 
 /* VS */
@@ -161,7 +161,7 @@
   color: var(--accent);
   text-transform: uppercase;
   letter-spacing: 5px;
-  font-family: 'OnestBold', sans-serif;
+  font-family: var(--font-bold);
 }
 
 /* Адаптивность */

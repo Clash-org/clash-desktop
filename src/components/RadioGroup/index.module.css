@@ -98,7 +98,7 @@
 
 .radioText {
   color: var(--fg);
-  font-family: "OnestRegular", sans-serif;
+  font-family: var(--font-regular);
   font-size: 16px;
   transition: color 0.2s ease;
 }

@@ -79,7 +79,7 @@
 .option {
   padding: 10px 12px;
   color: var(--fg);
-  font-family: "OnestRegular", sans-serif;
+  font-family: var(--font-regular);
   cursor: pointer;
   transition: all 0.2s ease;
   outline: none;
@@ -106,7 +106,7 @@
   padding: 12px;
   color: var(--placeholder);
   text-align: center;
-  font-family: "OnestRegular", sans-serif;
+  font-family: var(--font-regular);
   font-style: italic;
 }
 
@@ -160,7 +160,7 @@
   color: white;
   border-radius: 16px;
   font-size: 12px;
-  font-family: "OnestMedium", sans-serif;
+  font-family: var(--font-medium);
   animation: tagAppear 0.2s ease;
 }
 

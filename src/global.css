@@ -13,7 +13,7 @@
   --font-regular: 'OnestRegular', -apple-system, sans-serif;
   --font-medium: 'OnestMedium', -apple-system, sans-serif;
   --font-semi-bold: 'OnestSemiBold', -apple-system, sans-serif;
-  --font-bold: 'OnestSansBold', -apple-system, sans-serif;
+  --font-bold: 'OnestBold', -apple-system, sans-serif;
 }
 
 /* Сброс стилей */
@@ -72,11 +72,6 @@ body {
   -moz-osx-font-smoothing: grayscale;
 }
 
-main {
-  overflow-y: auto;
-  height: 100vh;
-}
-
 /* Глобальные стили для Tauri */
 #root {
   height: 100vh;
@@ -127,7 +122,7 @@ button:disabled {
 }
 
 .title {
-  font-family: "OnestBold", sans-serif;
+  font-family: var(--font-bold);
   font-size: 48px;
   margin: 0 0 16px 0;
   color: var(--fg);

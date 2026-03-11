@@ -116,7 +116,7 @@
 
 .manualVsDivider {
     padding: 0 16px;
-    font-family: "OnestBold", sans-serif;
+    font-family: var(--font-bold);
     font-size: 18px;
     color: var(--accent);
     text-transform: uppercase;

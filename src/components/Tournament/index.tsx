@@ -1,9 +1,8 @@
-// components/Tournament/index.tsx
-import { useEffect, useState } from 'react';
+import { ReactNode, useEffect, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import {
   Calendar, MapPin, Users, Sword,
-  CheckCircle, Circle, DollarSign,
+  CheckCircle, Circle,
   ChevronRight,
   UsersRound
 } from 'lucide-react';
@@ -11,7 +10,7 @@ import Button from '@/components/Button';
 import Section from '@/components/Section';
 import ModalWindow from '@/components/ModalWindow';
 import styles from './index.module.css';
-import { TournamentType } from '@/typings';
+import { NominationUsersType, ParticipantStatus, TournamentStatus, TournamentType } from '@/typings';
 import { tournamentsApi } from '@/utils/api';
 import SocialMedias from '../SocialMedias';
 import remarkGfm from 'remark-gfm';
@@ -20,23 +19,11 @@ import { useAtomValue } from 'jotai';
 import { languageAtom } from '@/store';
 import Checkbox from '../Checkbox';
 import Tabs from '../Tabs';
-
-interface Nomination {
-  id: number;
-  name: string;
-  weapon: 'foil' | 'epee' | 'saber';
-  participants: number;
-  maxParticipants: number;
-  price: number;
-  image?: string;
-}
-
-interface Application {
-  userId: number;
-  userName: string;
-  club: string;
-  paid: boolean;
-}
+import { getSymbolCurrencyByCode } from '@/utils/helpers';
+import InputText from '../InputText';
+import InputNumber from '../InputNumber';
+import CitySelect from '../CitySelect';
+import Icon from '../Icon';
 
 export default function Tournament({ id }:{id: number|null}) {
   const { t } = useTranslation();
@@ -46,51 +33,53 @@ export default function Tournament({ id }:{id: number|null}) {
   const [showApplications, setShowApplications] = useState(false);
   const [selectedNominations, setSelectedNominations] = useState<number[]>([]);
   const [tournamentData, setTournamentData] = useState<TournamentType>()
+  const [participants, setParticipants] = useState<NominationUsersType>()
+  const [additionsFields, setAdditionsFields] = useState({
+    trainerName: "",
+    age: 18,
+    cityId: undefined,
+    fullName: "",
+    phone: "",
+    otherContacts: "",
+    weaponsRental: {} as {[weapon: string]: boolean}
+  })
   const lang = useAtomValue(languageAtom)
-
   useEffect(()=>{
     (async ()=>{
       if (id) {
         const tournament = await tournamentsApi.getById(id, lang)
-        if (tournament)
+        if (tournament) {
           setTournamentData(tournament)
+          setAdditionsFields(state=>{
+            return { ...state, weaponsRental: tournament.nominations.reduce((sum, nom)=>({ ...sum, [nom.weapon.title]: false }), {}) }
+          })
+          const resParticipants = await tournamentsApi.getParticipants(id, tournament.nominationsIds)
+          setParticipants(resParticipants)
+        }
       }
     })()
-  }, [id])
+  }, [])
+  if (!tournamentData) return
 
-  // Моковые данные для номинаций
-  const nominations: Nomination[] = [
-    { id: 1, name: t('foil'), weapon: 'foil', participants: 12, maxParticipants: 32, price: 1500 },
-    { id: 2, name: t('epee'), weapon: 'epee', participants: 8, maxParticipants: 32, price: 1500 },
-    { id: 3, name: t('saber'), weapon: 'saber', participants: 15, maxParticipants: 32, price: 1500 },
-    { id: 4, name: t('foil'), weapon: 'foil', participants: 5, maxParticipants: 16, price: 1200 },
-    { id: 5, name: t('epee'), weapon: 'epee', participants: 3, maxParticipants: 16, price: 1200 },
-  ];
+  const nominations = tournamentData.nominations.map(nom=>({
+    id: nom.id,
+    name: nom.title,
+    weapon: nom.weapon.title,
+    weaponId: nom.weapon.id,
+    participants: participants?.[nom.id],
+    maxParticipants: tournamentData.participantsCount[nom.id],
+    price: tournamentData.prices[nom.id]
+  }))
 
-  // Моковые данные для заявок
-  const applications: Record<number, Application[]> = {
-    1: [
-      { userId: 1, userName: 'Иван Петров', club: 'Спартак', paid: true },
-      { userId: 2, userName: 'Петр Сидоров', club: 'Динамо', paid: false },
-      { userId: 3, userName: 'Алексей Иванов', club: 'ЦСКА', paid: true },
-    ],
-    2: [
-      { userId: 4, userName: 'Мария Смирнова', club: 'Спартак', paid: true },
-      { userId: 5, userName: 'Елена Кузнецова', club: 'Динамо', paid: true },
-    ],
-    3: [
-      { userId: 6, userName: 'Дмитрий Волков', club: 'Локомотив', paid: false },
-    ],
-  };
+  const handlerAdditionsFields = (field: keyof typeof additionsFields, val: any) => {
+    setAdditionsFields(state=>({
+      ...state,
+      [field]: val
+    }))
+  }
 
-  const getWeaponIcon = (weapon: string) => {
-    switch(weapon) {
-      case 'foil': return '🤺';
-      case 'epee': return '⚔️';
-      case 'saber': return '🗡️';
-      default: return '🤺';
-    }
-  };
+  const currency = getSymbolCurrencyByCode(tournamentData.currency)
+  const getTotalParticipants = (nonination: typeof nominations[number])=>`${nonination.participants?.length || 0}/${nonination.maxParticipants}`
 
   const handleNominationClick = (nominationId: number) => {
     setSelectedNomination(nominationId);
@@ -100,7 +89,15 @@ export default function Tournament({ id }:{id: number|null}) {
   const handleApply = () => {
   };
 
-  return tournamentData && (
+  if (tournamentData.status === TournamentStatus.PENDING) {
+    return (
+      <div className={styles.container}>
+        <h1 className={[styles.wait, "title"].join(" ")}>Ждите объявления</h1>
+      </div>
+    )
+  }
+
+  return (
     <div className={styles.container}>
       {/* Заголовок турнира */}
       <div className={styles.header}>
@@ -145,7 +142,7 @@ export default function Tournament({ id }:{id: number|null}) {
               <div className={styles.actionButtons}>
                 <Button
                   title={t('apply')}
-                  onClick={() => { setActiveTab('registration'); scroll({ top: 0, left: 0 }) }}
+                  onClick={() => setActiveTab('registration')}
                   className={styles.applyButton}
                 >
                   <Sword size={20} />
@@ -153,7 +150,7 @@ export default function Tournament({ id }:{id: number|null}) {
                 </Button>
                 <Button
                   title={t('viewApplications')}
-                  onClick={() => { setActiveTab('applications'); window.scroll({ top: 0, left: 0 }); }}
+                  onClick={() => setActiveTab('applications')}
                   className={styles.viewButton}
                   stroke
                 >
@@ -175,18 +172,17 @@ export default function Tournament({ id }:{id: number|null}) {
             {nominations.map((nomination) => (
               <div key={nomination.id} className={styles.nominationCard}>
                 <div className={styles.nominationImage}>
-                  <span className={styles.weaponEmoji}>{getWeaponIcon(nomination.weapon)}</span>
+                  <span className={styles.weaponEmoji}>{<Icon type={nomination.weaponId} />}</span>
                 </div>
                 <div className={styles.nominationInfo}>
                   <h4>{nomination.name}</h4>
                   <div className={styles.nominationStats}>
                     <div className={styles.stat}>
                       <UsersRound size={14} />
-                      <span>{nomination.participants}/{nomination.maxParticipants}</span>
+                      <span>{getTotalParticipants(nomination)}</span>
                     </div>
                     <div className={styles.stat}>
-                      <DollarSign size={14} />
-                      <span>{nomination.price} ₽</span>
+                      <span>{nomination.price} {currency}</span>
                     </div>
                   </div>
                 </div>
@@ -208,7 +204,7 @@ export default function Tournament({ id }:{id: number|null}) {
                     <span className={styles.nominationName}>{nomination.name}</span>
                     <span className={styles.participantsCount}>
                       <UsersRound size={20} />
-                      {applications[nomination.id]?.length || 0}
+                      {participants![nomination.id]?.length || 0}
                     </span>
                     <ChevronRight size={18} />
                   </button>
@@ -219,20 +215,20 @@ export default function Tournament({ id }:{id: number|null}) {
             <ModalWindow
               isOpen={showApplications}
               onClose={() => setShowApplications(false)}
-            //   title={t('applications')}
             >
               {selectedNomination && (
                 <div className={styles.applicationsList}>
                   <h4>{nominations.find(n => n.id === selectedNomination)?.name}</h4>
-                  {applications[selectedNomination]?.map((app) => (
-                    <div key={app.userId} className={styles.applicationItem}>
+                  {participants![selectedNomination]?.map((participant) => (
+                    <div key={participant.id} className={styles.applicationItem}>
                       <div className={styles.userInfo}>
-                        <span className={styles.userName}>{app.userName}</span>
-                        <span className={styles.userClub}>{app.club}</span>
+                        <span className={styles.userName}>{participant.username}</span>
+                        <span className={styles.userClub}>{participant.club.title}</span>
                       </div>
-                      {app.paid ? (
+                      {participant.status === ParticipantStatus.CONFIRMED && (
                         <CheckCircle size={20} className={styles.paidIcon} />
-                      ) : (
+                      )}
+                      {participant.status === ParticipantStatus.REGISTERED && (
                         <Circle size={20} className={styles.unpaidIcon} />
                       )}
                     </div>
@@ -249,20 +245,100 @@ export default function Tournament({ id }:{id: number|null}) {
             <div className={styles.nominationsCheckboxList}>
               {nominations.map((nomination) => (
                   <Checkbox
+                  key={nomination.id}
                   value={nomination.id}
                   values={selectedNominations}
                   setValue={setSelectedNominations}
-                  title={`${nomination.participants}/${nomination.maxParticipants} ${nomination.price}`}
+                  title={`${nomination.name} ${nomination.price} ${currency}`}
                   />
               ))}
             </div>
+            {(()=>{
+              const nodes: ReactNode[] = []
+              if (tournamentData.isAdditions["isChildlike"]) {
+                nodes.push((
+                  <>
+                    <InputText
+                    placeholder='Имя тренера'
+                    value={additionsFields.trainerName}
+                    setValue={val=>handlerAdditionsFields("trainerName", val)}
+                    required
+                    />
+                    <InputNumber
+                    placeholder='Возраст'
+                    value={additionsFields.age}
+                    setValue={val=>handlerAdditionsFields("age", val)}
+                    required
+                    />
+                  </>
+                ))
+              }
+              if (tournamentData.isAdditions["isCity"]) {
+                nodes.push(
+                  <CitySelect
+                  required
+                  cityId={additionsFields.cityId}
+                  setCityId={(val)=>handlerAdditionsFields("cityId", val)}
+                  />
+                )
+              }
+
+              if (tournamentData.isAdditions["isFullName"]) {
+                nodes.push(
+                  <InputText
+                  required
+                  placeholder={t("fullName")}
+                  value={additionsFields.fullName}
+                  setValue={(val)=>handlerAdditionsFields("fullName", val)}
+                  />
+                )
+              }
+
+              if (tournamentData.isAdditions["isPhone"]) {
+                nodes.push(
+                  <InputText
+                  required
+                  placeholder={t("phone")}
+                  value={additionsFields.phone}
+                  setValue={(val)=>handlerAdditionsFields("phone", val)}
+                  />
+                )
+              }
+
+              if (tournamentData.isAdditions["isOtherContacts"]) {
+                nodes.push(
+                  <InputText
+                  required
+                  placeholder={t("otherContacts")}
+                  value={additionsFields.otherContacts}
+                  setValue={(val)=>handlerAdditionsFields("otherContacts", val)}
+                  />
+                )
+              }
+              const weapons = Object.keys(additionsFields.weaponsRental)
+              if (tournamentData.isAdditions["isWeaponsRental"] && Object.keys(additionsFields.weaponsRental).length) {
+                nodes.push(weapons.map((weapon, i)=>(
+                  <Checkbox
+                  key={i}
+                  title={weapon}
+                  values={weapons.filter(w=>additionsFields.weaponsRental[w])}
+                  value={weapon}
+                  setValue={(val)=>handlerAdditionsFields("weaponsRental", { ...additionsFields.weaponsRental, [weapon]: val.includes(weapon) })}
+                  />
+                ))
+                )
+              }
+
+              return nodes
+            })()
+            }
 
             <div className={styles.totalPrice}>
               <span>{t('total')}:</span>
               <span className={styles.price}>
                 {selectedNominations.reduce((sum, id) =>
                   sum + (nominations.find(n => n.id === id)?.price || 0), 0
-                )} ₽
+                )} {currency}
               </span>
             </div>
 

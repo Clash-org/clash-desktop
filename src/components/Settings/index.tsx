@@ -574,7 +574,7 @@ function App() {
               {t("pool")}
               <InputNumber
                 value={currentPoolIndex + 1}
-                onChange={(pool) => {
+                setValue={(pool) => {
                   if (pool - 1 === fighterPairs.length) {
                     setFighterPairs((state) => [...state, ...pairsDefault]);
                     setPools((state) => [...state, ...pairsDefault]);
@@ -633,7 +633,7 @@ function App() {
               <span className={styles.zoneLabel}>{t(zone)}</span>
               <InputNumber
                 value={pts}
-                onChange={(val) =>
+                setValue={(val) =>
                   setHitZones({ ...hitZones, [zone]: Number(val) || 0 })
                 }
               />
@@ -699,7 +699,7 @@ function App() {
             </span>
             <InputNumber
               value={poolCountDelete}
-              onChange={setPoolCountDelete}
+              setValue={setPoolCountDelete}
               min={1}
             />
           </div>

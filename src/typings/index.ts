@@ -10,6 +10,8 @@ export enum TournamentSystem {
   SWISS
 }
 
+export type LangType = "en"|"ru"|"cn"
+
 export type ParticipantType = {
   id: string;               // уникальный идентификатор
   name: string;
@@ -45,6 +47,8 @@ export type CityType = {
   createdAt: Date;
 }
 
+export type ClubType = CityType
+
 export type SelectOptionType = { label: string, value: number }
 
 export type UserType = {
@@ -54,6 +58,7 @@ export type UserType = {
   gender: boolean;
   isAdmin: boolean;
   city: CityType;
+  club: ClubType;
   totalMatches: number;
   createdAt: string;
 }
@@ -64,25 +69,39 @@ export type RegistrationType = {
   user: UserType
 }
 
+export const CURRENCY_CODES = [
+  "USD", "EUR", "GBP", "JPY", "CNY", "RUB", "CHF", "CAD", "AUD", "INR",
+  "BRL", "KRW", "SGD", "NZD", "MXN", "HKD", "NOK", "SEK", "TRY", "ZAR",
+  "AED", "PLN", "THB", "IDR", "SAR", "MYR", "DKK", "CZK", "HUF", "ILS"
+] as const;
+
+export type CurrencyType = typeof CURRENCY_CODES[number]
+
 export type TournamentType = {
   id: number;
   title: string;
   weaponsIds: number[];
   nominationsIds: number[];
   organizerId: string;
-  status: 'pending' | 'active' | 'completed' | 'cancelled';
+  status: TournamentStatusType;
   image: string,
   date: string;
   city: CityType;
+  nominations: NominationType[];
+  prices: {[nominationId: string]: number};
+  currency: CurrencyType,
   description: string;
   socialMedias: string[];
   participants: UserType[];
   participantsCount: number[];
   matchesCount: number[];
+  isAdditions: {[field: string]: boolean};
   createdAt: Date;
 }
 
-export type TournamentSliceType = Omit<TournamentType, "participants"|"participantsCount"|"matchesCount"|"description"|"organizerId"|"weaponsIds">
+export type NominationUsersType = {[nominationId: string]: (UserType & { status: ParticipantStatusType })[]}
+
+export type TournamentShortType = Pick<TournamentType, "image"|"id"|"date"|"title"|"status"> & { city: string }
 
 export type TournamentFormData = {
   title: string;
@@ -91,10 +110,12 @@ export type TournamentFormData = {
   cityId: number;
   image: string;
   weaponsIds: number[];
+  prices: {[nominationId: string]: number};
   nominationsIds: number[];
   socialMedias: string[];
-  isChildlike: boolean;
+  isAdditions: {[field: string]: boolean};
   participantsCount: {[nominationId: number]: number};
+  status: TournamentStatusType
 }
 
 export type WeaponType = {
@@ -106,3 +127,18 @@ export type WeaponType = {
 export type NominationType = WeaponType & {
   weapon: WeaponType
 }
+
+export const ParticipantStatus = {
+  REGISTERED: 'registered',
+  CONFIRMED: 'confirmed',
+  CANCELLED: 'cancelled'
+} as const;
+
+export type ParticipantStatusType = typeof ParticipantStatus[keyof typeof ParticipantStatus];
+
+export const TournamentStatus = {
+  PENDING: 'pending',
+  ACTIVE: 'active'
+} as const;
+
+export type TournamentStatusType = typeof TournamentStatus[keyof typeof TournamentStatus];

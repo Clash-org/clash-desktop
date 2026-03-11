@@ -5,7 +5,7 @@ import styles from "./index.module.css";
 interface SwitchProps {
   title: string;
   value: boolean;
-  setValue: React.Dispatch<React.SetStateAction<boolean>>;
+  setValue: (val: boolean)=>void;
   className?: string;
   fit?: boolean
 }

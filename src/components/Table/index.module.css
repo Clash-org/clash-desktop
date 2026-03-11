@@ -22,7 +22,7 @@
 
 .headerText {
   color: var(--accent);
-  font-family: "OnestBold", sans-serif;
+  font-family: var(--font-bold);
   font-size: 14px;
 }
 
@@ -54,14 +54,14 @@
 
 .text {
   color: var(--fg);
-  font-family: "OnestRegular", sans-serif;
+  font-family: var(--font-regular);
   font-size: 14px;
   line-height: 1.4;
 }
 
 .hint {
   color: var(--placeholder);
-  font-family: "OnestRegular", sans-serif;
+  font-family: var(--font-regular);
   font-size: 12px;
   margin-top: 4px;
 }

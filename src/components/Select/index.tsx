@@ -3,6 +3,7 @@ import React, { useState, useRef, useEffect } from 'react';
 import { ChevronDown, X } from 'lucide-react';
 import InputText from '../InputText';
 import styles from './index.module.css';
+import { useTranslation } from 'react-i18next';
 
 export interface SelectOption<T> {
   value: T;
@@ -12,7 +13,9 @@ export interface SelectOption<T> {
 interface SelectProps<T> {
   options: SelectOption<T>[];
   value?: T | T[];
+  inputValue?: string;
   setValue: (value: any) => void;
+  setInputValue?: (value: string) => void;
   placeholder?: string;
   error?: boolean;
   fullWidth?: boolean;
@@ -20,20 +23,25 @@ interface SelectProps<T> {
   className?: string;
   multiple?: boolean;
   maxSelected?: number; // максимальное количество выбранных опций (для multiple)
+  required?: boolean;
 }
 
 export default function Select<T>({
   options,
   value,
+  inputValue,
   setValue,
+  setInputValue,
   placeholder = 'Выберите...',
   error = false,
   fullWidth = true,
   disabled = false,
   className = '',
   multiple = false,
-  maxSelected
+  maxSelected,
+  required
 }: SelectProps<T>) {
+  const { t } = useTranslation()
   const [isOpen, setIsOpen] = useState(false);
   const [searchTerm, setSearchTerm] = useState('');
   const wrapperRef = useRef<HTMLDivElement>(null);
@@ -67,7 +75,7 @@ export default function Select<T>({
 
   // Обработка клавиш
   const handleKeyDown = (e: React.KeyboardEvent) => {
-    if (e.key === 'Enter' || e.key === ' ') {
+    if (e.key === 'Enter') {
       e.preventDefault();
       if (!disabled) {
         setIsOpen(!isOpen);
@@ -101,6 +109,7 @@ export default function Select<T>({
     } else {
       // Режим одиночного выбора
       setValue(option.value);
+      setInputValue?.(option.label as string)
       setIsOpen(false);
       setSearchTerm('');
     }
@@ -122,6 +131,7 @@ export default function Select<T>({
 
   const handleInputChange = (text: string) => {
     setSearchTerm(text);
+    if (setInputValue) setInputValue(text)
     if (!isOpen) setIsOpen(true);
   };
 
@@ -188,11 +198,12 @@ export default function Select<T>({
       >
 
         <InputText
-          value={isOpen ? searchTerm : (!multiple && selectedOptions[0]?.label) || ''}
+          value={isOpen ? searchTerm : (setInputValue !== undefined ? inputValue : (!multiple && selectedOptions[0]?.label) || '')}
           setValue={handleInputChange}
           placeholder={selectedOptions.length === 0 ? placeholder : ''}
           className={`${styles.input} ${isOpen ? styles.inputOpen : ''}`}
           disabled={disabled}
+          required={required}
         />
 
         <ChevronDown
@@ -237,7 +248,7 @@ export default function Select<T>({
             })
           ) : (
             <div className={styles.noOptions}>
-              Нет совпадений
+              {t("noMatches")}
             </div>
           )}
         </div>

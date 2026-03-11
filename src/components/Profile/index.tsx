@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
-import { MapPin, Calendar, Award, Target, Sword, BarChart3, TrendingUp, Mail } from 'lucide-react';
+import { MapPin, Calendar, Award, Target, Sword, BarChart3, TrendingUp, Flag } from 'lucide-react';
 import Button from '@/components/Button';
 import Section from '@/components/Section';
 import styles from './index.module.css';
@@ -39,9 +39,9 @@ export default function Profile() {
         <div className={styles.headerInfo}>
           <h1 className={styles.username}>{user.username}</h1>
           <div className={styles.userMeta}>
-            <div className={styles.metaItem}>
-              <Mail size={16} color="var(--placeholder)" />
-              <span>{user.email}</span>
+            <div className={styles.metaItem + " title"} style={{ fontSize: "14px", cursor: "pointer", margin: "0", backgroundSize: "160% 160%" }}>
+              <Flag size={16} color="var(--placeholder)" />
+              <span>{user.club.title}</span>
             </div>
             <div className={styles.metaItem}>
               <MapPin size={16} color="var(--placeholder)" />
