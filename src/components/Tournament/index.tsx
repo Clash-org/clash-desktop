@@ -10,8 +10,7 @@ import Button from '@/components/Button';
 import Section from '@/components/Section';
 import ModalWindow from '@/components/ModalWindow';
 import styles from './index.module.css';
-import { NominationUsersType, ParticipantStatus, TournamentStatus, TournamentType } from '@/typings';
-import { tournamentsApi } from '@/utils/api';
+import { NominationUsersType, ParticipantStatus, TournamentStatus } from '@/typings';
 import SocialMedias from '../SocialMedias';
 import remarkGfm from 'remark-gfm';
 import Markdown from 'react-markdown'
@@ -24,16 +23,18 @@ import InputText from '../InputText';
 import InputNumber from '../InputNumber';
 import CitySelect from '../CitySelect';
 import Icon from '../Icon';
+import { useTournament } from '@/hooks/useTournaments';
+import { useParticipants } from '@/hooks/useParticipants';
 
 export default function Tournament({ id }:{id: number|null}) {
   const { t } = useTranslation();
-  const tabs = ['tournament', 'nominations', 'applications', 'registration']
+  const lang = useAtomValue(languageAtom)
+  const { tournament: tournamentData } = useTournament(id, lang)
+  const { participants } = useParticipants(id, tournamentData?.nominationsIds||[])
   const [activeTab, setActiveTab] = useState('tournament');
   const [selectedNomination, setSelectedNomination] = useState<number | null>(null);
   const [showApplications, setShowApplications] = useState(false);
   const [selectedNominations, setSelectedNominations] = useState<number[]>([]);
-  const [tournamentData, setTournamentData] = useState<TournamentType>()
-  const [participants, setParticipants] = useState<NominationUsersType>()
   const [additionsFields, setAdditionsFields] = useState({
     trainerName: "",
     age: 18,
@@ -43,23 +44,18 @@ export default function Tournament({ id }:{id: number|null}) {
     otherContacts: "",
     weaponsRental: {} as {[weapon: string]: boolean}
   })
-  const lang = useAtomValue(languageAtom)
+
   useEffect(()=>{
     (async ()=>{
-      if (id) {
-        const tournament = await tournamentsApi.getById(id, lang)
-        if (tournament) {
-          setTournamentData(tournament)
-          setAdditionsFields(state=>{
-            return { ...state, weaponsRental: tournament.nominations.reduce((sum, nom)=>({ ...sum, [nom.weapon.title]: false }), {}) }
-          })
-          const resParticipants = await tournamentsApi.getParticipants(id, tournament.nominationsIds)
-          setParticipants(resParticipants)
-        }
+      if (tournamentData && id) {
+        setAdditionsFields(state=>{
+          return { ...state, weaponsRental: tournamentData.nominations.reduce((sum, nom)=>({ ...sum, [nom.weapon.title]: false }), {}) }
+        })
       }
     })()
   }, [])
   if (!tournamentData) return
+  const tabs = ['tournament', 'nominations', 'applications', new Date(tournamentData.date) >= new Date() ? 'registration' : ""].filter(Boolean)
 
   const nominations = tournamentData.nominations.map(nom=>({
     id: nom.id,
@@ -119,14 +115,12 @@ export default function Tournament({ id }:{id: number|null}) {
       </div>
 
       {/* Табы */}
-      <div className={styles.tabs}>
-        <Tabs
-        tabs={tabs}
-        titles={[t('tournament'), t('nominations'), t('applications'), t('registration')]}
-        activeTab={activeTab}
-        setActiveTab={setActiveTab}
-        />
-      </div>
+      <Tabs
+      tabs={tabs}
+      titles={[t('tournament'), t('nominations'), t('applications'), t('registration')]}
+      activeTab={activeTab}
+      setActiveTab={setActiveTab}
+      />
 
       {/* Контент табов */}
       <Section className={styles.content}>
@@ -317,6 +311,9 @@ export default function Tournament({ id }:{id: number|null}) {
               }
               const weapons = Object.keys(additionsFields.weaponsRental)
               if (tournamentData.isAdditions["isWeaponsRental"] && Object.keys(additionsFields.weaponsRental).length) {
+                nodes.push(
+                  <span>{t("weaponsRental")}</span>
+                )
                 nodes.push(weapons.map((weapon, i)=>(
                   <Checkbox
                   key={i}

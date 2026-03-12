@@ -4,9 +4,11 @@ import "./global.css";
 import { Toaster } from "react-hot-toast";
 import Layout from "./components/Layout";
 import { Provider } from "jotai";
+import { AuthProvider } from './providers/AuthProvider';
 
 ReactDOM.createRoot(document.getElementById("root") as HTMLElement).render(
   <>
+  <AuthProvider>
     <Provider>
       <Layout />
     </Provider>
@@ -17,5 +19,6 @@ ReactDOM.createRoot(document.getElementById("root") as HTMLElement).render(
       }
     }}
     />
+  </AuthProvider>
   </>,
 );

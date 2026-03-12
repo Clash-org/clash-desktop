@@ -11,14 +11,13 @@ import ModalWindow from "../ModalWindow";
 import DirectP2P from "../DirectP2P";
 import Button from "../Button";
 import Auth from "../Auth";
-import { registrationApi } from "@/utils/api";
 import { useAtom, useAtomValue } from "jotai";
 import { languageAtom, userAtom } from "@/store";
 import Profile from "../Profile";
 import TournamentsList from "../TournamentsList";
 import Tournament from "../Tournament";
 import CreateTournament from "../CreateTournament";
-import { LocalStorage } from "@/utils/helpers";
+import { useMe } from "@/hooks/useAuth";
 
 enum Pages {
     SETTINGS,
@@ -39,6 +38,7 @@ export default function Layout() {
     const [tournamentId, setTournamentId] = useState<number|null>(null)
     const [user, setUser] = useAtom(userAtom)
     const lang = useAtomValue(languageAtom)
+    const { user: userData } = useMe(lang)
 
     const profileHandler = () => {
         if (user) {
@@ -59,19 +59,8 @@ export default function Layout() {
         }
         (async ()=>{
             await storage.init()
-            let res = await registrationApi.me(lang)
-            if (res)
-                setUser(res)
-            else {
-                const tokens = await registrationApi.refresh()
-                if (tokens) {
-                    LocalStorage.setItem("accessToken", tokens.accessToken)
-                    LocalStorage.setItem("refreshToken", tokens.refreshToken)
-                    res = await registrationApi.me(lang)
-                    if (res)
-                        setUser(res)
-                }
-            }
+            if (userData)
+                setUser(userData)
             setIsStorageReady(true)
         })()
 

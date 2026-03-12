@@ -229,5 +229,6 @@
   "status": "Status",
   "realyDeleteTournament": "Are you sure you want to delete the tournament?",
   "emailOrPasswordIncorrect": "The email or password is incorrect",
-  "notFieldsFilled": "Not all fields are filled in"
+  "notFieldsFilled": "Not all fields are filled in",
+  "updateStatus": "Update status"
 }

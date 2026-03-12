@@ -1,207 +1,139 @@
-import { AUTH_HOST, CITY_HOST, CLUB_HOST, NOMINATION_HOST, TOURNAMENT_HOST, UPLOAD_HOST, WEAPON_HOST } from '@/constants';
-import { CityType, ClubType, NominationType, NominationUsersType, RegistrationType, TournamentFormData, TournamentShortType, TournamentType, UserType, WeaponType } from '@/typings';
+import { AUTH_HOST, TOURNAMENT_HOST, UPLOAD_HOST } from '@/constants';
+import { TournamentFormData, TournamentStatusType, TournamentType } from '@/typings';
 import toast from 'react-hot-toast';
-import { LocalStorage } from './helpers';
+import { mutate } from 'swr';
 
-async function getHeaderWithToken() {
-    return {
-        "Authorization": `Bearer ${await LocalStorage.getItem("accessToken")}`
-    } as HeadersInit
+// POST /tournaments
+export async function createTournament(data: TournamentFormData) {
+  const result = await fetcher(TOURNAMENT_HOST, {
+    method: 'POST',
+    body: JSON.stringify(data),
+  });
+
+  // Инвалидируем кэш списка
+  await mutate((key) => typeof key === 'string' && key.startsWith(TOURNAMENT_HOST));
+
+  return result as TournamentType;
 }
 
-export const registrationApi = {
-    createUser: async (email: string, username: string, password: string, cityId: number|null, clubId: number|null, gender: boolean, lang: string, cityName?: string, clubName?: string) => {
-        const res = await fetch(AUTH_HOST + "register", {
-            method: "POST",
-            body: JSON.stringify({ email, username, password, cityId, clubId, gender, cityName, clubName, lang })
-        })
-        if (res.status === 201) {
-            return (await res.json()) as RegistrationType
-        } else {
-            toast.error(res.statusText)
-        }
-    },
-    login: async (email: string, password: string, lang: string) => {
-        const res = await fetch(AUTH_HOST + "login", {
-            method: "POST",
-            body: JSON.stringify({ email, password, lang })
-        })
-        if (res.status === 200) {
-            return (await res.json()) as RegistrationType
-        } else {
-            toast.error(res.statusText)
-        }
-    },
-    me: async (lang: string) => {
-        try {
-            const res = await fetch(AUTH_HOST + `me?lang=${lang}`, {
-                headers: await getHeaderWithToken()
-            })
-            if (res.status === 200) {
-                return (await res.json()) as UserType
-            } else {
-                toast.error(res.statusText)
-            }
-        } catch(e){}
-    },
-    refresh: async () => {
-        try {
-            const refreshToken = await LocalStorage.getItem("refreshToken")
-            if (refreshToken) {
-                const res = await fetch(AUTH_HOST + "refresh", {
-                    method: "POST",
-                    body: JSON.stringify({ refresh: refreshToken })
-                })
-                if (res.status === 200) {
-                    return (await res.json()) as Omit<RegistrationType, "user">
-                } else {
-                    toast.error(res.statusText)
-                }
-            }
-        } catch {}
+// PUT /tournaments
+export async function updateTournament(data: TournamentFormData, tournamentId: number) {
+  const result = await fetcher(TOURNAMENT_HOST, {
+    method: 'PUT',
+    body: JSON.stringify({ ...data, tournamentId }),
+  });
+
+  // Инвалидируем кэш
+  await mutate(`${TOURNAMENT_HOST}/${tournamentId}`);
+
+  return result as TournamentType;
+}
+
+// PATCH /tournaments (status)
+export async function updateTournamentStatus(status: TournamentStatusType, tournamentId: number) {
+  const result = await fetcher(TOURNAMENT_HOST, {
+    method: 'PATCH',
+    body: JSON.stringify({ status, tournamentId }),
+  });
+
+  await mutate(`${TOURNAMENT_HOST}/${tournamentId}`);
+
+  return result as TournamentType;
+}
+
+// DELETE /tournaments
+export async function deleteTournament(tournamentId: number) {
+  const result = await fetcher(TOURNAMENT_HOST, {
+    method: 'DELETE',
+    body: JSON.stringify({ tournamentId }),
+  });
+
+  // Инвалидируем всё
+  await mutate((key) => typeof key === 'string' && key.startsWith(TOURNAMENT_HOST));
+
+  return result as { success: boolean };
+}
+
+export async function uploadImage(formData: FormData, dir: "covers"|"profiles") {
+    const res = await fetcher(UPLOAD_HOST + `/image?dir=${dir}`, {
+        method: "POST",
+        body: formData
+    })
+    if (res.status === 201) {
+        return (await res.json()) as string
+    } else {
+        toast.error(res.statusText)
     }
 }
 
-export const citiesApi = {
-    getAll: async (lang: string) => {
-        const res = await fetch(CITY_HOST + `?lang=${lang}`)
-        if (res.status === 200) {
-            return (await res.json()) as CityType[]
-        } else {
-            toast.error(res.statusText)
-        }
-    },
-    getById: async (id: number) => {
-        const res = await fetch(CITY_HOST + `/${id}`)
-        if (res.status === 200) {
-            return (await res.json()) as CityType
-        } else {
-            toast.error(res.statusText)
-        }
-    }
+// Глобальное состояние access токена (в памяти, не localStorage!)
+let accessToken: string | null = null;
+
+export function setAccessToken(token: string | null) {
+  accessToken = token;
 }
 
-export const clubsApi = {
-    getAll: async () => {
-        const res = await fetch(CLUB_HOST)
-        if (res.status === 200) {
-            return (await res.json()) as ClubType[]
-        }
-    },
-    getById: async (id: number) => {
-        const res = await fetch(CLUB_HOST + `/${id}`)
-        if (res.status === 200) {
-            return (await res.json()) as ClubType
-        } else {
-            toast.error(res.statusText)
-        }
-    }
+export function getAccessToken(): string | null {
+  return accessToken;
 }
 
-export const tournamentsApi = {
-    getAll: async (lang: string, short?: boolean) => {
-        const res = await fetch(TOURNAMENT_HOST + `?lang=${lang}&short=${short}`)
-        if (res.status === 200) {
-            if (short)
-                return (await res.json()) as TournamentShortType[]
-            return (await res.json()) as TournamentType[]
-        } else {
-            toast.error(res.statusText)
-        }
-    },
-    getById: async (id: number, lang: string) => {
-        const res = await fetch(TOURNAMENT_HOST + `/${id}?lang=${lang}`)
-        if (res.status === 200) {
-            return (await res.json()) as TournamentType
-        } else {
-            toast.error(res.statusText)
-            console.error(await res.json())
-        }
-    },
-    create: async (data: TournamentFormData) => {
-        const res = await fetch(TOURNAMENT_HOST, {
-            method: "POST",
-            body: JSON.stringify(data),
-            headers: await getHeaderWithToken()
-        })
-        if (res.status === 201) {
-            return (await res.json()) as TournamentType
-        } else {
-            toast.error(res.statusText)
-        }
-    },
-    update: async (data: TournamentFormData, tournamentId: number) => {
-        const res = await fetch(TOURNAMENT_HOST, {
-            method: "PUT",
-            body: JSON.stringify({ ...data, tournamentId }),
-            headers: await getHeaderWithToken()
-        })
-        if (res.status === 200) {
-            return (await res.json()) as TournamentType
-        } else {
-            toast.error(res.statusText)
-        }
-    },
-    getParticipants: async (tournamentId: number, nominationIds: number[]) => {
-        const res = await fetch(TOURNAMENT_HOST + `/${tournamentId}/participants?nominationIds=${JSON.stringify(nominationIds)}`)
-        if (res.status === 200) {
-            return (await res.json()) as NominationUsersType
-        } else {
-            toast.error(res.statusText)
-        }
-    },
-    getTournamentsByOrganizer: async (uuid: string) => {
-        const res = await fetch(TOURNAMENT_HOST + `/organizer/${uuid}`)
-        if (res.status === 200) {
-            return (await res.json()) as TournamentType[]
-        } else {
-            toast.error(res.statusText)
-        }
-    },
-    delete: async (tournamentId: number) => {
-        const res = await fetch(TOURNAMENT_HOST, {
-            method: "DELETE",
-            body: JSON.stringify({ tournamentId }),
-            headers: await getHeaderWithToken()
-        })
-        if (res.status === 200) {
-            return (await res.json()) as { success: boolean }
-        } else {
-            toast.error(res.statusText)
-        }
-    }
-}
+// Fetcher для useSWR с автоматическим refresh
+export const fetcher = async (url: string, options: RequestInit = {}) => {
+  const token = getAccessToken();
 
-export const weaponsApi = {
-    getWeaponsAll: async () => {
-        const res = await fetch(WEAPON_HOST)
-        if (res.status === 200) {
-            return (await res.json()) as WeaponType[]
-        } else {
-            toast.error(res.statusText)
-        }
+  const res = await fetch(url, {
+    ...options,
+    headers: {
+      ...(options.body ? { 'Content-Type': 'application/json' } : {}),
+      ...(token ? { Authorization: `Bearer ${token}` } : {}),
+      ...options.headers,
     },
-    getNominationsAll: async (lang: string) => {
-        const res = await fetch(NOMINATION_HOST + `?lang=${lang}`)
-        if (res.status === 200) {
-            return (await res.json()) as NominationType[]
-        } else {
-            toast.error(res.statusText)
-        }
-    }
-}
+    credentials: 'include',
+  });
 
-export const uploadsApi = {
-    imageLoad: async (formData: FormData, dir: "covers"|"profiles") => {
-        const res = await fetch(UPLOAD_HOST + `/image?dir=${dir}`, {
-            method: "POST",
-            headers: await getHeaderWithToken(),
-            body: formData
-        })
-        if (res.status === 201) {
-            return (await res.json()) as string
-        } else {
-            toast.error(res.statusText)
-        }
+  // Авто-refresh при 401
+  if (res.status === 401 && !url.includes('/refresh')) {
+    const refreshRes = await fetch(AUTH_HOST + 'refresh', {
+      method: 'POST',
+      credentials: 'include',
+    });
+
+    if (refreshRes.ok) {
+      const data = await refreshRes.json();
+      setAccessToken(data.accessToken);
+
+      // Повторяем оригинальный запрос
+      const retryRes = await fetch(url, {
+        ...options,
+        headers: {
+          ...(options.body ? { 'Content-Type': 'application/json' } : {}),
+          Authorization: `Bearer ${data.accessToken}`,
+          ...options.headers,
+        },
+        credentials: 'include',
+      });
+
+      if (!retryRes.ok) throw new Error('Request failed after refresh');
+      return retryRes.json();
     }
-}
+
+    // Refresh не сработал
+    setAccessToken(null);
+    window.location.href = '/login';
+    throw new Error('Session expired');
+  }
+
+  if (!res.ok) {
+    const error = await res.json().catch(() => ({ message: 'Request failed' }));
+    throw new Error(error.message);
+  }
+
+  return res.json();
+};
+
+// Для публичных endpoint без токена
+export const fetcherPublic = async (url: string) => {
+  const res = await fetch(url, { credentials: 'include' });
+  if (!res.ok) throw new Error('Request failed');
+  return res.json();
+};

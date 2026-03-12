@@ -16,3 +16,5 @@ export const NOMINATION_HOST = `${SERVER_HOST}nominations`
 export const UPLOAD_HOST = `${SERVER_HOST}upload`
 
 export const SERVER_COVER_HOST = `${SERVER_HOST}uploads/images/covers/`
+
+export const PAGE_SIZE_TOURNAMENTS = 10

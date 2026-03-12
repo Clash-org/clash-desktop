@@ -229,5 +229,6 @@
   "status": "状况",
   "realyDeleteTournament": "你确定要删除比赛吗?",
   "emailOrPasswordIncorrect": "电子邮件或密码不正确",
-  "notFieldsFilled": "并非所有字段都填写"
+  "notFieldsFilled": "并非所有字段都填写",
+  "updateStatus": "更新状态"
 }

@@ -1,26 +1,25 @@
 // components/TournamentsList/index.tsx
-import { useState, useEffect } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Calendar, MapPin, ChevronRight } from 'lucide-react';
 import Button from '@/components/Button';
 import Section from '@/components/Section';
 import styles from './index.module.css';
 import { TFunction } from 'i18next';
-import { tournamentsApi } from '@/utils/api';
 import { useAtomValue } from 'jotai';
 import { languageAtom } from '@/store';
 import { TournamentShortType, TournamentStatus } from '@/typings';
 import { formatDate } from '@/utils/helpers';
-import { SERVER_COVER_HOST } from '@/constants';
+import { PAGE_SIZE_TOURNAMENTS, SERVER_COVER_HOST } from '@/constants';
+import { useTournaments } from '@/hooks/useTournaments';
 
 type ContentProps = {
     isPast?: boolean;
     t: TFunction<"translation", undefined>;
     tournaments: TournamentShortType[];
-    visibleCount: number;
 }
 
-function Content({ isPast=false, t, tournaments, visibleCount }:ContentProps) {
+function Content({ isPast=false, t, tournaments }:ContentProps) {
     const handleTournamentClick = (tournamentId: number) => {
         window.location.href = `/tournament?id=${tournamentId}`
     };
@@ -28,7 +27,7 @@ function Content({ isPast=false, t, tournaments, visibleCount }:ContentProps) {
     return (
         <Section title={isPast ? t('pastTournaments') : t('upcomingTournaments')} className={styles.section}>
             <div className={styles.tournamentsGrid}>
-            {tournaments.slice(0, visibleCount).map((tournament) => (
+            {tournaments.map((tournament) => (
                 <div
                 key={tournament.id}
                 className={`${styles.tournamentCard} ${isPast ? styles.pastCard : ""}`}
@@ -82,32 +81,32 @@ function Content({ isPast=false, t, tournaments, visibleCount }:ContentProps) {
 
 export default function TournamentsList() {
   const { t } = useTranslation();
-  const [visibleCount, setVisibleCount] = useState(6);
-  const [tournaments, setTournaments] = useState<TournamentShortType[]>([]);
   const [loading, setLoading] = useState(false);
   const lang = useAtomValue(languageAtom)
+  const [page, setPage] = useState(1)
+  const { tournaments, tournamentsCount } = useTournaments(lang, page, true)
+  const [currentTournaments, setCurrentTournaments] = useState<TournamentShortType[]>([])
 
-  // Моковые данные
-  useEffect(() => {
-    (async ()=>{
-      const res = await tournamentsApi.getAll(lang, true) as TournamentShortType[]|undefined
-      if (res)
-        setTournaments(res);
-    })()
-  }, []);
+  useEffect(()=>{
+    setCurrentTournaments(state=>{
+      if (JSON.stringify(state) !== JSON.stringify(tournaments))
+        return [...state, ...tournaments]
+      return state
+    })
+  }, [page, tournaments])
 
   const loadMore = () => {
     setLoading(true);
     // Имитация загрузки
     setTimeout(() => {
-      setVisibleCount(prev => prev + 6);
+      setPage(page+1);
       setLoading(false);
     }, 800);
   };
 
   const upcomingTournaments: TournamentShortType[] = [];
   const pastTournaments: TournamentShortType[] = [];
-  tournaments.forEach(t=>{
+  currentTournaments.forEach(t=>{
     if (new Date(t.date) >= new Date()) {
       upcomingTournaments.push(t)
     } else {
@@ -124,14 +123,14 @@ export default function TournamentsList() {
       </div>
       <div className={styles.content}>
         {/* Секция предстоящих турниров */}
-        <Content t={t} tournaments={upcomingTournaments} visibleCount={visibleCount} />
+        <Content t={t} tournaments={upcomingTournaments} />
 
         {/* Секция прошедших турниров */}
         {pastTournaments.length > 0 &&
-        <Content isPast t={t} tournaments={pastTournaments} visibleCount={visibleCount} />}
+        <Content isPast t={t} tournaments={pastTournaments} />}
 
         {/* Кнопка "Показать больше" */}
-        {visibleCount < upcomingTournaments.length && (
+        {page * PAGE_SIZE_TOURNAMENTS < tournamentsCount && (
             <div className={styles.loadMoreWrapper}>
             <Button
                 title={t('showMore')}

@@ -1,8 +1,7 @@
-import { SelectOptionType } from "@/typings";
 import Select from "../Select";
-import { Dispatch, SetStateAction, useEffect, useState } from "react";
-import { clubsApi } from "@/utils/api";
+import { Dispatch, SetStateAction } from "react";
 import { useTranslation } from "react-i18next";
+import { useClubs } from "@/hooks/useClubs";
 
 type ClubSelectProps = {
     club?: string;
@@ -14,17 +13,15 @@ type ClubSelectProps = {
 
 export default function CitySelect({ club, clubId, setClub, setClubId, required }:ClubSelectProps) {
     const { t } = useTranslation()
-    const [clubs, setClubs] = useState<SelectOptionType[]>([])
+    const { clubs } = useClubs()
 
-    useEffect(()=>{
-        (async ()=>{
-            const resClubs = await clubsApi.getAll()
-            if (resClubs) {
-                const selectClubs = Array<SelectOptionType>(resClubs.length)
-                resClubs.forEach((club, i)=>{selectClubs[i] = { label: club.title, value: club.id }})
-                setClubs(selectClubs)
-            }
-        })()
-    }, [])
-    return <Select required={required} placeholder={t("club")} value={clubId} setValue={setClubId} inputValue={club} setInputValue={setClub} options={clubs} />
+    return <Select
+           required={required}
+           placeholder={t("club")}
+           value={clubId}
+           setValue={setClubId}
+           inputValue={club}
+           setInputValue={setClub}
+           options={clubs.map(club=>({ label: club.title, value: club.id }))}
+           />
 }

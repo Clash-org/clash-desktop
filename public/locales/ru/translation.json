@@ -229,5 +229,6 @@
   "status": "Статус",
   "realyDeleteTournament": "Вы точно хотите удалить турнир?",
   "emailOrPasswordIncorrect": "Email или пароль неверны",
-  "notFieldsFilled": "Не все поля заполнены"
+  "notFieldsFilled": "Не все поля заполнены",
+  "updateStatus": "Обновить статус"
 }

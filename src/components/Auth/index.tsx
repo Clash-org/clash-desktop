@@ -1,6 +1,5 @@
 import { languageAtom, userAtom } from "@/store";
 import { Gender, RegistrationType } from "@/typings";
-import { registrationApi } from "@/utils/api";
 import { LocalStorage } from "@/utils/helpers";
 import Button from "@components/Button";
 import InputText from "@components/InputText";
@@ -11,8 +10,10 @@ import { useTranslation } from "react-i18next";
 import { GenderSwitch } from "../GenderSwitch";
 import CitySelect from "../CitySelect";
 import ClubSelect from "../ClubSelect";
+import { useAuth } from "@/hooks/useAuth";
 
 export default function Auth({ profileActivate, onClose }:{ profileActivate: ()=>void; onClose: ()=>void; }) {
+    const { register, login } = useAuth()
     const { t } = useTranslation()
     const [isLogin, setIsLogin] = useState(true)
     const [username, setUsername] = useState("")
@@ -29,13 +30,12 @@ export default function Auth({ profileActivate, onClose }:{ profileActivate: ()=
 
     const userSetter = async (res: RegistrationType) => {
         await LocalStorage.setItem("accessToken", res.accessToken)
-        await LocalStorage.setItem("refreshToken", res.refreshToken)
         setUser(res.user)
     }
     const authHandler = async () => {
         if (isLogin) {
             if (email && password) {
-                const res = await registrationApi.login(email, password, lang)
+                const res = await login(email, password, lang)
                 if (res) {
                     await userSetter(res)
                     // profileActivate()
@@ -46,7 +46,7 @@ export default function Auth({ profileActivate, onClose }:{ profileActivate: ()=
             }
         } else {
             if (username && email && password) {
-                const res = await registrationApi.createUser(email, username, password, cityId||null, clubId||null, Boolean(gender), lang, city, club)
+                const res = await register(email, username, password, cityId||null, clubId||null, Boolean(gender), lang, city, club)
                 if (res) {
                     await userSetter(res)
                     profileActivate()

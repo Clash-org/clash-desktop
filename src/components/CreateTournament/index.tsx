@@ -21,29 +21,32 @@ import Switch from '@/components/Switch';
 import styles from './index.module.css';
 import Checkbox from '../Checkbox';
 import ModalWindow from '../ModalWindow';
-import { CityType, NominationType, TournamentFormData, TournamentStatus, TournamentType, WeaponType } from '@/typings';
-import { citiesApi, tournamentsApi, uploadsApi, weaponsApi } from '@/utils/api';
+import { TournamentFormData, TournamentStatus, TournamentType, WeaponType } from '@/typings';
+import { createTournament, deleteTournament, updateTournament, updateTournamentStatus, uploadImage } from '@/utils/api';
 import ImageUploader from '@/ImageUploader';
 import toast from 'react-hot-toast';
 import { useAtomValue } from 'jotai';
 import { languageAtom, userAtom } from '@/store';
 import { SERVER_COVER_HOST } from '@/constants';
-import { translateStatus } from '@/utils/helpers';
+import { capitalizeFirstLetter, translateStatus } from '@/utils/helpers';
+import { useCities } from '@/hooks/useCities';
+import { useOrganizerTournaments } from '@/hooks/useTournaments';
+import { useNominations } from '@/hooks/useNominations';
 
 export default function CreateTournament() {
   const { t } = useTranslation();
+  const lang = useAtomValue(languageAtom)
+  const user = useAtomValue(userAtom)
+  const { cities } = useCities(lang)
+  const { tournaments } = useOrganizerTournaments(user!.id)
+  const { nominations } = useNominations(lang)
   const [currentStep, setCurrentStep] = useState(1);
-  const [cities, setCities] = useState<CityType[]>([]);
   const [weapons, setWeapons] = useState<WeaponType[]>([]);
-  const [nominations, setNominations] = useState<NominationType[]>([]);
-  const [tournaments, setTournaments] = useState<TournamentType[]>([]);
   const [currentTournament, setCurrentTournament] = useState<TournamentType>();
   const [socialLink, setSocialLink] = useState('');
   const [showMarkdown, setShowMarkdown] = useState(false);
   const [showDelete, setShowDelete] = useState(false);
   const [cover, setCover] = useState<FormData>(new FormData())
-  const lang = useAtomValue(languageAtom)
-  const user = useAtomValue(userAtom)
 
   const defaultTournametData: TournamentFormData = {
     title: '',
@@ -64,23 +67,13 @@ export default function CreateTournament() {
 
   useEffect(() => {
     (async ()=>{
-        const resCities = await citiesApi.getAll(lang)
-        if (resCities)
-            setCities(resCities)
-        const resNominations = await weaponsApi.getNominationsAll(lang)
-        if (resNominations) {
+        if (nominations) {
           let weapons: WeaponType[] = []
-          resNominations.forEach(nom=>{
+          nominations.forEach(nom=>{
             weapons.push(nom.weapon)
           })
           weapons = Array.from(new Map(weapons.map(item => [item.id, item])).values())
-          setNominations(resNominations)
           setWeapons(weapons)
-        }
-        if (user) {
-          const resTournaments = await tournamentsApi.getTournamentsByOrganizer(user.id)
-          if (resTournaments)
-            setTournaments(resTournaments)
         }
     })()
   }, []);
@@ -144,18 +137,18 @@ export default function CreateTournament() {
 
     if (currentTournament) {
       if (cover.get("image"))
-        await uploadsApi.imageLoad(cover, "covers")
+        await uploadImage(cover, "covers")
       const newName = getNewImageName(formData.image)
-      const res = await tournamentsApi.update({ ...formData, image: newName }, currentTournament.id)
+      const res = await updateTournament({ ...formData, image: newName }, currentTournament.id)
       if (res) {
         toast.success(t("dataUpdated"))
         setCurrentTournament(res)
       }
     } else {
       if (cover.get("image"))
-        await uploadsApi.imageLoad(cover, "covers")
+        await uploadImage(cover, "covers")
       const newName = getNewImageName(formData.image)
-      const data = await tournamentsApi.create({ ...formData, image: newName })
+      const data = await createTournament({ ...formData, image: newName })
       if (data) {
         toast.success(t("tournamentCreated"))
         setFormData(defaultTournametData)
@@ -246,6 +239,8 @@ export default function CreateTournament() {
               onClick={()=>{setCurrentTournament(undefined); setFormData(defaultTournametData)}}
               />
               }
+              {currentTournament &&
+              <>
               <Select
               placeholder={t("status")}
               options={Object.values(TournamentStatus).map(s=>({ label: translateStatus(s, lang), value: s }))}
@@ -253,10 +248,22 @@ export default function CreateTournament() {
               setValue={(val)=>handleInputChange("status", val)}
               />
               <Button
+              title={t("updateStatus")}
+              onClick={async ()=>{
+                const res = await updateTournamentStatus(formData.status, currentTournament.id)
+                if (res) {
+                  setCurrentTournament(res)
+                  toast.success(capitalizeFirstLetter(t("updated")))
+                }
+              }}
+              />
+              <Button
               stroke
               title={t("delete")}
               onClick={()=>setShowDelete(true)}
               />
+              </>
+              }
             </div>
             }
             <div className={styles.formGroup}>
@@ -504,7 +511,7 @@ export default function CreateTournament() {
       </ModalWindow>
       <ModalWindow isOpen={showDelete} onClose={()=>setShowDelete(false)}>
           <Section title={t("realyDeleteTournament")}>
-            <Button onClick={()=>{ tournamentsApi.delete(currentTournament!.id); setCurrentTournament(undefined) }}>
+            <Button onClick={()=>{ deleteTournament(currentTournament!.id); setCurrentTournament(undefined) }}>
               <Trash2 color="var(--fg)" />
             </Button>
           </Section>

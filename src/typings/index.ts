@@ -65,7 +65,6 @@ export type UserType = {
 
 export type RegistrationType = {
   accessToken: string;
-  refreshToken: string;
   user: UserType
 }
 

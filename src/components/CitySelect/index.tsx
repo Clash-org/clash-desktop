@@ -1,10 +1,9 @@
-import { SelectOptionType } from "@/typings";
 import Select from "../Select";
-import { Dispatch, SetStateAction, useEffect, useState } from "react";
-import { citiesApi } from "@/utils/api";
+import { Dispatch, SetStateAction } from "react";
 import { useAtomValue } from "jotai";
 import { languageAtom } from "@/store";
 import { useTranslation } from "react-i18next";
+import { useCities } from "@/hooks/useCities";
 
 type CitySelectProps = {
     city?: string;
@@ -16,18 +15,16 @@ type CitySelectProps = {
 
 export default function CitySelect({ city, cityId, setCity, setCityId, required }:CitySelectProps) {
     const { t } = useTranslation()
-    const [cities, setCities] = useState<SelectOptionType[]>([])
     const lang = useAtomValue(languageAtom)
+    const { cities } = useCities(lang)
 
-    useEffect(()=>{
-        (async ()=>{
-            const resCities = await citiesApi.getAll(lang)
-            if (resCities) {
-                const selectCities = Array<SelectOptionType>(resCities.length)
-                resCities.forEach((city, i)=>{selectCities[i] = { label: city.title, value: city.id }})
-                setCities(selectCities)
-            }
-        })()
-    }, [])
-    return <Select required={required} placeholder={t("city")} value={cityId} setValue={setCityId} inputValue={city} setInputValue={setCity} options={cities} />
+    return <Select
+            required={required}
+            placeholder={t("city")}
+            value={cityId}
+            setValue={setCityId}
+            inputValue={city}
+            setInputValue={setCity}
+            options={cities.map(city=>({ label: city.title, value: city.id }))}
+            />
 }
