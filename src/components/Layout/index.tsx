@@ -1,43 +1,23 @@
 // components/Layout/index.tsx
-import { Network, Radio, ScrollText, Settings, Timer, Trophy, User } from "lucide-react";
+import { Boxes, Network, Radio, ScrollText, Settings, Timer, Trophy, User } from "lucide-react";
 import styles from "./index.module.css"
-import Setting from "../Settings";
-import Fight from "../Fight";
-import Grid from "../Grid";
 import { useState, useEffect, CSSProperties } from "react";
-import FightViewerWindow from "../FightViewerWindow";
 import { storage } from "@/utils/storage";
 import ModalWindow from "../ModalWindow";
 import DirectP2P from "../DirectP2P";
 import Button from "../Button";
 import Auth from "../Auth";
-import { useAtom, useAtomValue } from "jotai";
+import { useAtom } from "jotai";
 import { languageAtom, userAtom } from "@/store";
-import Profile from "../Profile";
-import TournamentsList from "../TournamentsList";
-import Tournament from "../Tournament";
-import CreateTournament from "../CreateTournament";
 import { useMe } from "@/hooks/useAuth";
+import { initPage, PageRenderer, Pages } from "@/hooks/usePage";
 
-enum Pages {
-    SETTINGS,
-    TIMER,
-    GRID,
-    TIMER_VIEW,
-    PROFILE,
-    TOURNAMENTS_LIST,
-    TOURNAMENTS_CREATE,
-    TOURNAMENT
-}
-
-export default function Layout() {
-    const [page, setPage] = useState<Pages>(Pages.SETTINGS);
-    const [isStorageReady, setIsStorageReady] = useState(false);
+function LayoutContent() {
+    const { page, setPage, params, goBack } = initPage()
     const [showP2P, setShowP2P] = useState(false);
     const [showAuth, setShowAuth] = useState(false);
-    const [tournamentId, setTournamentId] = useState<number|null>(null)
     const [user, setUser] = useAtom(userAtom)
-    const lang = useAtomValue(languageAtom)
+    const [lang] = useAtom(languageAtom)
     const { user: userData } = useMe(lang)
 
     const profileHandler = () => {
@@ -48,22 +28,13 @@ export default function Layout() {
         }
     }
 
+    useEffect(()=>{
+        if (userData)
+            setUser(userData)
+    }, [userData])
+
     // Проверяем URL параметры при загрузке
     useEffect(() => {
-        const params = new URLSearchParams(window.location.search);
-        if (params.get('view') === 'true') {
-            setPage(Pages.TIMER_VIEW);
-        } else if (params.get("id") !== null && window.location.pathname === "/tournament") {
-            setTournamentId(Number(params.get("id")))
-            setPage(Pages.TOURNAMENT)
-        }
-        (async ()=>{
-            await storage.init()
-            if (userData)
-                setUser(userData)
-            setIsStorageReady(true)
-        })()
-
         const handleKeyDown = (event: KeyboardEvent) => {
           const { code, target } = event;
           // Проверяем, не находится ли фокус на интерактивном элементе
@@ -80,16 +51,16 @@ export default function Layout() {
             return; // Позволяем стандартному поведению Tab сработать
           }
 
-          if (code === "Tab") {
-            event.preventDefault();
-            setPage(state=>{
-                if (state === Pages.SETTINGS)
-                    return Pages.TIMER
-                else if (state === Pages.TIMER)
-                    return Pages.GRID
-                return Pages.SETTINGS
-            })
-          }
+            if (code === "Tab") {
+                event.preventDefault();
+                if (page === Pages.SETTINGS) {
+                    setPage(Pages.TIMER);
+                } else if (page === Pages.TIMER) {
+                    setPage(Pages.GRID);
+                } else {
+                    setPage(Pages.SETTINGS);
+                }
+            }
         };
 
         document.addEventListener('keydown', handleKeyDown);
@@ -99,38 +70,15 @@ export default function Layout() {
         };
     }, []);
 
-    const renderPage = () => {
-        switch(page) {
-            case Pages.SETTINGS:
-                return <Setting />;
-            case Pages.TIMER:
-                return <Fight />;
-            case Pages.PROFILE:
-                return <Profile />;
-            case Pages.TIMER_VIEW:
-                return <FightViewerWindow />
-            case Pages.GRID:
-                return <Grid fightActivate={()=>setPage(Pages.TIMER)} />;
-            case Pages.TOURNAMENTS_LIST:
-                return <TournamentsList />
-            case Pages.TOURNAMENT:
-                return <Tournament id={tournamentId} />
-            case Pages.TOURNAMENTS_CREATE:
-                return <CreateTournament />
-            default:
-                return <Setting />;
-        }
-    }
-
     // В окне просмотра скрываем навигацию
     const isViewerMode = page === Pages.TIMER_VIEW;
     const btnStyle: CSSProperties = { minWidth: "8px", width: "50px", padding: "10px 10px" }
-    const absoluteBtnStyle: CSSProperties = { ...btnStyle, position: "absolute", top: "12px", right: "15px" }
-    return isStorageReady && (
+    const wrapBtns: (left?: boolean)=>CSSProperties = (left=true) => ({ position: "absolute", [left ? "left" : "right"]: "15px", top: "12px", width: "fit-content" })
+    return (
         <div style={{ background: "var(--bg)" }}>
             {!isViewerMode && (
                 <header className={styles.header}>
-                    <div className={styles.nav} style={{ position: "absolute", left: "15px", width: "fit-content" }}>
+                    <div className={styles.nav} style={wrapBtns()}>
                         <Button stroke={page !== Pages.PROFILE} onClick={profileHandler} style={btnStyle}>
                             <User size={28} color="var(--fg)" />
                         </Button>
@@ -142,37 +90,40 @@ export default function Layout() {
                         </Button>
                     </div>
                     <nav className={styles.nav}>
-                        <button
+                        <fieldset
                             className={`${styles.navButton} ${page === Pages.SETTINGS ? styles.active : ''}`}
                             onClick={() => setPage(Pages.SETTINGS)}
-                            aria-label="Настройки"
                         >
                             <Settings size={28} />
-                        </button>
+                        </fieldset>
 
-                        <button
+                        <fieldset
                             className={`${styles.navButton} ${page === Pages.TIMER ? styles.active : ''}`}
                             onClick={() => setPage(Pages.TIMER)}
-                            aria-label="Таймер"
                         >
                             <Timer size={28} />
-                        </button>
+                        </fieldset>
 
-                        <button
+                        <fieldset
                             className={`${styles.navButton} ${page === Pages.GRID ? styles.active : ''}`}
                             onClick={() => setPage(Pages.GRID)}
-                            aria-label="Сетка"
                         >
                             <Network size={28} />
-                        </button>
+                        </fieldset>
                     </nav>
-                    <Button stroke onClick={()=>setShowP2P(!showP2P)} style={absoluteBtnStyle}>
-                        <Radio size={28} color="var(--fg)" />
-                    </Button>
+                    <div className={styles.nav} style={wrapBtns(false)}>
+                        <Button stroke onClick={()=>setPage(Pages.SERVERS)} style={btnStyle}>
+                            <Boxes size={28} color="var(--fg)" strokeWidth={1.5} />
+                        </Button>
+                        <Button stroke onClick={()=>setPage(Pages.SERVERS)} style={btnStyle}>
+                            <Radio size={28} color="var(--fg)" />
+                        </Button>
+                        <Button stroke onClick={()=>setShowP2P(!showP2P)} style={{...btnStyle, minHeight: "25px", height: "50px"}} title="P2P" />
+                    </div>
                 </header>
             )}
             {/* Рендерим только активную страницу */}
-            {renderPage()}
+            <PageRenderer page={page} setPage={setPage} goBack={goBack} params={params} />
             <ModalWindow isOpen={showP2P} onClose={()=>setShowP2P(!showP2P)} style={{ maxWidth: "38rem" }} hidden>
                 <DirectP2P />
             </ModalWindow>
@@ -181,4 +132,20 @@ export default function Layout() {
             </ModalWindow>
         </div>
     )
+}
+
+export default function Layout() {
+    const [isStorageReady, setIsStorageReady] = useState(false);
+
+    useEffect(() => {
+        const params = new URLSearchParams(window.location.search);
+        if (params.get('view') === 'true') {
+            // Используем глобальный метод для установки страницы или просто игнорируем
+        }
+        storage.init().then(() => setIsStorageReady(true));
+    }, []);
+
+    if (!isStorageReady) return null;
+
+    return <LayoutContent key="layout" />;
 }

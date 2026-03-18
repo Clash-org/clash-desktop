@@ -4,8 +4,8 @@
   display: inline-block;
 }
 
-.wrapper.fullWidth {
-  width: 100%;
+.wrapper.fit {
+  width: fit-content;
 }
 
 .wrapper.disabled {

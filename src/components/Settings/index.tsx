@@ -48,8 +48,12 @@ import {
   warnings1Atom,
   warnings2Atom,
   playoffAtom,
+  userAtom,
+  currentTournamentAtom,
+  currentWeaponIdAtom,
+  currentNominationIdAtom
 } from "@store";
-import { ParticipantType, TournamentSystem } from "@typings";
+import { NominationUser, ParticipantStatus, ParticipantType, TournamentStatus, TournamentSystem } from "@typings";
 import { langLabels } from "@constants";
 import toast from "react-hot-toast";
 import Switch from "@/components/Switch";
@@ -61,6 +65,10 @@ import { importExcel } from "@/utils/importExcel";
 import { openFightViewerWindow } from "@/utils/windowManager";
 import { storage } from "@/utils/storage";
 import RadioGroup from "@/components/RadioGroup";
+import { useParticipants } from "@/hooks/useParticipants";
+import { useOrganizerTournaments } from "@/hooks/useTournaments";
+import Select from "../Select";
+import WeaponNominationsSelect from "../WeaponNominationsSelect";
 
 type TrashPairProps = {
   setFighterPairs: React.Dispatch<React.SetStateAction<ParticipantType[][][]>>;
@@ -221,6 +229,7 @@ function PoolControllers({
 function App() {
   const { t, i18n } = useTranslation();
   /* ---------- атомы ---------- */
+  const [user] = useAtom(userAtom);
   const [poolCountDelete, setPoolCountDelete] = useAtom(poolCountDeleteAtom);
   const [isPoolRating, setIsPoolRating] = useAtom(isPoolRatingAtom);
   const [fightTime, setFightTime] = useAtom(fightTimeAtom);
@@ -244,8 +253,15 @@ function App() {
   const [, setScore1] = useAtom(score1Atom);
   const [, setScore2] = useAtom(score2Atom);
   const [, setHistory] = useAtom(historyAtom)
+  const [currentTournament, setCurrentTournament] = useAtom(currentTournamentAtom)
+  const [weaponId, setWeaponId] = useAtom(currentWeaponIdAtom)
+  const [nominationId, setNominationId] = useAtom(currentNominationIdAtom)
+
+  const { tournaments } = useOrganizerTournaments(user?.id || null, language)
+  const { participants: tournamentParticipants } = useParticipants(currentTournament?.id || null, currentTournament?.nominationsIds || [])
 
   /* ---------- состояние ---------- */
+  const [currentTournamentParticipants, setCurrentTournamentParticipants] = useState<NominationUser[]>([])
   const [newName, setNewName] = useState("");
   const [isSounds, setIsSounds] = useState(true);
   const hotKeysActions = [
@@ -275,6 +291,12 @@ function App() {
       value: TournamentSystem.SWISS
     }
   ]
+
+  useEffect(()=>{
+    if (tournamentParticipants && nominationId && tournamentParticipants[nominationId]) {
+      setCurrentTournamentParticipants(tournamentParticipants[nominationId])
+    }
+  }, [nominationId])
   /* ---------- загрузка ---------- */
   useEffect(() => {
     (async () => {
@@ -287,7 +309,7 @@ function App() {
           storage.get<boolean>("isSounds"),
           storage.get<boolean>("isPoolRating"),
           storage.get<number>("poolCountDelete"),
-          storage.get<string>("language"),
+          storage.get<string>("language")
         ]);
 
         if (t) setFightTime(t);
@@ -303,8 +325,7 @@ function App() {
           await i18n.changeLanguage(lang);
         }
       } catch (error) {
-        console.error("❌ Failed to load settings:", error);
-        toast.error("Failed to load settings");
+        toast.error(t("settingsLoadError"));
       }
     })();
   }, []);
@@ -378,7 +399,7 @@ function App() {
         }
         setPools((p) => {
           const b = [...p];
-          b[currentPoolIndex] = buf[currentPoolIndex];
+          b[currentPoolIndex] = [...buf[currentPoolIndex]];
           return b;
         });
         return buf
@@ -388,26 +409,31 @@ function App() {
     }))
   }
 
-  const addParticipant = () => {
-    const name = newName.trim();
+  const addParticipant = (nameProp = "", id="", club="") => {
+    if (nameProp && id)
+      setCurrentTournamentParticipants(state=>state.filter(s=>s.id !== id))
+    const name = nameProp || newName.trim();
     if (!name) return;
     setParticipants((state) => {
       const buf = [...state];
       buf[currentPoolIndex] = [
         ...buf[currentPoolIndex],
-        { ...fighterDefault, name, id: generateId(name) },
+        { ...fighterDefault, name, id: id || generateId(name), club },
       ];
       return buf;
     });
     setNewName("");
   };
 
-  const removeParticipant = (idx: number) =>
+  const removeParticipant = (id: string) => {
+    if (nominationId && tournamentParticipants)
+      setCurrentTournamentParticipants(state=>[...state, tournamentParticipants[nominationId].find(user=>user.id === id)!].filter(Boolean))
     setParticipants((state) => {
       const buf = [...state];
-      buf[currentPoolIndex] = buf[currentPoolIndex].filter((_, i) => i !== idx);
+      buf[currentPoolIndex] = buf[currentPoolIndex].filter(p => p.id !== id);
       return buf;
     });
+  }
 
   const genPairs = () => {
     let newParticipants = [...participants];
@@ -428,7 +454,7 @@ function App() {
 
       setPools((state) => {
         const buf = [...state];
-        buf[currentPoolIndex] = pairs[currentPoolIndex];
+        buf[currentPoolIndex] = [...pairs[currentPoolIndex]];
         return buf;
       });
     }, true)
@@ -453,7 +479,7 @@ function App() {
       await mkdir(destDir, { recursive: true });
       // 3. Копируем
       await copyFile(sourcePath, destPath);
-      toast.success(`Трек загружен:\n${destPath}`);
+      toast.success(t("fileImportSuccess"));
       storage.set(`${type}Sound`, destPath);
     } catch (err) {
       // @ts-ignore
@@ -538,6 +564,43 @@ function App() {
           </button>
         </div>
 
+        {!!tournaments.length &&
+        (
+          <Section title={t("tournaments")}>
+            <Select
+              placeholder={t("yourTournamets")}
+              setValue={(val)=>setCurrentTournament(JSON.parse(val))}
+              value={JSON.stringify(currentTournament)}
+              options={tournaments.filter(t=>t.status === TournamentStatus.ACTIVE).map(t=>({ label: t.title, value: JSON.stringify(t) }))}
+            />
+            {currentTournament &&
+            <>
+            <WeaponNominationsSelect
+            nominations={currentTournament.nominations}
+            weaponId={weaponId}
+            nominationId={nominationId}
+            setNominationId={setNominationId}
+            setWeaponId={setWeaponId}
+            />
+            {tournamentParticipants && nominationId &&
+            <>
+            <span style={{ marginTop: "10px" }}>{t("participants")}</span>
+            {currentTournamentParticipants?.filter(p=>p.status === ParticipantStatus.CONFIRMED).map((p, idx)=>
+              <div key={idx} className={styles.participantRow}>
+                <span className={styles.participantTxt}>{p.username}</span>
+                <button onClick={()=>addParticipant(p.username, p.id, p.club.title)}>
+                  <Plus size={22} color="var(--fg)" />
+                </button>
+              </div>
+            )}
+            </>
+            }
+            </>
+            }
+          </Section>
+        )
+        }
+
         {/* --- 1. Участники --- */}
         <Section title={t("participants")}>
           <>
@@ -549,7 +612,7 @@ function App() {
 
             <Button
               className={styles.addBtn}
-              onClick={addParticipant}
+              onClick={()=>addParticipant()}
             >
               <Plus size={28} color="var(--fg)" />
             </Button>
@@ -558,7 +621,7 @@ function App() {
               <div key={idx} className={styles.participantRow}>
                 <span className={styles.participantTxt}>{p.name}</span>
                 <button
-                  onClick={() => removeParticipant(idx)}
+                  onClick={() => removeParticipant(p.id)}
                   style={{
                     background: "none",
                     border: "none",
@@ -619,6 +682,8 @@ function App() {
           currentPairIndex={currentPairIndex[currentPoolIndex]}
           selectPair={selectPair}
           onPairsReordered={setFighterPairs}
+          setPools={setPools}
+          onDeletePair={(id1, id2)=>{ removeParticipant(id1); removeParticipant(id2) }}
           manualMode
         />
         {/* --- 2. Длительность --- */}
@@ -738,7 +803,7 @@ function App() {
                 setСurrentPoolIndex={setСurrentPoolIndex}
                 setParticipants={setParticipants}
               />
-              {pairs.map((pair, idx) => (
+              {pairs?.map((pair, idx) => (
                 <span key={idx}>
                   {`${getName(pair[0].name)} VS ${getName(pair[1].name)}`}
                 </span>

@@ -1,5 +1,5 @@
 // store.ts
-import { LangType, ParticipantPlayoffType, ParticipantType, TournamentSystem, UserType } from '@/typings';
+import { LangType, ParticipantPlayoffType, ParticipantType, TournamentSystem, TournamentType, UserType } from '@/typings';
 import { generateId } from '@/utils/helpers';
 import { atom } from 'jotai';
 
@@ -89,3 +89,9 @@ export const playoffMatchIndexAtom = atom(0);
 export const participantsAtom = atom<ParticipantType[][]>([[]])
 
 export const userAtom = atom<UserType|undefined>()
+
+export const currentTournamentAtom = atom<TournamentType>()
+
+export const currentWeaponIdAtom = atom<number>()
+
+export const currentNominationIdAtom = atom<number>()

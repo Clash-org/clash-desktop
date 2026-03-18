@@ -1,19 +1,19 @@
-import { AUTH_HOST } from '@/constants';
 import { LangType, RegistrationType, UserType } from '@/typings';
 import { getAccessToken, setAccessToken } from '@/utils/api';
 import { useState, useCallback, useEffect } from 'react';
 import useSWR from 'swr';
 import { fetcher } from '@/utils/api';
 import toast from 'react-hot-toast';
+import { useApi } from './useApi';
 
 export function useAuth() {
   const [isAuthenticated, setIsAuthenticated] = useState(() => !!getAccessToken());
-
+  const { api } = useApi()
   // Авто-восстановление сессии при загрузке
   useEffect(() => {
     const restoreSession = async () => {
       try {
-        const res = await fetch(AUTH_HOST + 'refresh', {
+        const res = await fetch(api.auth + 'refresh', {
           method: 'POST',
           credentials: 'include',
         });
@@ -45,7 +45,7 @@ export function useAuth() {
     cityName?: string,
     clubName?: string
   ): Promise<RegistrationType | undefined> => {
-    const res = await fetch(AUTH_HOST + 'register', {
+    const res = await fetch(api.auth + 'register', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       credentials: 'include',
@@ -62,13 +62,13 @@ export function useAuth() {
       return data;
     } else {
       const error = await res.json();
-      throw new Error(error.message || 'Registration failed');
+      toast.error(error.message || res.statusText)
     }
   }, []);
 
   // POST /auth/login
   const login = useCallback(async (email: string, password: string, lang: LangType): Promise<RegistrationType | undefined> => {
-    const res = await fetch(AUTH_HOST + 'login', {
+    const res = await fetch(api.auth + 'login', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       credentials: 'include',
@@ -81,15 +81,14 @@ export function useAuth() {
       setIsAuthenticated(true);
       return data;
     } else {
-        toast.error(res.statusText)
-    //   const error = await res.json();
-    //   throw new Error(error.message || 'Login failed');
+      const error = await res.json();
+      toast.error(error.message || res.statusText)
     }
   }, []);
 
   // POST /auth/refresh (используется в fetcher, но можно и явно)
   const refresh = useCallback(async (): Promise<{ accessToken: string } | undefined> => {
-    const res = await fetch(AUTH_HOST + 'refresh', {
+    const res = await fetch(api.auth + 'refresh', {
       method: 'POST',
       credentials: 'include',
     });
@@ -103,7 +102,7 @@ export function useAuth() {
 
   // POST /auth/logout
   const logout = useCallback(async () => {
-    await fetch(AUTH_HOST + 'logout', {
+    await fetch(api.auth + 'logout', {
       method: 'POST',
       credentials: 'include',
     });
@@ -125,9 +124,9 @@ export function useAuth() {
 // GET /auth/me через useSWR (авто-обновление данных пользователя)
 export function useMe(lang: string) {
   const token = getAccessToken();
-
+  const { api } = useApi()
   const { data, error, isLoading, mutate } = useSWR(
-    token ? `${AUTH_HOST}me?lang=${lang}` : null,
+    token ? `${api.auth}me?lang=${lang}` : null,
     fetcher,
     {
       revalidateOnFocus: true,

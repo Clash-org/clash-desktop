@@ -1,24 +1,25 @@
 import useSWR from 'swr';
 import { fetcher } from '@/utils/api';
-import { TOURNAMENT_HOST } from '@/constants';
 import { NominationUsersType } from '@/typings';
+import { useApi } from './useApi';
 
 export function useParticipants(
   tournamentId: number | null,
   nominationIds: number[]
 ) {
+  const { api } = useApi()
   // Формируем URL только если есть id и nominationIds
   const query = nominationIds.length > 0
-    ? `?nominationIds=${encodeURIComponent(JSON.stringify(nominationIds))}`
+    ? `?nominationIds=${JSON.stringify(nominationIds)}`
     : '';
 
   const url = tournamentId
-    ? `${TOURNAMENT_HOST}/${tournamentId}/participants${query}`
+    ? `${api.tournaments}/${tournamentId}/participants${query}`
     : null;
 
   const { data, error, isLoading, mutate } = useSWR<NominationUsersType>(
     url,
-    fetcher,
+    url=>fetcher(url, {}, true),
     {
       revalidateOnFocus: false,
       errorRetryCount: 3,

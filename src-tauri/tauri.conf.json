@@ -28,6 +28,16 @@
   "bundle": {
     "active": true,
     "targets": "all",
+    "linux": {
+        "deb": {
+          "depends": ["webkit2gtk"]
+        },
+        "appimage": {}
+    },
+    "macOS": {
+      "frameworks": [],
+      "minimumSystemVersion": "10.15"
+    },
     "icon": [
       "icons/32x32.png",
       "icons/128x128.png",

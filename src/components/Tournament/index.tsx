@@ -4,18 +4,19 @@ import {
   Calendar, MapPin, Users, Sword,
   CheckCircle, Circle,
   ChevronRight,
-  UsersRound
+  UsersRound,
+  Ban
 } from 'lucide-react';
 import Button from '@/components/Button';
 import Section from '@/components/Section';
 import ModalWindow from '@/components/ModalWindow';
 import styles from './index.module.css';
-import { NominationUsersType, ParticipantStatus, TournamentStatus } from '@/typings';
+import { ParticipantStatus, TournamentStatus } from '@/typings';
 import SocialMedias from '../SocialMedias';
 import remarkGfm from 'remark-gfm';
 import Markdown from 'react-markdown'
 import { useAtomValue } from 'jotai';
-import { languageAtom } from '@/store';
+import { languageAtom, userAtom } from '@/store';
 import Checkbox from '../Checkbox';
 import Tabs from '../Tabs';
 import { getSymbolCurrencyByCode } from '@/utils/helpers';
@@ -25,10 +26,13 @@ import CitySelect from '../CitySelect';
 import Icon from '../Icon';
 import { useTournament } from '@/hooks/useTournaments';
 import { useParticipants } from '@/hooks/useParticipants';
+import { addParticipant, addParticipantInfo } from '@/utils/api';
+import toast from 'react-hot-toast';
 
 export default function Tournament({ id }:{id: number|null}) {
   const { t } = useTranslation();
   const lang = useAtomValue(languageAtom)
+  const user = useAtomValue(userAtom)
   const { tournament: tournamentData } = useTournament(id, lang)
   const { participants } = useParticipants(id, tournamentData?.nominationsIds||[])
   const [activeTab, setActiveTab] = useState('tournament');
@@ -37,13 +41,49 @@ export default function Tournament({ id }:{id: number|null}) {
   const [selectedNominations, setSelectedNominations] = useState<number[]>([]);
   const [additionsFields, setAdditionsFields] = useState({
     trainerName: "",
-    age: 18,
+    age: "",
     cityId: undefined,
     fullName: "",
     phone: "",
     otherContacts: "",
     weaponsRental: {} as {[weapon: string]: boolean}
   })
+
+  const isAdditionsFill = () => {
+    let result = false
+
+    if (additionsFields.trainerName && additionsFields.age && tournamentData?.isAdditions["isChildlike"]) {
+      result = true
+    } else {
+      return false
+    }
+
+    if (additionsFields.cityId && tournamentData.isAdditions["isCity"]) {
+      result = true
+    } else {
+      return false
+    }
+
+    if (additionsFields.fullName && tournamentData.isAdditions["isFullName"]) {
+      result = true
+    } else {
+      return false
+    }
+
+    if (additionsFields.otherContacts && tournamentData.isAdditions["isOtherContacts"]) {
+      result = true
+    } else {
+      return false
+    }
+
+    if (additionsFields.phone && tournamentData.isAdditions["isPhone"]) {
+      result = true
+    } else {
+      return false
+    }
+
+    return result
+  }
 
   useEffect(()=>{
     (async ()=>{
@@ -55,7 +95,7 @@ export default function Tournament({ id }:{id: number|null}) {
     })()
   }, [])
   if (!tournamentData) return
-  const tabs = ['tournament', 'nominations', 'applications', new Date(tournamentData.date) >= new Date() ? 'registration' : ""].filter(Boolean)
+  const tabs = ['tournament', 'nominations', 'applications', new Date(tournamentData.date) >= new Date() && tournamentData.status !== TournamentStatus.COMPLETED ? 'registration' : ""].filter(Boolean)
 
   const nominations = tournamentData.nominations.map(nom=>({
     id: nom.id,
@@ -82,19 +122,26 @@ export default function Tournament({ id }:{id: number|null}) {
     setShowApplications(true);
   };
 
-  const handleApply = () => {
+  const handleApply = async () => {
+    if (isAdditionsFill() && user) {
+      await addParticipantInfo(tournamentData.id, user.id, additionsFields, lang)
+    }
+    for (let nominationId of selectedNominations) {
+      await addParticipant(tournamentData.id, nominationId)
+    }
+    toast.success(t("registered"))
   };
 
   if (tournamentData.status === TournamentStatus.PENDING) {
     return (
       <div className={styles.container}>
-        <h1 className={[styles.wait, "title"].join(" ")}>Ждите объявления</h1>
+        <h1 className={[styles.wait, "title"].join(" ")}>{t("waitAnnouncement")}</h1>
       </div>
     )
   }
 
   return (
-    <div className={styles.container}>
+    <div className={["container", styles.container].join(" ")}>
       {/* Заголовок турнира */}
       <div className={styles.header}>
         <h1 className={styles.title}>{tournamentData.title}</h1>
@@ -216,7 +263,7 @@ export default function Tournament({ id }:{id: number|null}) {
                   {participants![selectedNomination]?.map((participant) => (
                     <div key={participant.id} className={styles.applicationItem}>
                       <div className={styles.userInfo}>
-                        <span className={styles.userName}>{participant.username}</span>
+                        <span className={styles.userName} style={participant.status === ParticipantStatus.CANCELLED ? { textDecoration: "line-through" } : {}}>{participant.username}</span>
                         <span className={styles.userClub}>{participant.club.title}</span>
                       </div>
                       {participant.status === ParticipantStatus.CONFIRMED && (
@@ -224,6 +271,9 @@ export default function Tournament({ id }:{id: number|null}) {
                       )}
                       {participant.status === ParticipantStatus.REGISTERED && (
                         <Circle size={20} className={styles.unpaidIcon} />
+                      )}
+                      {participant.status === ParticipantStatus.CANCELLED && (
+                        <Ban size={20} className={styles.unpaidIcon} />
                       )}
                     </div>
                   ))}
@@ -253,15 +303,16 @@ export default function Tournament({ id }:{id: number|null}) {
                 nodes.push((
                   <>
                     <InputText
-                    placeholder='Имя тренера'
+                    placeholder={t("trainerName")}
                     value={additionsFields.trainerName}
                     setValue={val=>handlerAdditionsFields("trainerName", val)}
                     required
                     />
                     <InputNumber
-                    placeholder='Возраст'
+                    placeholder={t("age")}
                     value={additionsFields.age}
                     setValue={val=>handlerAdditionsFields("age", val)}
+                    className={styles.age}
                     required
                     />
                   </>
@@ -343,7 +394,7 @@ export default function Tournament({ id }:{id: number|null}) {
               title={t('submitApplication')}
               onClick={handleApply}
               className={styles.submitButton}
-              disabled={selectedNominations.length === 0}
+              disabled={selectedNominations.length === 0 || !isAdditionsFill()}
             >
               {t('submitApplication')}
             </Button>

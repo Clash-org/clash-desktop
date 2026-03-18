@@ -1,19 +1,31 @@
 import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
-import { MapPin, Calendar, Award, Target, Sword, BarChart3, TrendingUp, Flag } from 'lucide-react';
+import { MapPin, Calendar, Award, Target, Sword, BarChart3, TrendingUp, Flag, LogOut, ChartNoAxesCombined } from 'lucide-react';
 import Button from '@/components/Button';
 import Section from '@/components/Section';
 import styles from './index.module.css';
-import { useAtomValue } from 'jotai';
-import { userAtom } from '@/store';
-import { formatDate } from '@/utils/helpers';
+import { useAtom } from 'jotai';
+import { languageAtom, userAtom } from '@/store';
+import { capitalizeFirstLetter, formatDate } from '@/utils/helpers';
 import Tabs from '../Tabs';
+import { Pages, usePage } from '@/hooks/usePage';
+import { logout } from '@/utils/api';
+import { useUserRating } from '@/hooks/useRatings';
+import WeaponNominationsSelect from '../WeaponNominationsSelect';
+import { useNominations } from '@/hooks/useNominations';
+import Table from '../Table';
 
 export default function Profile() {
   const { t } = useTranslation();
-  const tabs = ['info', 'stats']
-  const [activeTab, setActiveTab] = useState('info');
-  const user = useAtomValue(userAtom)
+  const { setPage } = usePage()
+  const tabs = ['info', 'stats', 'weaponDetails'] as const
+  const [activeTab, setActiveTab] = useState<typeof tabs[number]>('info');
+  const [lang] = useAtom(languageAtom)
+  const [user, setUser] = useAtom(userAtom)
+  const [weaponId, setWeaponId] = useState<number>()
+  const [nominationId, setNominationId] = useState<number>()
+  const { nominations } = useNominations(lang)
+  const { stats } = useUserRating(user?.id)
   if (!user) return
   const onPredictionsClick = () => {
 
@@ -41,7 +53,7 @@ export default function Profile() {
           <div className={styles.userMeta}>
             <div className={styles.metaItem + " title"} style={{ fontSize: "14px", cursor: "pointer", margin: "0", backgroundSize: "160% 160%" }}>
               <Flag size={16} color="var(--placeholder)" />
-              <span>{user.club.title}</span>
+              <span onClick={()=>setPage(Pages.CLUB, { id: user.club.id })}>{user.club.title}</span>
             </div>
             <div className={styles.metaItem}>
               <MapPin size={16} color="var(--placeholder)" />
@@ -49,9 +61,16 @@ export default function Profile() {
             </div>
             <div className={styles.metaItem}>
               <Calendar size={16} color="var(--placeholder)" />
-              <span>{t('registered')}: {formatDate(user.createdAt)}</span>
+              <span>{t('registered')}: {formatDate(user.createdAt, lang)}</span>
             </div>
           </div>
+          <Button
+          stroke
+          className={styles.logout}
+          onClick={async () => { await logout(); setUser(undefined); setPage(Pages.SETTINGS) }}
+          >
+            <LogOut size={28} color="var(--fg)" />
+          </Button>
         </div>
       </div>
 
@@ -114,14 +133,14 @@ export default function Profile() {
       {/* Табы с информацией */}
       <Tabs
       tabs={tabs}
-      titles={[t('profileInfo'), t('statistics')]}
+      titles={[t('profileInfo'), t('statistics'), <><Sword size={20} />{t('weaponDetails')}</>]}
       activeTab={activeTab}
       setActiveTab={setActiveTab}
       />
 
       {/* Контент табов */}
       <Section>
-        {activeTab === 'info' ? (
+        {activeTab === 'info' && (
           <div className={styles.infoContent}>
             <div className={styles.infoRow}>
               <span className={styles.infoLabel}>{t('id')}:</span>
@@ -151,7 +170,8 @@ export default function Profile() {
               </div>
             )}
           </div>
-        ) : (
+        )}
+        {activeTab === "stats" && (
           <div className={styles.statsContent}>
             <div className={styles.statRow}>
               <span>{t('totalFights')}</span>
@@ -174,6 +194,23 @@ export default function Profile() {
               <span className={styles.statNumber}>0</span>
             </div>
           </div>
+        )}
+        {activeTab === "weaponDetails" && (
+          <>
+            <WeaponNominationsSelect
+            nominations={nominations}
+            weaponId={weaponId}
+            nominationId={nominationId}
+            setNominationId={setNominationId}
+            setWeaponId={setWeaponId}
+            />
+            {stats && nominationId &&
+            <Table
+            headers={[t("rating"), t("rank"), t("volatility"), "RD", capitalizeFirstLetter(t("stage"))]}
+            data={[stats.ratings?.find(r=>r.id === nominationId)]?.map(r=>[String(r.rating.toFixed(2)), String(r.rank), String(r.volatility.toFixed(2)), String(r.rd.toFixed(2)), String(r.matches)])}
+            />
+            }
+          </>
         )}
       </Section>
     </div>

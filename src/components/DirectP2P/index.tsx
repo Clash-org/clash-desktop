@@ -783,7 +783,7 @@ export default function DirectP2P({ onPeerConnected }: DirectP2PProps) {
       {connectionStatus === 'connected' && (
         <div className={styles.connected}>
           <div className={styles.statusBadge}>
-            {isServer ? t('p2pServer') : t('p2pClient')} • {t('p2pConnectedStatus')}
+            {isServer ? t('server') : t('p2pClient')} • {t('p2pConnectedStatus')}
           </div>
 
           <div className={styles.connectedControls}>

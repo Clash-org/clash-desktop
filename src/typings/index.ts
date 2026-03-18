@@ -22,6 +22,7 @@ export type ParticipantType = {
   warnings: number;
   protests: number;
   doubleHits: number;
+  club?: string;
   // для швейцарской
   opponents: string[];     // уже сыгранные соперники (чтобы не повторяться)
   buchholz: number;        // доп. показатель, если понадобится
@@ -92,30 +93,19 @@ export type TournamentType = {
   description: string;
   socialMedias: string[];
   participants: UserType[];
-  participantsCount: number[];
+  participantsCount: {[nominationId: number]: number};
   matchesCount: number[];
   isAdditions: {[field: string]: boolean};
   createdAt: Date;
 }
 
-export type NominationUsersType = {[nominationId: string]: (UserType & { status: ParticipantStatusType })[]}
+export type NominationUser = UserType & { status: ParticipantStatusType }
+
+export type NominationUsersType = {[nominationId: string]: NominationUser[]}
 
 export type TournamentShortType = Pick<TournamentType, "image"|"id"|"date"|"title"|"status"> & { city: string }
 
-export type TournamentFormData = {
-  title: string;
-  description: string;
-  date: Date;
-  cityId: number;
-  image: string;
-  weaponsIds: number[];
-  prices: {[nominationId: string]: number};
-  nominationsIds: number[];
-  socialMedias: string[];
-  isAdditions: {[field: string]: boolean};
-  participantsCount: {[nominationId: number]: number};
-  status: TournamentStatusType
-}
+export type TournamentFormData = Omit<TournamentType, "city"|"organizerId"|"matchesCount"|"date"|"createdAt"|"participants"|"nominations"|"id"> & { date: Date, cityId: number }
 
 export type WeaponType = {
   id: number;
@@ -137,7 +127,78 @@ export type ParticipantStatusType = typeof ParticipantStatus[keyof typeof Partic
 
 export const TournamentStatus = {
   PENDING: 'pending',
+  COMPLETED: "completed",
   ACTIVE: 'active'
 } as const;
 
 export type TournamentStatusType = typeof TournamentStatus[keyof typeof TournamentStatus];
+
+export type TournamentMatch = {
+  fighterId: string;
+  opponentId: string;
+  result: 0 | 0.5 | 1;
+}
+
+export type TournamentResponse = {
+  processed: number;
+  results: {
+    userId: string;
+    user: UserType;
+    weaponSubtype: string;
+    ratingChange: number;
+    newRating: number;
+    newRd: number;
+    rankChange: number;
+    newRank: number;
+    matchesPlayed: number;
+  }[]
+}
+
+export type ParticipantInfo = {
+  id: number;
+  createdAt: Date;
+  user: UserType;
+  tournamentId: number;
+  info: {[field: string]: any};
+}
+
+export type AdditionsFields = {
+    trainerName: string;
+    age: number;
+    cityId: undefined;
+    fullName: string;
+    phone: string;
+    otherContacts: string;
+    weaponsRental: {
+        [weapon: string]: boolean;
+    };
+}
+
+export type FighterRatingType = {
+  weaponSubtype: string;
+  glickoPlayer: any;
+  matchesCount: number;
+  lastTournamentDate?: Date;
+  lastRank?: number;
+  currentRank?: number;
+}
+
+export type FighterType = {
+  id: string;
+  name: string;
+  ratings: Map<string, FighterRatingType>;
+  createdAt: Date;
+  totalMatches: number;
+}
+
+export type StatsType = {
+  fighter: FighterType,
+  ratings: {
+    weaponSubtype: string;
+    rating: number;
+    rd: number;
+    volatility: number;
+    matches: number;
+    rank?: number;
+  }[]
+}

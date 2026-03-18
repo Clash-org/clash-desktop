@@ -62,7 +62,7 @@ export default function Auth({ profileActivate, onClose }:{ profileActivate: ()=
     return (
         <div style={{ display: "flex", flexDirection: "column", gap: "10px", marginTop: "30px" }}>
             <InputText required placeholder="Email" type="email" value={email} setValue={setEmail} />
-            {!isLogin && <InputText required placeholder="Username" value={username} setValue={setUsername} /> }
+            {!isLogin && <InputText required placeholder={t("username")} value={username} setValue={setUsername} /> }
             {!isLogin && <GenderSwitch gender={gender} setGender={setGender} />}
             {!isLogin && <CitySelect city={city} setCity={setCity} cityId={cityId} setCityId={setCityId} />}
             {!isLogin && <span style={hintStyle}>Если не нашли город, то просто введите свой</span> }

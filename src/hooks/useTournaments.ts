@@ -1,10 +1,10 @@
 import useSWR from 'swr';
 import { fetcher } from '@/utils/api';
-import { TOURNAMENT_HOST } from '@/constants';
-import { TournamentShortType, TournamentType } from '@/typings';
+import { LangType, TournamentShortType, TournamentType } from '@/typings';
+import { useApi } from './useApi';
 
 
-export function useTournaments(lang: string, page: number, short: true): {
+export function useTournaments(lang: LangType, page: number, short: true): {
   tournaments: TournamentShortType[];
   tournamentsCount: number
   isLoading: boolean;
@@ -12,7 +12,7 @@ export function useTournaments(lang: string, page: number, short: true): {
   mutate: () => void;
 };
 
-export function useTournaments(lang: string, page: number, short?: false): {
+export function useTournaments(lang: LangType, page: number, short?: false): {
   tournaments: TournamentType[];
   tournamentsCount: number
   isLoading: boolean;
@@ -21,7 +21,7 @@ export function useTournaments(lang: string, page: number, short?: false): {
 };
 
 // GET /tournaments?lang=&short=
-export function useTournaments(lang: string, page: number, short?: boolean): {
+export function useTournaments(lang: LangType, page: number, short?: boolean): {
   tournaments: TournamentShortType[]|TournamentType[];
   tournamentsCount: number;
   isLoading: boolean;
@@ -31,8 +31,9 @@ export function useTournaments(lang: string, page: number, short?: boolean): {
   const query = new URLSearchParams({ lang, page: String(page) });
   if (short) query.set('short', 'true');
 
+  const { api } = useApi()
   const { data, error, isLoading, mutate } = useSWR(
-    `${TOURNAMENT_HOST}?${query}`,
+    `${api.tournaments}?${query}`,
     fetcher,
     {
       revalidateOnFocus: false,
@@ -50,9 +51,10 @@ export function useTournaments(lang: string, page: number, short?: boolean): {
 }
 
 // GET /tournaments/:id?lang=
-export function useTournament(id: number | null, lang: string) {
+export function useTournament(id: number | null, lang: LangType) {
+  const { api } = useApi()
   const { data, error, isLoading, mutate } = useSWR(
-    id ? `${TOURNAMENT_HOST}/${id}?lang=${lang}` : null,
+    id ? `${api.tournaments}/${id}?lang=${lang}` : null,
     fetcher,
     {
       revalidateOnFocus: false,
@@ -68,9 +70,10 @@ export function useTournament(id: number | null, lang: string) {
 }
 
 // GET /tournaments/organizer/:uuid
-export function useOrganizerTournaments(uuid: string | null) {
+export function useOrganizerTournaments(uuid: string | null, lang: LangType) {
+  const { api } = useApi()
   const { data, error, isLoading } = useSWR(
-    uuid ? `${TOURNAMENT_HOST}/organizer/${uuid}` : null,
+    uuid ? `${api.tournaments}/organizer/${uuid}?lang=${lang}` : null,
     fetcher,
     {
       revalidateOnFocus: false,

@@ -1,6 +1,5 @@
 import { fighterDefault } from "@/store";
 import { ParticipantType, TournamentSystem } from "@/typings";
-import { generateId } from "./helpers";
 
 export const generatePairs = (
   participants: ParticipantType[],
@@ -34,55 +33,62 @@ export const generatePairs = (
   } else if (tournamentSystem === TournamentSystem.HYBRID || tournamentSystem === TournamentSystem.ROBIN) {
 
   /* ---------- КРУГОВАЯ ---------- */
-  // Если нечётное количество, добавляем "пустышку" (—)
-  let players = [...participants];
+  let players = [[...participants]];
 
-  // Если нечётное количество, добавляем "—"
-  if (players.length % 2 !== 0) {
-    players.push({
-      ...fighterDefault,
-      id: generateId("bye"),
-      name: "—"
-    });
-  }
+    players.forEach((group) => {
+      const used = new Set<string>();
+      const tempPairs: ParticipantType[][] = [];
 
-  const numRounds = players.length - 1; // Количество туров
-  const half = players.length / 2;       // Половина для разделения
+      for (let i = 0; i < group.length; i++) {
+        const p1 = group[i];
+        if (used.has(p1.id)) continue;
+        const candidates = [];
+        for (let j = i + 1; j < group.length; j++) {
+          if (!used.has(group[j].id)) candidates.push(j);
+        }
+        // Fisher-Yates shuffle
+        const shuffle = <T>(array: T[]): T[] => {
+          const result = [...array];
+          for (let i = result.length - 1; i > 0; i--) {
+            const j = Math.floor(Math.random() * (i + 1));
+            [result[i], result[j]] = [result[j], result[i]];
+          }
+          return result;
+        };
+        const shuffledCandidates = shuffle(candidates);
+        // ищем первого подходящего соперника
+        let found = -1;
+        for (const j of shuffledCandidates) {
+          const p2 = group[j];
+          if (used.has(p2.id)) continue;
+          // не играли ли они уже?
+          const played =
+            p1.opponents?.includes(p2.id) || p2.opponents?.includes(p1.id);
+          if (!played) {
+            found = j;
+            break;
+          }
+        }
 
-  // Фиксируем первого игрока
-  const fixed = players[0];
-  // Остальные будут вращаться
-  let rotating = players.slice(1);
-
-  for (let round = 0; round < numRounds; round++) {
-    const roundPairs: ParticipantType[][] = [];
-
-    // Первая пара: фиксированный игрок с rotating[0]
-    if (fixed.name !== "—" && rotating[0].name !== "—") {
-      // Проверяем, не встречались ли они уже
-      if (!fixed.opponents.includes(rotating[0].id)) {
-        roundPairs.push([fixed, rotating[0]]);
-      }
-    }
-
-    // Остальные пары: i-й с конца
-    for (let i = 1; i < half; i++) {
-      const player1 = rotating[i];
-      const player2 = rotating[rotating.length - i];
-
-      if (player1.name !== "—" && player2.name !== "—") {
-        // Проверяем, не встречались ли они уже
-        if (!player1.opponents.includes(player2.id)) {
-          roundPairs.push([player1, player2]);
+        if (found !== -1) {
+          const p2 = group[found];
+          tempPairs.push([p1, p2]);
+          used.add(p1.id);
+          used.add(p2.id);
+        } else {
+          // не нашли пары – «пара с null»
+          tempPairs.push([
+            p1,
+            {
+              ...fighterDefault,
+            },
+          ]);
+          used.add(p1.id);
         }
       }
-    }
-
-    pairs[poolIndex] = roundPairs;
-
-    // Ротация: сдвигаем вращающихся игроков (последний становится первым)
-    rotating = [rotating[rotating.length - 1], ...rotating.slice(0, -1)];
-  }
+      if (!pairs[poolIndex]) pairs[poolIndex] = [];
+      pairs[poolIndex].push(...tempPairs);
+    });
 
   } else if (tournamentSystem === TournamentSystem.SWISS) {
     pairs = generateSwissPairs(participants, poolIndex);

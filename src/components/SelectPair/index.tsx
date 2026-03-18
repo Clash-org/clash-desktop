@@ -6,6 +6,7 @@ import styles from "./index.module.css"
 import { getName } from "@/utils/helpers"
 import { useTranslation } from "react-i18next"
 import { useState } from "react"
+import { Trash2 } from "lucide-react"
 
 type SelectPairProps = {
     poolIndex: number;
@@ -15,6 +16,8 @@ type SelectPairProps = {
     deleteEmptyPairs?: boolean;
     manualMode?: boolean;
     onPairsReordered?: (newPairs: ParticipantType[][][]) => void;
+    onDeletePair?: (id1: string, id2: string) => void
+    setPools?: React.Dispatch<React.SetStateAction<ParticipantType[][][]>>;
 }
 
 export default function SelectPair({
@@ -24,7 +27,9 @@ export default function SelectPair({
     selectPair,
     deleteEmptyPairs = false,
     manualMode = false,
-    onPairsReordered
+    onPairsReordered,
+    onDeletePair,
+    setPools
 }: SelectPairProps) {
     const { t } = useTranslation()
     const [draggedParticipant, setDraggedParticipant] = useState<{
@@ -184,6 +189,20 @@ export default function SelectPair({
                                     </span>
                                     <span className={styles.dragIndicator}>⋮⋮</span>
                                 </div>
+                                {onDeletePair && onPairsReordered && setPools &&
+                                <button
+                                className={styles.deletePair}
+                                onClick={()=>{
+                                    const buf = [...fighterPairs]
+                                    buf[poolIndex][originalIdx] = []
+                                    buf[poolIndex] = buf[poolIndex].filter(pairs=>pairs.length)
+                                    onPairsReordered(buf)
+                                    setPools(buf)
+                                    onDeletePair(pair[0].id, pair[1].id);
+                                }}>
+                                    <Trash2 size={28} color="var(--fg)" />
+                                </button>
+                                }
                             </div>
                         );
                     })}

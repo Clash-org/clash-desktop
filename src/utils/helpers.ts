@@ -76,8 +76,9 @@ export function isPoolEndByDuels(duels: ParticipantType[][][][], poolIndex: numb
   }
 }
 
-export const formatDate = (dateString: string) => {
-  return new Date(dateString).toLocaleDateString('ru-RU', {
+export const formatDate = (dateString: string, lang: LangType) => {
+  const code = lang === "ru" ? "ru-RU" : (lang === "en" ? "en-US" : "zh-CN")
+  return new Date(dateString).toLocaleDateString(code, {
     day: 'numeric',
     month: 'long',
     year: 'numeric'
@@ -159,7 +160,15 @@ export function translateStatus(status: TournamentStatusType, lang: LangType) {
     case "pending": {
       return lang === "en" ? status : (lang === "ru" ? "ожидаемый" : "预期的")
     }
+    case "completed": {
+      return lang === "en" ? status : (lang === "ru" ? "завершённый" : "已完成")
+    }
   }
 }
 
 export function capitalizeFirstLetter(str: string) { return str.charAt(0).toUpperCase() + str.slice(1); }
+
+export function getFileNameFromPath(path: string) {
+  const pathArr = path.split("/")
+  return pathArr[pathArr.length - 1]
+}

@@ -1,8 +1,11 @@
 import Button from "@/components/Button";
 import Table from "@/components/Table";
 import {
+  currentNominationIdAtom,
   currentPairIndexAtom,
   currentPoolIndexAtom,
+  currentTournamentAtom,
+  currentWeaponIdAtom,
   doubleHitsAtom,
   duelsAtom,
   fighterPairsAtom,
@@ -21,24 +24,24 @@ import {
 import { generatePairs } from "@/utils/generatePairs";
 import { isPoolEndByDuels, truncate } from "@/utils/helpers";
 import { useAtom } from "jotai";
-import { ChartColumn, Save } from "lucide-react";
+import { ChartColumn, HardDriveUpload, Save } from "lucide-react";
 import { useState } from "react";
 
 import styles from "./index.module.css";
-import { ParticipantType, TournamentSystem } from "@/typings";
+import { ParticipantType, TournamentMatch, TournamentResponse, TournamentSystem } from "@/typings";
 import { useTranslation } from "react-i18next";
 import { calculateAllSD, getAllInOneParticipants, getTopThreeFighters, getWinnersRobin, getWinnersSwiss } from "@/utils/matchesHandlers";
 import { exportExcel } from "@/utils/exportExcel";
 import { generatePlayoffPairs } from "@/utils/generatePlayoffPairs";
 import Playoff from "../Playoff";
 import ModalWindow from "../ModalWindow";
+import { processTournament } from "@/utils/api";
 
-export default function TournamentGridScreen({
-  fightActivate,
-}: {
-  fightActivate: () => void;
-}) {
+export default function TournamentGridScreen() {
   const { t } = useTranslation();
+  const [currentTournament] = useAtom(currentTournamentAtom)
+  const [currentWeaponId] = useAtom(currentWeaponIdAtom)
+  const [currentNominationId] = useAtom(currentNominationIdAtom)
   const [poolCountDelete] = useAtom(poolCountDeleteAtom);
   const [isPoolRating] = useAtom(isPoolRatingAtom);
   const [fighterPairs, setFighterPairs] = useAtom(fighterPairsAtom);
@@ -59,6 +62,8 @@ export default function TournamentGridScreen({
   const [showRank, setShowRank] = useState(false)
   const [rank, setRank] = useState<ParticipantType[]>([])
   const [idsSD, setIdsSD] = useState<Map<string, number>>(new Map<string, number>())
+  const [rating, setRating] = useState<TournamentResponse>()
+  const [isRatingOpen, setIsRatingOpen] = useState(true)
 
   const isRound = tournamentSystem === TournamentSystem.HYBRID || tournamentSystem === TournamentSystem.ROBIN || tournamentSystem === TournamentSystem.SWISS
 
@@ -80,6 +85,24 @@ export default function TournamentGridScreen({
     "SD",
     tournamentSystem === TournamentSystem.SWISS ? t("buchholz") : ""
   ].filter(Boolean)
+
+  const saveOnServer = async () => {
+    if (currentTournament && currentNominationId && currentWeaponId) {
+      const matches: TournamentMatch[] = []
+      duels[currentPoolIndex].forEach(pairs=>{
+        pairs.forEach(pair=>{
+          matches.push({
+            fighterId: pair[0].id,
+            opponentId: pair[1].id,
+            result: pair[0].wins === pair[1].wins ? 0.5: (pair[0].wins > pair[1].wins ? 1 : 0)
+          })
+        })
+      })
+
+      const res = await processTournament(currentTournament.id, currentWeaponId, currentNominationId, matches, new Date(currentTournament.date))
+      setRating(res)
+    }
+  }
 
   const endTournament = (endFightersBuchholz?: {[id: string]: number}) => {
     let winnersArr: string[] = new Array(3)
@@ -208,14 +231,14 @@ export default function TournamentGridScreen({
   const getDataTable = (data: ParticipantType[][]) => {
     return {
       data: data.map(([f1, f2]) => [
-        truncate(f1?.name || ""),
+        f1.club ? `${truncate(f1?.name || "")}\n${f1.club}` : truncate(f1?.name || ""),
         f1.wins.toString(),
         f1.scores.toString(),
         f2.scores.toString(),
         f2.wins.toString(),
-        truncate(f2?.name || ""),
+        f2.club ? `${truncate(f2?.name || "")}\n${f2.club}` : truncate(f2?.name || ""),
       ]),
-      titles: data.map(([f1, f2]) => [
+      hints: data.map(([f1, f2]) => [
         f1?.name,
         "",
         "",
@@ -230,7 +253,7 @@ export default function TournamentGridScreen({
   const getDataRankTable = (data: ParticipantType[]) => {
     return {
       data: data.map((f) => [
-        truncate(f.name || ""),
+        f.club ? `${truncate(f.name || "")}\n${f.club}` : truncate(f.name || ""),
         f.wins.toString(),
         f.losses.toString(),
         f.draws.toString(),
@@ -238,7 +261,7 @@ export default function TournamentGridScreen({
         idsSD.get(f.id)?.toString() || "",
         tournamentSystem === TournamentSystem.SWISS ? f.buchholz.toString() : ""
       ]).filter(Boolean),
-      titles: data.map((f) => [
+      hints: data.map((f) => [
         f?.name,
         "",
         "",
@@ -307,7 +330,7 @@ export default function TournamentGridScreen({
       {sections.map((item, index) => (
         <div key={item.key} className={styles.duelWrap}>
           <h2 className={styles.duelTitle}>{item.title}</h2>
-          <Table data={item.content.data} titles={item.content.titles} headers={headers} />
+          <Table data={item.content.data} hints={item.content.hints} headers={headers} />
 
           {index === 0 &&
           fighterPairs[currentPoolIndex].filter((p) => p.length).length &&
@@ -344,16 +367,26 @@ export default function TournamentGridScreen({
       >
         <Save size={28} />
       </Button>
+      {!!winners.length && tournamentSystem !== TournamentSystem.HYBRID && currentTournament && currentNominationId && currentWeaponId &&
+      <Button
+      onClick={saveOnServer}
+      >
+        <HardDriveUpload size={28} color="var(--fg)" />
+      </Button>
+      }
       <ModalWindow isOpen={showRank} onClose={()=>setShowRank(false)} style={{ maxWidth: "40rem" }}>
         {(()=>{
           const content = getDataRankTable(rank)
           return (
-            <Table data={content.data} titles={content.titles} headers={headersRank} />
+            <Table data={content.data} hints={content.hints} headers={headersRank} />
           )
         })()}
       </ModalWindow>
+      <ModalWindow isOpen={isRatingOpen && !!rating} onClose={()=>setIsRatingOpen(false)} style={{ maxWidth: "60rem" }}>
+        <Table headers={[t("name"), t("matchesCount"), t("rankChange"), t("newRank"), "RD", t("ratingChange"), t("newRating")]} data={rating?.results.map(res=>[res.user.username, String(res.matchesPlayed), String(res.rankChange), String(res.newRank), String(res.newRd), String(res.ratingChange), String(res.newRating)])} />
+      </ModalWindow>
     </div>
   ) : (
-    <Playoff fightActivate={fightActivate} />
+    <Playoff />
   );
 }

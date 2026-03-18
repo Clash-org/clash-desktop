@@ -1,12 +1,13 @@
 import useSWR from 'swr';
 import { fetcher } from '@/utils/api';
-import { CLUB_HOST } from '@/constants';
 import { ClubType } from '@/typings';
+import { useApi } from './useApi';
 
 // GET /clubs
 export function useClubs() {
+  const { api } = useApi()
   const { data, error, isLoading, mutate } = useSWR<ClubType[]>(
-    CLUB_HOST,
+    api.clubs,
     fetcher,
     {
       revalidateOnFocus: false,
@@ -24,8 +25,9 @@ export function useClubs() {
 
 // GET /clubs/:id
 export function useClub(id: number | null) {
+  const { api } = useApi()
   const { data, error, isLoading, mutate } = useSWR<ClubType>(
-    id ? `${CLUB_HOST}/${id}` : null,
+    id ? `${api.clubs}/${id}` : null,
     fetcher,
     {
       revalidateOnFocus: false,

@@ -1,13 +1,10 @@
 /* components/Tournament/index.module.css */
 .container {
   padding: 24px;
-  max-width: 100%;
   padding-left: 20%;
   padding-right: 20%;
-  height: 100vh;
-  margin: 0 auto;
-  color: var(--fg);
-  overflow-y: auto;
+  padding-bottom: 100px;
+  gap: 0;
 }
 
 .wait {
@@ -334,6 +331,14 @@
   width: 100%;
   padding: 16px !important;
   font-size: 18px !important;
+}
+
+.age {
+  width: 150px;
+}
+
+.age > input {
+  width: 100%;
 }
 
 /* Адаптивность */

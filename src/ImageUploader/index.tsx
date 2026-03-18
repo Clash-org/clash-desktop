@@ -6,6 +6,7 @@ import { Trash2, Image as ImageIcon } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 import styles from './index.module.css';
 import toast from 'react-hot-toast';
+import { getFileNameFromPath } from '@/utils/helpers';
 
 interface ImageUploaderProps {
   value?: string | null;
@@ -110,8 +111,7 @@ export default function ImageUploader({
         const formData = new FormData();
         formData.append('image', file);
         setValue?.(formData)
-        const pathArr = file.name.split("/")
-        setFileName?.(pathArr[pathArr.length - 1])
+        setFileName?.(getFileNameFromPath(file.name))
         setPreviewUrl(base64);
         onChange?.(base64);
       };
@@ -140,7 +140,7 @@ export default function ImageUploader({
 
       // Читаем файл через Tauri FS
       const fileData = await readFile(filePath);
-      const fileName = filePath.split("\\")[filePath.split("\\").length - 1]
+      const fileName = getFileNameFromPath(filePath)
       const file = new File([fileData], fileName, { type: `image/${fileName.split(".")[1]}` });
       setFileName?.(fileName)
       const formData = new FormData();

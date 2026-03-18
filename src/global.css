@@ -152,3 +152,21 @@ button:disabled {
     background-position: 0% 0%;
   }
 }
+
+.container {
+  padding: 32px 24px;
+  width: 100%;
+  padding-left: 30%;
+  padding-right: 30%;
+  margin: 0 auto;
+  height: 100vh;
+  overflow-y: auto;
+  display: flex;
+  flex-direction: column;
+  gap: 15px;
+}
+
+.link {
+  border-bottom: 1px dashed var(--accent);
+  cursor: pointer;
+}

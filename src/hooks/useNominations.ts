@@ -1,12 +1,13 @@
 import useSWR from 'swr';
 import { fetcher } from '@/utils/api';
-import { NOMINATION_HOST } from '@/constants';
 import { NominationType } from '@/typings';
+import { useApi } from './useApi';
 
 // GET /nominations?lang=
 export function useNominations(lang: string) {
+  const { api } = useApi()
   const { data, error, isLoading, mutate } = useSWR<NominationType[]>(
-    `${NOMINATION_HOST}?lang=${lang}`,
+    `${api.nominations}?lang=${lang}`,
     fetcher,
     {
       revalidateOnFocus: false,

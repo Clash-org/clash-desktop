@@ -41,6 +41,7 @@
     border: 2px solid var(--accent);
     transition: all 0.2s ease;
     cursor: pointer;
+    position: relative;
 }
 
 .manualPairRow:hover {
@@ -122,6 +123,12 @@
     text-transform: uppercase;
     letter-spacing: 2px;
     user-select: none;
+}
+
+.deletePair {
+    position: absolute;
+    right: -60px;
+    top: 20px;
 }
 
 /* Адаптивность для мобильных устройств */

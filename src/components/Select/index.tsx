@@ -18,7 +18,7 @@ interface SelectProps<T> {
   setInputValue?: (value: string) => void;
   placeholder?: string;
   error?: boolean;
-  fullWidth?: boolean;
+  fit?: boolean;
   disabled?: boolean;
   className?: string;
   multiple?: boolean;
@@ -34,7 +34,7 @@ export default function Select<T>({
   setInputValue,
   placeholder = 'Выберите...',
   error = false,
-  fullWidth = true,
+  fit = false,
   disabled = false,
   className = '',
   multiple = false,
@@ -52,11 +52,13 @@ export default function Select<T>({
     ? (Array.isArray(value) ? value : [])
     : (value !== undefined ? [value] : []);
 
+  // @ts-ignore
   const selectedOptions = options.filter(opt => selectedValues.includes(opt.value));
 
   // Фильтрация опций по поиску
   const filteredOptions = options.filter(opt =>
     opt.label.toLowerCase().includes(searchTerm.toLowerCase()) &&
+    // @ts-ignore
     (multiple ? true : !selectedValues.includes(opt.value)) // в одиночном режиме скрываем выбранное
   );
 
@@ -90,9 +92,10 @@ export default function Select<T>({
     if (multiple) {
       // Режим множественного выбора
       let newValues: T[];
-
+      // @ts-ignore
       if (selectedValues.includes(option.value)) {
         // Удаляем, если уже выбран
+        // @ts-ignore
         newValues = selectedValues.filter(v => v !== option.value);
       } else {
         // Добавляем, если не выбран
@@ -100,6 +103,7 @@ export default function Select<T>({
           // Достигнут лимит, не добавляем
           return;
         }
+        // @ts-ignore
         newValues = [...selectedValues, option.value];
       }
 
@@ -178,7 +182,7 @@ export default function Select<T>({
       ref={wrapperRef}
       className={`
         ${styles.wrapper}
-        ${fullWidth ? styles.fullWidth : ''}
+        ${fit ? styles.fit : ''}
         ${disabled ? styles.disabled : ''}
         ${multiple ? styles.multiple : ''}
         ${className}
@@ -217,10 +221,11 @@ export default function Select<T>({
         <div className={styles.dropdown} role="listbox">
           {filteredOptions.length > 0 ? (
             filteredOptions.map((option) => {
+              // @ts-ignore
               const isSelected = selectedValues.includes(option.value);
               return (
                 <div
-                  key={option.value}
+                  key={String(option.value)}
                   className={`
                     ${styles.option}
                     ${isSelected ? styles.selected : ''}

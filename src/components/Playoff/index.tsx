@@ -8,17 +8,17 @@ import { useAtom } from 'jotai';
 import { doubleHitsAtom, historyAtom, playoffAtom, playoffIndexAtom, playoffMatchIndexAtom, protests1Atom, protests2Atom, score1Atom, score2Atom, warnings1Atom, warnings2Atom } from '@/store';
 import { Save } from 'lucide-react';
 import { exportExcel } from '@/utils/exportExcel';
+import { Pages, usePage } from '@/hooks/usePage';
 
 interface PlayoffProps {
-  fightActivate: ()=>void;
   onTournamentComplete?: (winner: ParticipantPlayoffType) => void;
 }
 
 export default function Playoff({
-  fightActivate,
   onTournamentComplete
 }: PlayoffProps) {
   const { t } = useTranslation();
+  const { setPage } = usePage()
   const [playoff, setPlayoff] = useAtom(playoffAtom)
   const [winners, setWinners] = useState<{ [key: string]: number }>({}); // Индекс победителя в паре (0 или 1)
   const [champion, setChampion] = useState<ParticipantPlayoffType | null>(null);
@@ -343,7 +343,7 @@ export default function Playoff({
                         setWarnings1(0);
                         setWarnings2(0);
                         setHistory([])
-                        fightActivate();
+                        setPage(Pages.TIMER);
                       }}
                     >
                       {isFinalMatch && (

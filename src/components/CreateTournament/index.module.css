@@ -1,13 +1,5 @@
-/* components/CreateTournament/index.module.css */
 .container {
-  padding: 32px 24px;
-  max-width: 100%;
-  padding-left: 30%;
-  padding-right: 30%;
-  margin: 0 auto;
-  color: var(--fg);
-  height: 100vh;
-  overflow-y: auto;
+  padding-bottom: 100px;
 }
 
 .header {
@@ -156,7 +148,7 @@
   padding: 0 !important;
 }
 
-.socialLinks {
+.socialLinks, .participants {
   display: flex;
   flex-direction: column;
   gap: 8px;
@@ -171,6 +163,26 @@
   background: var(--accent-transparent);
   border-radius: 8px;
   font-size: 14px;
+}
+
+.participants {
+  flex-direction: row;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.participantsControllers {
+  display: flex;
+  gap: 8px;
+}
+
+.participantsControllers > svg:hover {
+  stroke: var(--accent);
+  cursor: pointer;
+}
+
+.participantField {
+  color: var(--accent);
 }
 
 .removeButton {

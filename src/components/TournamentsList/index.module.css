@@ -1,13 +1,8 @@
-/* components/TournamentsList/index.module.css */
 .container {
   padding: 32px 24px;
-  width: 100%;
-  height: 100vh;
   padding-left: 15%;
   padding-right: 15%;
-  margin: 0 auto;
-  color: var(--fg);
-  overflow-y: auto;
+  gap: 0;
 }
 
 .content {

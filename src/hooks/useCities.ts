@@ -1,12 +1,13 @@
 import useSWR from 'swr';
 import { fetcher } from '@/utils/api';
-import { CITY_HOST } from '@/constants';
 import { CityType } from '@/typings';
+import { useApi } from './useApi';
 
 // GET /cities?lang=
 export function useCities(lang: string) {
+  const { api } = useApi()
   const { data, error, isLoading, mutate } = useSWR<CityType[]>(
-    `${CITY_HOST}?lang=${lang}`,
+    `${api.cities}?lang=${lang}`,
     fetcher,
     {
       revalidateOnFocus: false,
@@ -24,8 +25,9 @@ export function useCities(lang: string) {
 
 // GET /cities/:id
 export function useCity(id: number | null) {
+  const { api } = useApi()
   const { data, error, isLoading, mutate } = useSWR<CityType>(
-    id ? `${CITY_HOST}/${id}` : null,
+    id ? `${api.cities}/${id}` : null,
     fetcher,
     {
       revalidateOnFocus: false,

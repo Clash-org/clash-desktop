@@ -1,5 +1,5 @@
 // components/TournamentsList/index.tsx
-import { useEffect, useMemo, useState } from 'react';
+import { useEffect, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Calendar, MapPin, ChevronRight } from 'lucide-react';
 import Button from '@/components/Button';
@@ -8,22 +8,23 @@ import styles from './index.module.css';
 import { TFunction } from 'i18next';
 import { useAtomValue } from 'jotai';
 import { languageAtom } from '@/store';
-import { TournamentShortType, TournamentStatus } from '@/typings';
+import { LangType, TournamentShortType, TournamentStatus } from '@/typings';
 import { formatDate } from '@/utils/helpers';
-import { PAGE_SIZE_TOURNAMENTS, SERVER_COVER_HOST } from '@/constants';
+import { PAGE_SIZE_TOURNAMENTS } from '@/constants';
 import { useTournaments } from '@/hooks/useTournaments';
+import { useApi } from '@/hooks/useApi';
+import { PageParams, Pages, usePage } from '@/hooks/usePage';
 
 type ContentProps = {
     isPast?: boolean;
     t: TFunction<"translation", undefined>;
     tournaments: TournamentShortType[];
+    lang: LangType;
+    coversHost: string;
+    setGlobalPage: <T extends Pages>(page: T, params?: PageParams[T]) => void
 }
 
-function Content({ isPast=false, t, tournaments }:ContentProps) {
-    const handleTournamentClick = (tournamentId: number) => {
-        window.location.href = `/tournament?id=${tournamentId}`
-    };
-
+function Content({ isPast=false, t, coversHost, setGlobalPage, tournaments, lang }:ContentProps) {
     return (
         <Section title={isPast ? t('pastTournaments') : t('upcomingTournaments')} className={styles.section}>
             <div className={styles.tournamentsGrid}>
@@ -31,15 +32,15 @@ function Content({ isPast=false, t, tournaments }:ContentProps) {
                 <div
                 key={tournament.id}
                 className={`${styles.tournamentCard} ${isPast ? styles.pastCard : ""}`}
-                onClick={() => handleTournamentClick(tournament.id)}
+                onClick={() => setGlobalPage(Pages.TOURNAMENT, { id: tournament.id })}
                 >
                 <div className={styles.imageWrapper}>
                     <img
-                    src={SERVER_COVER_HOST + tournament.image}
+                    src={coversHost + tournament.image}
                     alt={tournament.title}
                     className={`${styles.image} ${isPast ? styles.pastImage : ""}`}
                     onError={(e) => {
-                        (e.target as HTMLImageElement).src = '/images/cross.webp';
+                        (e.target as HTMLImageElement).src = '/images/cross.svg';
                     }}
                     />
                     {!isPast && tournament.status === TournamentStatus.ACTIVE && (
@@ -56,7 +57,7 @@ function Content({ isPast=false, t, tournaments }:ContentProps) {
                     <div className={styles.metaItem}>
                         <Calendar size={16} />
                         <span>
-                        {formatDate(tournament.date)}
+                        {formatDate(tournament.date, lang)}
                         </span>
                     </div>
                     <div className={styles.metaItem}>
@@ -81,16 +82,18 @@ function Content({ isPast=false, t, tournaments }:ContentProps) {
 
 export default function TournamentsList() {
   const { t } = useTranslation();
+  const { setPage: setGlobalPage } = usePage()
   const [loading, setLoading] = useState(false);
   const lang = useAtomValue(languageAtom)
   const [page, setPage] = useState(1)
   const { tournaments, tournamentsCount } = useTournaments(lang, page, true)
   const [currentTournaments, setCurrentTournaments] = useState<TournamentShortType[]>([])
+  const { api } = useApi()
 
   useEffect(()=>{
     setCurrentTournaments(state=>{
       if (JSON.stringify(state) !== JSON.stringify(tournaments))
-        return [...state, ...tournaments]
+        return [...tournaments]
       return state
     })
   }, [page, tournaments])
@@ -107,7 +110,7 @@ export default function TournamentsList() {
   const upcomingTournaments: TournamentShortType[] = [];
   const pastTournaments: TournamentShortType[] = [];
   currentTournaments.forEach(t=>{
-    if (new Date(t.date) >= new Date()) {
+    if (new Date(t.date) >= new Date() && t.status !== TournamentStatus.COMPLETED) {
       upcomingTournaments.push(t)
     } else {
       pastTournaments.push(t)
@@ -115,7 +118,7 @@ export default function TournamentsList() {
   })
 
   return (
-    <div className={styles.container}>
+    <div className={["container", styles.container].join(" ")}>
       {/* Заголовок */}
       <div className={styles.header}>
         <h1 className="title">{t('tournaments')}</h1>
@@ -123,11 +126,11 @@ export default function TournamentsList() {
       </div>
       <div className={styles.content}>
         {/* Секция предстоящих турниров */}
-        <Content t={t} tournaments={upcomingTournaments} />
+        <Content lang={lang} setGlobalPage={setGlobalPage} coversHost={api.covers} t={t} tournaments={upcomingTournaments} />
 
         {/* Секция прошедших турниров */}
         {pastTournaments.length > 0 &&
-        <Content isPast t={t} tournaments={pastTournaments} />}
+        <Content isPast lang={lang} setGlobalPage={setGlobalPage} coversHost={api.covers} t={t} tournaments={pastTournaments} />}
 
         {/* Кнопка "Показать больше" */}
         {page * PAGE_SIZE_TOURNAMENTS < tournamentsCount && (
