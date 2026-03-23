@@ -1,0 +1,31 @@
+.loadMoreWrapper {
+  display: flex;
+  justify-content: center;
+  margin-top: 48px;
+}
+
+.loadMoreButton {
+  min-width: 200px;
+  padding: 14px 32px !important;
+  font-size: 16px !important;
+  transition: all 0.3s ease;
+}
+
+.loadMoreButton:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(var(--accent-rgb), 0.3);
+}
+
+.loadingSpinner {
+  display: inline-block;
+  width: 20px;
+  height: 20px;
+  border: 2px solid var(--accent-transparent);
+  border-top-color: var(--accent);
+  border-radius: 50%;
+  animation: spin 0.8s linear infinite;
+}
+
+@keyframes spin {
+  to { transform: rotate(360deg); }
+}

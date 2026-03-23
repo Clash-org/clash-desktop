@@ -10,6 +10,9 @@ import Tournament from '@/components/Tournament';
 import TournamentsList from '@/components/TournamentsList';
 import { useContext, useEffect, useState } from 'react';
 import { PageContext } from '@/providers/PageProvider';
+import Leaderboard from '@/components/Leaderboard';
+import AppInfo from '@/components/AppInfo';
+import Admin from '@/components/Admin';
 
 // Перечисление всех страниц
 export enum Pages {
@@ -22,7 +25,10 @@ export enum Pages {
     TOURNAMENTS_CREATE,
     TOURNAMENT,
     CLUB,
-    SERVERS
+    SERVERS,
+    LEADERBOARD,
+    INFO,
+    ADMIN
 }
 
 // Типы параметров для каждой страницы
@@ -31,12 +37,15 @@ export type PageParams = {
     [Pages.TIMER]: undefined;
     [Pages.GRID]: undefined;
     [Pages.TIMER_VIEW]: undefined;
-    [Pages.PROFILE]: undefined;
+    [Pages.PROFILE]: { id: string | undefined };
     [Pages.TOURNAMENTS_LIST]: undefined;
-    [Pages.TOURNAMENT]: { id: number | null };
+    [Pages.TOURNAMENT]: { id: number | undefined };
     [Pages.TOURNAMENTS_CREATE]: undefined;
     [Pages.CLUB]: { id: number | null };
     [Pages.SERVERS]: undefined;
+    [Pages.LEADERBOARD]: undefined;
+    [Pages.INFO]: undefined;
+    [Pages.ADMIN]: undefined;
 };
 
 // Тип для состояния страницы
@@ -163,7 +172,7 @@ export const PageRenderer: React.FC<{
             case Pages.TIMER:
                 return <Fight key="fight" />;
             case Pages.PROFILE:
-                return <Profile key="profile" />;
+                return <Profile key="profile" {...(params as PageParams[Pages.PROFILE])} />;
             case Pages.TIMER_VIEW:
                 return <FightViewerWindow key="fight-viewer" />;
             case Pages.GRID:
@@ -178,6 +187,12 @@ export const PageRenderer: React.FC<{
                 return <Club key="club" {...(params as PageParams[Pages.CLUB])} />;
             case Pages.SERVERS:
                 return <Servers key="servers" />;
+            case Pages.LEADERBOARD:
+                return <Leaderboard />
+            case Pages.INFO:
+                return <AppInfo />
+            case Pages.ADMIN:
+                return <Admin />
             default:
                 return <Settings />;
         }

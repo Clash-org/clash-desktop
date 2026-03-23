@@ -24,6 +24,7 @@ interface SelectProps<T> {
   multiple?: boolean;
   maxSelected?: number; // максимальное количество выбранных опций (для multiple)
   required?: boolean;
+  style?: React.CSSProperties;
 }
 
 export default function Select<T>({
@@ -39,6 +40,7 @@ export default function Select<T>({
   className = '',
   multiple = false,
   maxSelected,
+  style,
   required
 }: SelectProps<T>) {
   const { t } = useTranslation()
@@ -180,6 +182,7 @@ export default function Select<T>({
   return (
     <div
       ref={wrapperRef}
+      style={style}
       className={`
         ${styles.wrapper}
         ${fit ? styles.fit : ''}

@@ -2,7 +2,6 @@
 import { useEffect, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Calendar, MapPin, ChevronRight } from 'lucide-react';
-import Button from '@/components/Button';
 import Section from '@/components/Section';
 import styles from './index.module.css';
 import { TFunction } from 'i18next';
@@ -10,10 +9,11 @@ import { useAtomValue } from 'jotai';
 import { languageAtom } from '@/store';
 import { LangType, TournamentShortType, TournamentStatus } from '@/typings';
 import { formatDate } from '@/utils/helpers';
-import { PAGE_SIZE_TOURNAMENTS } from '@/constants';
 import { useTournaments } from '@/hooks/useTournaments';
 import { useApi } from '@/hooks/useApi';
 import { PageParams, Pages, usePage } from '@/hooks/usePage';
+import LoadBtn from '../LoadWrap';
+import LoadWrap from '../LoadWrap';
 
 type ContentProps = {
     isPast?: boolean;
@@ -43,16 +43,15 @@ function Content({ isPast=false, t, coversHost, setGlobalPage, tournaments, lang
                         (e.target as HTMLImageElement).src = '/images/cross.svg';
                     }}
                     />
+                </div>
+
+                <div className={styles.cardContent}>
+                    <h3 className={styles.tournamentTitle}>{tournament.title}</h3>
                     {!isPast && tournament.status === TournamentStatus.ACTIVE && (
                     <div className={styles.registrationBadge}>
                         {t('registrationOpen')}
                     </div>
                     )}
-                </div>
-
-                <div className={styles.cardContent}>
-                    <h3 className={styles.tournamentTitle}>{tournament.title}</h3>
-
                     <div className={styles.tournamentMeta}>
                     <div className={styles.metaItem}>
                         <Calendar size={16} />
@@ -83,29 +82,11 @@ function Content({ isPast=false, t, coversHost, setGlobalPage, tournaments, lang
 export default function TournamentsList() {
   const { t } = useTranslation();
   const { setPage: setGlobalPage } = usePage()
-  const [loading, setLoading] = useState(false);
   const lang = useAtomValue(languageAtom)
   const [page, setPage] = useState(1)
-  const { tournaments, tournamentsCount } = useTournaments(lang, page, true)
+  const { tournaments, tournamentsCount, isLoading } = useTournaments(lang, page, true)
   const [currentTournaments, setCurrentTournaments] = useState<TournamentShortType[]>([])
   const { api } = useApi()
-
-  useEffect(()=>{
-    setCurrentTournaments(state=>{
-      if (JSON.stringify(state) !== JSON.stringify(tournaments))
-        return [...tournaments]
-      return state
-    })
-  }, [page, tournaments])
-
-  const loadMore = () => {
-    setLoading(true);
-    // Имитация загрузки
-    setTimeout(() => {
-      setPage(page+1);
-      setLoading(false);
-    }, 800);
-  };
 
   const upcomingTournaments: TournamentShortType[] = [];
   const pastTournaments: TournamentShortType[] = [];
@@ -125,31 +106,14 @@ export default function TournamentsList() {
         <p className={styles.subtitle}>{t('findYourTournament')}</p>
       </div>
       <div className={styles.content}>
-        {/* Секция предстоящих турниров */}
-        <Content lang={lang} setGlobalPage={setGlobalPage} coversHost={api.covers} t={t} tournaments={upcomingTournaments} />
+        <LoadWrap loading={isLoading} totalCount={tournamentsCount} page={page} setPage={setPage} data={tournaments} setData={setCurrentTournaments}>
+          {/* Секция предстоящих турниров */}
+          <Content lang={lang} setGlobalPage={setGlobalPage} coversHost={api.covers} t={t} tournaments={upcomingTournaments} />
 
-        {/* Секция прошедших турниров */}
-        {pastTournaments.length > 0 &&
-        <Content isPast lang={lang} setGlobalPage={setGlobalPage} coversHost={api.covers} t={t} tournaments={pastTournaments} />}
-
-        {/* Кнопка "Показать больше" */}
-        {page * PAGE_SIZE_TOURNAMENTS < tournamentsCount && (
-            <div className={styles.loadMoreWrapper}>
-            <Button
-                title={t('showMore')}
-                onClick={loadMore}
-                className={styles.loadMoreButton}
-                disabled={loading}
-                stroke
-            >
-                {loading ? (
-                <span className={styles.loadingSpinner}></span>
-                ) : (
-                t('showMore')
-                )}
-            </Button>
-            </div>
-        )}
+          {/* Секция прошедших турниров */}
+          {pastTournaments.length > 0 &&
+          <Content isPast lang={lang} setGlobalPage={setGlobalPage} coversHost={api.covers} t={t} tournaments={pastTournaments} />}
+        </LoadWrap>
       </div>
     </div>
   );

@@ -1,49 +1,66 @@
 // components/DataTable.tsx
+import { ReactNode } from 'react';
 import styles from './index.module.css';
 
 interface TableProps {
-  data: string[][];
-  headers?: string[];
+  data: (string|ReactNode)[][];
+  titles?: string[];
   hints?: string[][];
   className?: string;
 }
 
 export default function Table({
   data,
-  headers,
+  titles,
   hints,
   className = ''
 }: TableProps) {
   return (
     <div className={`${styles.container} ${className}`}>
-      {headers && (
-        <div className={styles.header}>
-          {headers.map((h, i) => (
-            <div key={i} className={styles.headerCell}>
-              <span className={styles.headerText}>{h}</span>
-            </div>
-          ))}
-        </div>
-      )}
+      <table className={styles.table}>
+        {titles && (
+          <thead>
+            <tr className={styles.headerRow}>
+              {titles.map((title, i) => (
+                <th key={i} className={styles.headerCell}>
+                  <span className={styles.headerText}>{title}</span>
+                </th>
+              ))}
+            </tr>
+          </thead>
+        )}
 
-      <div className={`${styles.body}`}>
-        {data.map((row, rowIndex) => (
-          <div key={rowIndex} className={styles.row}>
-            {row.map((cell, cellIndex) => (
-              <div key={cellIndex} className={styles.cell}>
-                {cell.includes('\n') ? (
-                  <>
-                    <span className={styles.text} title={hints ? hints[rowIndex][cellIndex] : undefined}>{cell.split('\n')[0]}</span>
-                    <span className={styles.hint}>{cell.split('\n')[1]}</span>
-                  </>
-                ) : (
-                  <span className={styles.text} title={hints ? hints[rowIndex][cellIndex] : undefined}>{cell}</span>
-                )}
-              </div>
-            ))}
-          </div>
-        ))}
-      </div>
+        <tbody>
+          {data.map((row, rowIndex) => (
+            <tr key={rowIndex} className={styles.row}>
+              {row.map((cell, cellIndex) => (
+                <td key={cellIndex} className={styles.cell}>
+                  {typeof cell === "string" && cell.includes('\n') ? (
+                    <>
+                      <span
+                        className={styles.text}
+                        title={hints?.[rowIndex]?.[cellIndex]}
+                      >
+                        {cell.split('\n')[0]}
+                      </span>
+                      <span className={styles.hint}>
+                        {cell.split('\n')[1]}
+                      </span>
+                    </>
+                  ) : (
+                    <span
+                      className={styles.text}
+                      title={hints?.[rowIndex]?.[cellIndex]}
+                    >
+                      {cell}
+                    </span>
+                  )}
+                </td>
+              ))}
+            </tr>
+          ))}
+        </tbody>
+      </table>
     </div>
   );
 }

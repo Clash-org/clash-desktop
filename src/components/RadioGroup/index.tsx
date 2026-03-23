@@ -35,14 +35,13 @@ export default function RadioGroup<T>({
       className={`
         ${styles.container}
         ${styles[direction]}
-        ${disabled ? styles.disabled : ''}
         ${className}
       `}
       role="radiogroup"
     >
       {options.map((option) => {
         const isChecked = value === option.value;
-        const isDisabled = disabled || option.disabled;
+        const isDisabled = (disabled || option.disabled) && !isChecked;
 
         return (
           <label

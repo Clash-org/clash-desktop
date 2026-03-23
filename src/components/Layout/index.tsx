@@ -1,7 +1,7 @@
 // components/Layout/index.tsx
-import { Boxes, Network, Radio, ScrollText, Settings, Timer, Trophy, User } from "lucide-react";
+import { Boxes, ChartNoAxesCombined, Crown, Info, Network, Radio, ScrollText, Settings, Timer, Trophy, User } from "lucide-react";
 import styles from "./index.module.css"
-import { useState, useEffect, CSSProperties } from "react";
+import { useState, useEffect, CSSProperties, useCallback, useRef } from "react";
 import { storage } from "@/utils/storage";
 import ModalWindow from "../ModalWindow";
 import DirectP2P from "../DirectP2P";
@@ -19,6 +19,7 @@ function LayoutContent() {
     const [user, setUser] = useAtom(userAtom)
     const [lang] = useAtom(languageAtom)
     const { user: userData } = useMe(lang)
+    const pageRef = useRef(page);
 
     const profileHandler = () => {
         if (user) {
@@ -33,8 +34,30 @@ function LayoutContent() {
             setUser(userData)
     }, [userData])
 
+    useEffect(() => {
+        pageRef.current = page;
+    }, [page]);
+
+    const handleTabPress = useCallback(() => {
+        const currentPage = pageRef.current;
+
+        if (currentPage === Pages.SETTINGS) {
+            setPage(Pages.TIMER);
+        } else if (currentPage === Pages.TIMER) {
+            setPage(Pages.GRID);
+        } else if (currentPage === Pages.GRID) {
+            setPage(Pages.SETTINGS);
+        } else {
+            setPage(Pages.SETTINGS);
+        }
+    }, [setPage]);
+
     // Проверяем URL параметры при загрузке
     useEffect(() => {
+        const params = new URLSearchParams(window.location.search);
+        if (params.get('view') === 'true') {
+            setPage(Pages.TIMER_VIEW);
+        }
         const handleKeyDown = (event: KeyboardEvent) => {
           const { code, target } = event;
           // Проверяем, не находится ли фокус на интерактивном элементе
@@ -53,13 +76,7 @@ function LayoutContent() {
 
             if (code === "Tab") {
                 event.preventDefault();
-                if (page === Pages.SETTINGS) {
-                    setPage(Pages.TIMER);
-                } else if (page === Pages.TIMER) {
-                    setPage(Pages.GRID);
-                } else {
-                    setPage(Pages.SETTINGS);
-                }
+                handleTabPress()
             }
         };
 
@@ -88,6 +105,9 @@ function LayoutContent() {
                         <Button stroke={page !== Pages.TOURNAMENTS_CREATE} onClick={()=>setPage(Pages.TOURNAMENTS_CREATE)} style={btnStyle}>
                             <Trophy size={28} color="var(--fg)" />
                         </Button>
+                        <Button stroke={page !== Pages.LEADERBOARD} onClick={()=>setPage(Pages.LEADERBOARD)} style={btnStyle}>
+                            <ChartNoAxesCombined size={28} color="var(--fg)" />
+                        </Button>
                     </div>
                     <nav className={styles.nav}>
                         <fieldset
@@ -112,6 +132,14 @@ function LayoutContent() {
                         </fieldset>
                     </nav>
                     <div className={styles.nav} style={wrapBtns(false)}>
+                        {user?.isAdmin &&
+                            <Button stroke onClick={()=>setPage(Pages.ADMIN)} style={btnStyle}>
+                                <Crown size={28} color="var(--fg)" />
+                            </Button>
+                        }
+                        <Button stroke onClick={()=>setPage(Pages.INFO)} style={btnStyle}>
+                            <Info size={28} color="var(--fg)" />
+                        </Button>
                         <Button stroke onClick={()=>setPage(Pages.SERVERS)} style={btnStyle}>
                             <Boxes size={28} color="var(--fg)" strokeWidth={1.5} />
                         </Button>
@@ -138,10 +166,6 @@ export default function Layout() {
     const [isStorageReady, setIsStorageReady] = useState(false);
 
     useEffect(() => {
-        const params = new URLSearchParams(window.location.search);
-        if (params.get('view') === 'true') {
-            // Используем глобальный метод для установки страницы или просто игнорируем
-        }
         storage.init().then(() => setIsStorageReady(true));
     }, []);
 

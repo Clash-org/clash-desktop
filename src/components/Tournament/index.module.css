@@ -7,14 +7,6 @@
   gap: 0;
 }
 
-.wait {
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  height: 90%;
-  font-size: 60px;
-}
-
 .header {
   margin-bottom: 24px;
   background: var(--accent-transparent);

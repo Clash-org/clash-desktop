@@ -28,7 +28,7 @@ import { ChartColumn, HardDriveUpload, Save } from "lucide-react";
 import { useState } from "react";
 
 import styles from "./index.module.css";
-import { ParticipantType, TournamentMatch, TournamentResponse, TournamentSystem } from "@/typings";
+import { ParticipantType, TournamentMatchType, TournamentResponse, TournamentSystem } from "@/typings";
 import { useTranslation } from "react-i18next";
 import { calculateAllSD, getAllInOneParticipants, getTopThreeFighters, getWinnersRobin, getWinnersSwiss } from "@/utils/matchesHandlers";
 import { exportExcel } from "@/utils/exportExcel";
@@ -50,13 +50,13 @@ export default function TournamentGridScreen() {
   const [, setCurrentPairIndex] = useAtom(currentPairIndexAtom);
   const [currentPoolIndex] = useAtom(currentPoolIndexAtom);
   const [duels, setDuels] = useAtom(duelsAtom);
-  const [, setDoubleHits] = useAtom(doubleHitsAtom);
-  const [, setProtests1] = useAtom(protests1Atom);
-  const [, setProtests2] = useAtom(protests2Atom);
-  const [, setWarnings1] = useAtom(warnings1Atom);
-  const [, setWarnings2] = useAtom(warnings2Atom);
-  const [, setScore1] = useAtom(score1Atom);
-  const [, setScore2] = useAtom(score2Atom);
+  const [doubleHits, setDoubleHits] = useAtom(doubleHitsAtom);
+  const [protestsRed, setProtests1] = useAtom(protests1Atom);
+  const [protestsBlue, setProtests2] = useAtom(protests2Atom);
+  const [warningsRed, setWarnings1] = useAtom(warnings1Atom);
+  const [warningsBlue, setWarnings2] = useAtom(warnings2Atom);
+  const [scoreRed, setScore1] = useAtom(score1Atom);
+  const [scoreBlue, setScore2] = useAtom(score2Atom);
   const [playoff, setPlayoff] = useAtom(playoffAtom);
   const [isEnd, setIsEnd] = useAtom(isPlayoffAtom);
   const [showRank, setShowRank] = useState(false)
@@ -88,13 +88,20 @@ export default function TournamentGridScreen() {
 
   const saveOnServer = async () => {
     if (currentTournament && currentNominationId && currentWeaponId) {
-      const matches: TournamentMatch[] = []
+      const matches: TournamentMatchType[] = []
       duels[currentPoolIndex].forEach(pairs=>{
         pairs.forEach(pair=>{
           matches.push({
-            fighterId: pair[0].id,
-            opponentId: pair[1].id,
-            result: pair[0].wins === pair[1].wins ? 0.5: (pair[0].wins > pair[1].wins ? 1 : 0)
+            redId: pair[0].id,
+            blueId: pair[1].id,
+            resultRed: pair[0].wins === pair[1].wins ? 0.5: (pair[0].wins > pair[1].wins ? 1 : 0),
+            doubleHits,
+            protestsRed,
+            protestsBlue,
+            warningsRed,
+            warningsBlue,
+            scoreRed,
+            scoreBlue
           })
         })
       })
@@ -330,7 +337,7 @@ export default function TournamentGridScreen() {
       {sections.map((item, index) => (
         <div key={item.key} className={styles.duelWrap}>
           <h2 className={styles.duelTitle}>{item.title}</h2>
-          <Table data={item.content.data} hints={item.content.hints} headers={headers} />
+          <Table data={item.content.data} hints={item.content.hints} titles={headers} />
 
           {index === 0 &&
           fighterPairs[currentPoolIndex].filter((p) => p.length).length &&
@@ -363,6 +370,7 @@ export default function TournamentGridScreen() {
             `${t("pool") + " " + (currentPoolIndex + 1)}.xlsx`,
           )
         }
+        disabled={!duels[currentPoolIndex].length}
         style={{ width: "100%" }}
       >
         <Save size={28} />
@@ -378,12 +386,14 @@ export default function TournamentGridScreen() {
         {(()=>{
           const content = getDataRankTable(rank)
           return (
-            <Table data={content.data} hints={content.hints} headers={headersRank} />
+            <Table data={content.data} hints={content.hints} titles={headersRank} />
           )
         })()}
       </ModalWindow>
       <ModalWindow isOpen={isRatingOpen && !!rating} onClose={()=>setIsRatingOpen(false)} style={{ maxWidth: "60rem" }}>
-        <Table headers={[t("name"), t("matchesCount"), t("rankChange"), t("newRank"), "RD", t("ratingChange"), t("newRating")]} data={rating?.results.map(res=>[res.user.username, String(res.matchesPlayed), String(res.rankChange), String(res.newRank), String(res.newRd), String(res.ratingChange), String(res.newRating)])} />
+        {rating &&
+        <Table titles={[t("name"), t("matchesCount"), t("rankChange"), t("newRank"), "RD", t("ratingChange"), t("newRating")]} data={rating.results.map(res=>[res.user.username, String(res.matchesPlayed), String(res.rankChange), String(res.newRank), String(res.newRd), String(res.ratingChange), String(res.newRating)])} />
+        }
       </ModalWindow>
     </div>
   ) : (

@@ -37,7 +37,7 @@ export const hotKeysDefault = {
 }
 export type HotKeysType = typeof hotKeysDefault
 
-export const pairsDefault: ParticipantType[][][] = [[
+export const pairsDefault: [ParticipantType, ParticipantType][][] = [[
   // Массив пар бойцов по умолчанию
   [{ ...fighterDefault, name: 'Fighter A', id: generateId("Fighter A") }, { ...fighterDefault, name: 'Fighter B', id: generateId("Fighter B") }],
   [{ ...fighterDefault, name: 'Fighter C', id: generateId("Fighter C") }, { ...fighterDefault, name: 'Fighter D', id: generateId("Fighter D") }]
@@ -64,7 +64,7 @@ export const fighterPairsAtom = atom(pairsDefault);
 
 export const poolsAtom = atom(pairsDefault);
 
-export const duelsAtom = atom<ParticipantType[][][][]>([[]])
+export const duelsAtom = atom<[ParticipantType, ParticipantType][][][]>([[]])
 
 export const hitZonesAtom = atom(hitZonesDefault);
 
@@ -95,3 +95,5 @@ export const currentTournamentAtom = atom<TournamentType>()
 export const currentWeaponIdAtom = atom<number>()
 
 export const currentNominationIdAtom = atom<number>()
+
+export const currentPoolIdAtom = atom<number>()

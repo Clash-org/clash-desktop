@@ -1,4 +1,4 @@
-import { AdditionsFields, LangType, ParticipantInfo, ParticipantStatusType, TournamentFormData, TournamentMatch, TournamentResponse, TournamentStatusType, TournamentType } from '@/typings';
+import { AdditionsFields, LangType, ParticipantStatusType, PoolCreatedType, PredictType, TournamentFormData, TournamentMatchType, TournamentResponse, TournamentStatusType, TournamentType, UserType } from '@/typings';
 import toast from 'react-hot-toast';
 import { mutate } from 'swr';
 import { getApiConfig } from '@/providers/ApiProvider';
@@ -65,11 +65,8 @@ export async function uploadImage(formData: FormData, dir: "covers"|"profiles") 
         method: "POST",
         body: formData
     })
-    if (res.status === 201) {
-        return (await res.json()) as string
-    } else {
-        toast.error(res.statusText)
-    }
+
+    return res
 }
 
 // POST /tournaments/:id/participants
@@ -120,7 +117,7 @@ export async function updateParticipantStatus(tournamentId: number, nominationId
 }
 
 // POST /ratings/process-tournament
-export async function processTournament(tournamentId: number, weaponId: number, nominationId: number, matches: TournamentMatch[], tournamentDate: Date) {
+export async function processTournament(tournamentId: number, weaponId: number, nominationId: number, matches: TournamentMatchType[], tournamentDate: Date) {
   const host = getApiConfig().processTournament
   const result = await fetcher(host, {
     method: 'POST',
@@ -133,17 +130,91 @@ export async function processTournament(tournamentId: number, weaponId: number, 
   return result as TournamentResponse;
 }
 
-// POST /auth/logout
-export async function logout() {
-  const host = getApiConfig().logout
-  const result = await fetcher(host, {
-    method: 'POST'
+// PUT /users
+export async function updateUser(user: (Partial<Omit<UserType, "id">> & { id: string, password?: string }), lang: LangType) {
+  const host = getApiConfig().users
+  const result = await fetcher(host + `?lang=${lang}`, {
+    method: 'PUT',
+    body: JSON.stringify(user)
   });
-  setAccessToken(null)
+
   // Инвалидируем кэш списка
   await mutate((key) => typeof key === 'string' && key.startsWith(host));
 
-  return result as { success: boolean };
+  return result as UserType;
+}
+
+// POST /tournaments/:id/pool
+export async function createPool(pool: PoolCreatedType) {
+  const { tournamentId, ...other } = pool
+  const host = getApiConfig().tournaments
+  const result = await fetcher(`${host}/${tournamentId}/pool`, {
+    method: "POST",
+    body: JSON.stringify(other)
+  })
+
+  await mutate(
+    (key) => typeof key === 'string' && key.includes('/pool')
+  );
+
+  return result as { success: true };
+}
+
+// PUT /tournaments/pool
+export async function updatePool(poolId: number, pool: PoolCreatedType) {
+  const host = getApiConfig().tournaments
+  const result = await fetcher(host + `/pool`, {
+    method: 'PUT',
+    body: JSON.stringify({ poolId, ...pool })
+  });
+
+  // Инвалидируем кэш списка
+  await mutate((key) => typeof key === 'string' && key.includes('/pool'));
+
+  return result as { success: true };
+}
+
+// POST /ratings/predict
+export async function getPredict(fighterRedId: string, fighterBlueId: string, weaponId: number, nominationId: number) {
+  const host = getApiConfig().ratings
+  const result = await fetcher(host + `/predict`, {
+    method: 'POST',
+    body: JSON.stringify({ fighterBlueId, fighterRedId, weaponId, nominationId })
+  });
+
+  // Инвалидируем кэш списка
+  await mutate((key) => typeof key === 'string' && key.startsWith(host));
+
+  return result as PredictType;
+}
+
+// POST /ratings/predict
+export async function createWeapons(weapon: string, nomination: string, weaponId?: number) {
+  let result: { success: boolean } = { success: false }
+  const hostWeapons = getApiConfig().weapons
+  const hostNominations = getApiConfig().nominations
+  if (!weaponId) {
+    const newWeaponId = (await fetcher(hostWeapons, {
+      method: 'POST',
+      body: JSON.stringify({ title: weapon })
+    })) as number
+
+    await mutate((key) => typeof key === 'string' && key.startsWith(hostWeapons));
+
+    result = await fetcher(hostNominations, {
+      method: "POST",
+      body: JSON.stringify({ title: nomination, weaponId: newWeaponId })
+    })
+  } else {
+    result = await fetcher(hostNominations, {
+      method: "POST",
+      body: JSON.stringify({ title: nomination, weaponId })
+    })
+  }
+
+  await mutate((key) => typeof key === 'string' && key.startsWith(hostNominations));
+
+  return result;
 }
 
 // Глобальное состояние access токена (в памяти, не localStorage!)
@@ -158,14 +229,15 @@ export function getAccessToken(): string | null {
 }
 
 // Fetcher для useSWR с автоматическим refresh
-export const fetcher = async (url: string, options: RequestInit = {}, withoutMessage=false) => {
+export const fetcher = async <T>(url: string, options: RequestInit = {}, withoutMessage=false) => {
   const token = getAccessToken();
   const host = getApiConfig().auth
+  const isFormData = options.body instanceof FormData;
 
   const res = await fetch(url, {
     ...options,
     headers: {
-      ...(options.body ? { 'Content-Type': 'application/json' } : {}),
+      ...(!isFormData && options.body ? { 'Content-Type': 'application/json' } : {}),
       ...(token ? { Authorization: `Bearer ${token}` } : {}),
       ...options.headers,
     },
@@ -210,7 +282,7 @@ export const fetcher = async (url: string, options: RequestInit = {}, withoutMes
     throw new Error(error.message);
   }
 
-  return res.json();
+  return res.json() as T;
 };
 
 // Для публичных endpoint без токена

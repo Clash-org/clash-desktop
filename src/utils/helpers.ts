@@ -1,4 +1,4 @@
-import { STORAGE_PREFIX } from "@/constants";
+import { langLabels, STORAGE_PREFIX } from "@/constants";
 import { CurrencyType, LangType, ParticipantType, TournamentStatusType } from "@/typings";
 
 export const truncate = (str: string, max = 9) => str?.length > max ? `${str.slice(0, max-2)}…` : (str ? str: '');
@@ -76,11 +76,17 @@ export function isPoolEndByDuels(duels: ParticipantType[][][][], poolIndex: numb
   }
 }
 
-export const formatDate = (dateString: string, lang: LangType) => {
-  const code = lang === "ru" ? "ru-RU" : (lang === "en" ? "en-US" : "zh-CN")
-  return new Date(dateString).toLocaleDateString(code, {
-    day: 'numeric',
-    month: 'long',
+export function formatDate(dateString: string, lang: LangType, short?: boolean): string;
+export function formatDate(date: Date, lang: LangType, short?: boolean): string;
+export function formatDate(date: string | Date, lang: LangType, short=false) {
+  const code = langLabels[lang]
+  const dateObj = typeof date === 'string' ? new Date(date) : date;
+  if (isNaN(dateObj.getTime())) {
+    throw new Error(`Invalid date: ${date}`);
+  }
+  return dateObj.toLocaleDateString(code, {
+    day: short ? '2-digit' : 'numeric',
+    month: short ? '2-digit' : 'long',
     year: 'numeric'
   });
 };
@@ -152,7 +158,7 @@ export function getSymbolCurrencyByCode(code: CurrencyType) {
   }
 }
 
-export function translateStatus(status: TournamentStatusType, lang: LangType) {
+export function translateStatus(status: TournamentStatusType, lang: LangType): string {
   switch(status) {
     case "active": {
       return lang === "en" ? status : (lang === "ru" ? "активный" : "活动中")
@@ -169,6 +175,6 @@ export function translateStatus(status: TournamentStatusType, lang: LangType) {
 export function capitalizeFirstLetter(str: string) { return str.charAt(0).toUpperCase() + str.slice(1); }
 
 export function getFileNameFromPath(path: string) {
-  const pathArr = path.split("/")
+  const pathArr = path.split(/[\\/]/);
   return pathArr[pathArr.length - 1]
 }

@@ -38,7 +38,7 @@ export default function Auth({ profileActivate, onClose }:{ profileActivate: ()=
                 const res = await login(email, password, lang)
                 if (res) {
                     await userSetter(res)
-                    // profileActivate()
+                    profileActivate()
                     onClose()
                 }
             } else {
@@ -61,14 +61,14 @@ export default function Auth({ profileActivate, onClose }:{ profileActivate: ()=
     const hintStyle: CSSProperties = { fontSize: "12px", color: "var(--placeholder)", textAlign: "center" }
     return (
         <div style={{ display: "flex", flexDirection: "column", gap: "10px", marginTop: "30px" }}>
-            <InputText required placeholder="Email" type="email" value={email} setValue={setEmail} />
+            <InputText required placeholder={t("email")} type="email" value={email} setValue={setEmail} />
             {!isLogin && <InputText required placeholder={t("username")} value={username} setValue={setUsername} /> }
             {!isLogin && <GenderSwitch gender={gender} setGender={setGender} />}
             {!isLogin && <CitySelect city={city} setCity={setCity} cityId={cityId} setCityId={setCityId} />}
             {!isLogin && <span style={hintStyle}>Если не нашли город, то просто введите свой</span> }
             {!isLogin && <ClubSelect clubId={clubId} setClubId={setClubId} club={club} setClub={setClub} />}
             {!isLogin && <span style={hintStyle}>Если не нашли клуб, то просто введите свой</span> }
-            <InputText required placeholder="Password" type="password" value={password} setValue={setPassword} />
+            <InputText required placeholder={t("password")} type="password" value={password} setValue={setPassword} />
             <Button onClick={authHandler} title={isLogin ? t("enter") : t("register")} />
             <span onClick={()=>setIsLogin(!isLogin)} style={{ color: "var(--accent)", cursor: "pointer", alignSelf: "center" }}>{!isLogin ? t("enter") : t("register")}</span>
         </div>

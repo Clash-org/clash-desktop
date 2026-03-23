@@ -3,6 +3,9 @@ import { Calendar, ChevronLeft, ChevronRight } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 import Button from '@/components/Button';
 import styles from './index.module.css';
+import { formatDate } from '@/utils/helpers';
+import { useAtomValue } from 'jotai';
+import { languageAtom } from '@/store';
 
 interface DatePickerProps {
   value?: Date;
@@ -28,6 +31,7 @@ export default function DatePicker({
   const [currentMonth, setCurrentMonth] = useState(value || new Date());
   const [selectedDate, setSelectedDate] = useState<Date | null>(value || null);
   const wrapperRef = useRef<HTMLDivElement>(null);
+  const lang = useAtomValue(languageAtom)
 
   const months = [
     t('january'), t('february'), t('march'), t('april'),
@@ -91,15 +95,6 @@ export default function DatePicker({
     return false;
   };
 
-  const formatDisplayDate = (date: Date | null) => {
-    if (!date) return '';
-    return date.toLocaleDateString('ru-RU', {
-      day: '2-digit',
-      month: '2-digit',
-      year: 'numeric'
-    });
-  };
-
   const renderCalendar = () => {
     const daysInMonth = getDaysInMonth(currentMonth);
     const firstDay = getFirstDayOfMonth(currentMonth);
@@ -151,7 +146,7 @@ export default function DatePicker({
       >
         <Calendar size={18} className={styles.icon} />
         <span className={styles.value}>
-          {selectedDate ? formatDisplayDate(selectedDate) : placeholder}
+          {selectedDate ? formatDate(selectedDate, lang, true) : placeholder}
         </span>
       </div>
 

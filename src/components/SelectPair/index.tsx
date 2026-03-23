@@ -10,14 +10,14 @@ import { Trash2 } from "lucide-react"
 
 type SelectPairProps = {
     poolIndex: number;
-    fighterPairs: ParticipantType[][][];
+    fighterPairs: [ParticipantType, ParticipantType][][];
     currentPairIndex: number;
     selectPair: (idx: number) => void;
     deleteEmptyPairs?: boolean;
     manualMode?: boolean;
-    onPairsReordered?: (newPairs: ParticipantType[][][]) => void;
+    onPairsReordered?: (newPairs: [ParticipantType, ParticipantType][][]) => void;
     onDeletePair?: (id1: string, id2: string) => void
-    setPools?: React.Dispatch<React.SetStateAction<ParticipantType[][][]>>;
+    setPools?: React.Dispatch<React.SetStateAction<[ParticipantType, ParticipantType][][]>>;
 }
 
 export default function SelectPair({
@@ -72,7 +72,7 @@ export default function SelectPair({
             }
 
             // Создаём глубокую копию с гарантией нового референса
-            const newPairs: ParticipantType[][][] = fighterPairs.map(pool =>
+            const newPairs: [ParticipantType, ParticipantType][][] = fighterPairs.map(pool =>
                 pool.map(pair =>
                     pair.map(participant => ({ ...participant }))
                 )

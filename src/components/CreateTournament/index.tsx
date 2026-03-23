@@ -25,7 +25,7 @@ import Checkbox from '../Checkbox';
 import ModalWindow from '../ModalWindow';
 import { CURRENCY_CODES, ParticipantStatus, ParticipantStatusType, TournamentFormData, TournamentStatus, TournamentType } from '@/typings';
 import { createTournament, deleteTournament, updateParticipantStatus, updateTournament, updateTournamentStatus, uploadImage } from '@/utils/api';
-import ImageUploader from '@/ImageUploader';
+import ImageUploader from '../ImageUploader';
 import toast from 'react-hot-toast';
 import { useAtomValue } from 'jotai';
 import { languageAtom, userAtom } from '@/store';
@@ -39,19 +39,21 @@ import { useParticipants } from '@/hooks/useParticipants';
 import { useApi } from '@/hooks/useApi';
 import { useParticipantsInfo } from '@/hooks/useParticipantsInfo';
 import { openUrl } from '@tauri-apps/plugin-opener';
+import { useUsers } from '@/hooks/useUsers';
 
 export default function CreateTournament() {
   const { t } = useTranslation();
   const lang = useAtomValue(languageAtom)
   const user = useAtomValue(userAtom)
-  const { tournaments } = useOrganizerTournaments(user?.id||null, lang)
+  const { tournaments } = useOrganizerTournaments(user?.id, lang)
   const { nominations } = useNominations(lang)
   const { weapons } = useWeapons(nominations)
   const { cities } = useCities(lang)
+  const { users } = useUsers(lang)
   const [currentStep, setCurrentStep] = useState(1);
   const [currentTournament, setCurrentTournament] = useState<TournamentType>();
   const { info: participantsInfo } = useParticipantsInfo(currentTournament?.id, lang)
-  const { participants } = useParticipants(currentTournament?.id || null, currentTournament?.nominationsIds || [])
+  const { participants } = useParticipants(currentTournament?.id, currentTournament?.nominationsIds || [])
   const [socialLink, setSocialLink] = useState('');
   const [showMarkdown, setShowMarkdown] = useState(false);
   const [showDelete, setShowDelete] = useState(false);
@@ -73,6 +75,8 @@ export default function CreateTournament() {
     participantsCount: {},
     socialMedias: [],
     isAdditions: {},
+    moderatorsIds: [],
+    isInternal: false,
     currency: "RUB",
     status: "pending"
   }
@@ -92,6 +96,8 @@ export default function CreateTournament() {
       handleInputChange("socialMedias", currentTournament.socialMedias)
       handleInputChange("title", currentTournament.title)
       handleInputChange("image", currentTournament.image)
+      handleInputChange("isInternal", currentTournament.isInternal)
+      handleInputChange("moderatorsIds", currentTournament.moderators.map(m=>m.id))
       handleInputChange("weaponsIds", nominations.filter(nom=>currentTournament.nominationsIds.includes(nom.id)).map(nom=>nom.weapon.id))
     }
   }, [currentTournament])
@@ -136,7 +142,7 @@ export default function CreateTournament() {
   }
 
   const getNewImageName = async () => {
-      let newName = ""
+      let newName = formData.image || ""
       if (cover.get("image")) {
         const path = await uploadImage(cover, "covers")
         if (path)
@@ -146,7 +152,6 @@ export default function CreateTournament() {
   }
 
   const handleSubmit = async () => {
-
     if (currentTournament) {
       const newName = await getNewImageName()
       const res = await updateTournament({ ...formData, image: newName }, currentTournament.id)
@@ -158,7 +163,7 @@ export default function CreateTournament() {
       const newName = await getNewImageName()
       const data = await createTournament({ ...formData, image: newName })
       if (data) {
-        toast.success(t("tournamentCreated"))
+        toast.success(t("created"))
         setFormData(defaultTournametData)
         setCover(new FormData())
         setCurrentStep(1)
@@ -187,6 +192,13 @@ export default function CreateTournament() {
     label: weapon.title,
   }));
 
+  if (!user)
+    return (
+      <div className="container">
+        <h1 className="title wait">{t("registerFirst")}</h1>
+      </div>
+    )
+
   return (
     <div className={["container", styles.container].join(" ")} style={{ gap: 0 }}>
       {/* Заголовок */}
@@ -197,7 +209,7 @@ export default function CreateTournament() {
 
       {!!tournaments.length &&
       <>
-      <Tabs tabs={[...tabs]} activeTab={activeTab} setActiveTab={setActiveTab} titles={tabsTitles} />
+      <Tabs tabs={tabs} activeTab={activeTab} setActiveTab={setActiveTab} titles={tabsTitles} />
       <Section title={t("tournaments")}>
         <Select
         placeholder={t("yourTournamets")}
@@ -322,6 +334,21 @@ export default function CreateTournament() {
             </div>
 
             <div className={styles.formGroup}>
+              <label className={styles.label}>{t('moderator')}</label>
+              <Select
+                options={users.filter(u=>u.id !== user.id).map(u=>({ label: u.username, value: u.id }))}
+                value={formData.moderatorsIds}
+                setValue={(val)=>handleInputChange("moderatorsIds", val)}
+                multiple
+              />
+            </div>
+
+            <div className={styles.formGroup}>
+              <Switch
+                title={t('internal')}
+                value={formData.isInternal}
+                setValue={(val) => handleInputChange("isInternal", val)}
+              />
               <Switch
                 title={t('childlikeTournament')}
                 value={formData.isAdditions["isChildlike"]}

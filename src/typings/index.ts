@@ -1,13 +1,15 @@
+import { HitZonesType } from "@/store";
+
 export enum Gender {
   FEMALE,
   MALE
 }
 
 export enum TournamentSystem {
-  HYBRID,
-  OLYMPIC,
-  ROBIN,
-  SWISS
+  HYBRID="hybrid",
+  OLYMPIC="olympic",
+  ROBIN="robin",
+  SWISS="swiss"
 }
 
 export type LangType = "en"|"ru"|"cn"
@@ -61,6 +63,7 @@ export type UserType = {
   city: CityType;
   club: ClubType;
   totalMatches: number;
+  moderatorTournamentsIds: number[]
   createdAt: string;
 }
 
@@ -96,6 +99,8 @@ export type TournamentType = {
   participantsCount: {[nominationId: number]: number};
   matchesCount: number[];
   isAdditions: {[field: string]: boolean};
+  isInternal: boolean;
+  moderators: UserType[];
   createdAt: Date;
 }
 
@@ -103,9 +108,9 @@ export type NominationUser = UserType & { status: ParticipantStatusType }
 
 export type NominationUsersType = {[nominationId: string]: NominationUser[]}
 
-export type TournamentShortType = Pick<TournamentType, "image"|"id"|"date"|"title"|"status"> & { city: string }
+export type TournamentShortType = Pick<TournamentType, "image"|"id"|"date"|"title"|"status"> & { city: string, organizer: UserType }
 
-export type TournamentFormData = Omit<TournamentType, "city"|"organizerId"|"matchesCount"|"date"|"createdAt"|"participants"|"nominations"|"id"> & { date: Date, cityId: number }
+export type TournamentFormData = Omit<TournamentType, "city"|"organizerId"|"matchesCount"|"date"|"createdAt"|"participants"|"nominations"|"id"|"moderators"> & { date: Date, cityId: number, moderatorsIds: string[] }
 
 export type WeaponType = {
   id: number;
@@ -133,11 +138,34 @@ export const TournamentStatus = {
 
 export type TournamentStatusType = typeof TournamentStatus[keyof typeof TournamentStatus];
 
-export type TournamentMatch = {
-  fighterId: string;
-  opponentId: string;
-  result: 0 | 0.5 | 1;
+export const MatchTypes = {
+  POOL: 'pool',
+  PLAYOFF: 'playoff'
+} as const;
+export type MatchTypesType = typeof MatchTypes[keyof typeof MatchTypes];
+
+export interface MatchMetadata {
+  // Видео
+  videoUrl?: string;
+  // Произвольные дополнительные данные
+  [key: string]: any;
 }
+
+export type TournamentMatchType = {
+  redId: string;
+  blueId: string;
+  resultRed: 0 | 0.5 | 1;
+  scoreRed: number;
+  scoreBlue: number;
+  type?: MatchTypesType;
+  doubleHits?: number;
+  protestsRed?: number;
+  protestsBlue?: number;
+  warningsRed?: number;
+  warningsBlue?: number;
+}
+
+export type MatchType = Omit<TournamentMatchType, "redId"|"blueId"> & { red: UserType, blue: UserType }
 
 export type TournamentResponse = {
   processed: number;
@@ -201,4 +229,40 @@ export type StatsType = {
     matches: number;
     rank?: number;
   }[]
+}
+
+export type Leaderboard = {
+    rank: number;
+    userId: string;
+    username: string;
+    rating: number;
+    rd: number;
+    matches: number;
+    lastActive: Date | null;
+}
+
+export type PoolType = {
+    id: number;
+    createdAt: Date | null;
+    nominationId: number;
+    tournamentId: number;
+    moderatorId: string;
+    system: TournamentSystem;
+    hitZones: HitZonesType;
+    time: number;
+    pairs: [UserType|null, UserType|null][];
+    isEnd: boolean | null;
+}
+
+export type PoolCreatedType = Omit<PoolType, "createdAt"|"isEnd"|"pairs"|"id"> & { pairsIds: [string, string][] }
+
+export type PredictType = {
+    fighterRed: {
+        id: string;
+        winProbability: number;
+    };
+    fighterBlue: {
+        id: string;
+        winProbability: number;
+    };
 }

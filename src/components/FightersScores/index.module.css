@@ -1,0 +1,28 @@
+.wrap {
+    display: flex;
+    flex-direction: column;
+    margin: 0 auto;
+}
+
+.cell {
+    border: 2px solid var(--accent);
+    display: flex;
+    width: fit-content;
+    font-size: 26px;
+    border-radius: 16px;
+    overflow: hidden;
+    background: var(--accent-transparent);
+}
+
+.cell > span {
+    padding: 15px;
+}
+
+.cell > span:not(:last-child) {
+    border-right: 2px solid var(--accent);
+}
+
+.win {
+    color: var(--fg);
+    background-color: var(--accent);
+}

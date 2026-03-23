@@ -1,6 +1,6 @@
 import useSWR from 'swr';
 import { fetcher } from '@/utils/api';
-import { LangType, TournamentShortType, TournamentType } from '@/typings';
+import { LangType, PoolType, TournamentShortType, TournamentType } from '@/typings';
 import { useApi } from './useApi';
 
 
@@ -20,7 +20,7 @@ export function useTournaments(lang: LangType, page: number, short?: false): {
   mutate: () => void;
 };
 
-// GET /tournaments?lang=&short=
+// GET /tournaments?lang=&short=&page=
 export function useTournaments(lang: LangType, page: number, short?: boolean): {
   tournaments: TournamentShortType[]|TournamentType[];
   tournamentsCount: number;
@@ -51,9 +51,9 @@ export function useTournaments(lang: LangType, page: number, short?: boolean): {
 }
 
 // GET /tournaments/:id?lang=
-export function useTournament(id: number | null, lang: LangType) {
+export function useTournament(id: number | undefined, lang: LangType) {
   const { api } = useApi()
-  const { data, error, isLoading, mutate } = useSWR(
+  const { data, error, isLoading, mutate } = useSWR<TournamentType>(
     id ? `${api.tournaments}/${id}?lang=${lang}` : null,
     fetcher,
     {
@@ -62,7 +62,26 @@ export function useTournament(id: number | null, lang: LangType) {
   );
 
   return {
-    tournament: data as TournamentType|undefined,
+    tournament: data,
+    isLoading,
+    error,
+    mutate,
+  };
+}
+
+// GET /tournaments?lang=&ids=
+export function useTournamentsByIds(ids: number[] | undefined, lang: LangType) {
+  const { api } = useApi()
+  const { data, error, isLoading, mutate } = useSWR<TournamentType[]>(
+    ids && ids.length ? `${api.tournaments}?lang=${lang}&ids=${JSON.stringify(ids)}` : null,
+    fetcher,
+    {
+      revalidateOnFocus: false,
+    }
+  );
+
+  return {
+    tournaments: data,
     isLoading,
     error,
     mutate,
@@ -70,7 +89,7 @@ export function useTournament(id: number | null, lang: LangType) {
 }
 
 // GET /tournaments/organizer/:uuid
-export function useOrganizerTournaments(uuid: string | null, lang: LangType) {
+export function useOrganizerTournaments(uuid: string | undefined, lang: LangType) {
   const { api } = useApi()
   const { data, error, isLoading } = useSWR(
     uuid ? `${api.tournaments}/organizer/${uuid}?lang=${lang}` : null,
@@ -84,5 +103,24 @@ export function useOrganizerTournaments(uuid: string | null, lang: LangType) {
     tournaments: data as TournamentType[] || [],
     isLoading,
     error,
+  };
+}
+
+// GET /tournaments/:id/pool
+export function usePool(tournamentId?: number) {
+  const { api } = useApi()
+  const { data, error, isLoading, mutate } = useSWR<PoolType[]>(
+    tournamentId ? `${api.tournaments}/${tournamentId}/pool` : null,
+    url => fetcher(url, undefined, true),
+    {
+      revalidateOnFocus: false,
+    }
+  );
+
+  return {
+    pools: data,
+    isLoading,
+    error,
+    mutate,
   };
 }

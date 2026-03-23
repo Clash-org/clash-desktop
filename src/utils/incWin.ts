@@ -6,7 +6,7 @@ export function incWin(
     opponent: string,
     pairIndex: number,
     poolIndex: number,
-    setter: React.Dispatch<React.SetStateAction<ParticipantType[][][]>>,
+    setter: React.Dispatch<React.SetStateAction<[ParticipantType, ParticipantType][][]>>,
     warnings: number,
     protests: number,
     doubleHits: number,
@@ -15,12 +15,12 @@ export function incWin(
 )
 {
   setter(prev =>{
-      const buf: ParticipantType[][][] = JSON.parse(JSON.stringify(prev))
+      const buf: [ParticipantType, ParticipantType][][] = JSON.parse(JSON.stringify(prev))
       buf[poolIndex] = buf[poolIndex].map((pair, i) =>{
             if (pairIndex === i) {
                 return pair.map(p =>
                     p.id === winnerId ? { ...p, wins: (isLosse && !draws) ? 0 : 1, scores, losses: (isLosse && !draws) ? 1: 0, draws: p.draws + draws, opponents: [...p.opponents, opponent], warnings, protests, doubleHits } : p
-                )
+                ) as [ParticipantType, ParticipantType]
             }
             return pair
         }

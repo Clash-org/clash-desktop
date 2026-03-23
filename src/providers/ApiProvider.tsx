@@ -18,12 +18,8 @@ export class ApiConfig {
     return `${this._baseUrl}auth/`;
   }
 
-  get logout(): string {
-    return `${this.auth}logout`
-  }
-
   get users(): string {
-    return `${this._baseUrl}users/`;
+    return `${this._baseUrl}users`;
   }
 
   get cities(): string {
@@ -52,6 +48,10 @@ export class ApiConfig {
 
   get ratings(): string {
     return `${this._baseUrl}ratings`;
+  }
+
+  get matches(): string {
+    return `${this._baseUrl}matches`;
   }
 
   get processTournament(): string {

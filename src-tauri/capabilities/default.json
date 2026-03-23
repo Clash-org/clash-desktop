@@ -49,6 +49,8 @@
         }
       ]
     },
+    "core:app:allow-version",
+    "core:app:default",
     "core:webview:allow-internal-toggle-devtools",
     "core:path:allow-resolve-directory",
     "core:path:allow-join",

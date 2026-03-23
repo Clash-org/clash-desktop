@@ -8,6 +8,7 @@
   --surface: #221D1A;
   --surface-2: #222;
   --placeholder: #FFFFFF80;
+  --accent-rgb: 253, 80, 3;
 
   /* Типография */
   --font-regular: 'OnestRegular', -apple-system, sans-serif;
@@ -169,4 +170,13 @@ button:disabled {
 .link {
   border-bottom: 1px dashed var(--accent);
   cursor: pointer;
+}
+
+.wait {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  height: 90%;
+  font-size: 60px;
+  text-align: center;
 }

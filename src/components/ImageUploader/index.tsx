@@ -40,10 +40,6 @@ export default function ImageUploader({
   const defaultPlaceholder = t('imageUploaderPlaceholder');
   const maxSizeMB = maxSize / 1024 / 1024;
 
-  useEffect(() => {
-    setPreviewUrl(value || null);
-  }, [value]);
-
   // Обработка перетаскивания
   useEffect(() => {
     const dropZone = dropZoneRef.current;

@@ -1,10 +1,10 @@
 import useSWR from 'swr';
 import { fetcher } from '@/utils/api';
-import { NominationType } from '@/typings';
+import { LangType, NominationType } from '@/typings';
 import { useApi } from './useApi';
 
 // GET /nominations?lang=
-export function useNominations(lang: string) {
+export function useNominations(lang: LangType) {
   const { api } = useApi()
   const { data, error, isLoading, mutate } = useSWR<NominationType[]>(
     `${api.nominations}?lang=${lang}`,

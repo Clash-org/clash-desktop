@@ -1,4 +1,5 @@
 import {
+  CheckCircle,
   PictureInPicture2,
   Plus,
   RefreshCw,
@@ -51,9 +52,10 @@ import {
   userAtom,
   currentTournamentAtom,
   currentWeaponIdAtom,
-  currentNominationIdAtom
+  currentNominationIdAtom,
+  currentPoolIdAtom
 } from "@store";
-import { NominationUser, ParticipantStatus, ParticipantType, TournamentStatus, TournamentSystem } from "@typings";
+import { NominationType, NominationUser, ParticipantStatus, ParticipantType, PoolCreatedType, TournamentStatus, TournamentSystem } from "@typings";
 import { langLabels } from "@constants";
 import toast from "react-hot-toast";
 import Switch from "@/components/Switch";
@@ -66,18 +68,21 @@ import { openFightViewerWindow } from "@/utils/windowManager";
 import { storage } from "@/utils/storage";
 import RadioGroup from "@/components/RadioGroup";
 import { useParticipants } from "@/hooks/useParticipants";
-import { useOrganizerTournaments } from "@/hooks/useTournaments";
+import { useOrganizerTournaments, usePool, useTournamentsByIds } from "@/hooks/useTournaments";
 import Select from "../Select";
 import WeaponNominationsSelect from "../WeaponNominationsSelect";
+import { createPool, updatePool } from "@/utils/api";
+import { useNominations } from "@/hooks/useNominations";
 
 type TrashPairProps = {
-  setFighterPairs: React.Dispatch<React.SetStateAction<ParticipantType[][][]>>;
-  setPools: React.Dispatch<React.SetStateAction<ParticipantType[][][]>>;
+  setFighterPairs: React.Dispatch<React.SetStateAction<[ParticipantType, ParticipantType][][]>>;
+  setPools: React.Dispatch<React.SetStateAction<[ParticipantType, ParticipantType][][]>>;
   setСurrentPoolIndex: React.Dispatch<React.SetStateAction<number>>;
   setParticipants: Dispatch<SetStateAction<ParticipantType[][]>>;
-  setDuels: Dispatch<SetStateAction<ParticipantType[][][][]>>;
+  setDuels: Dispatch<SetStateAction<[ParticipantType, ParticipantType][][][]>>;
   setIsPlayoff: Dispatch<SetStateAction<boolean[]>>;
   currentPoolIndex: number;
+  isEnd: boolean;
   pool: number;
 };
 
@@ -88,6 +93,7 @@ function PoolControllers({
   setСurrentPoolIndex,
   setParticipants,
   setIsPlayoff,
+  isEnd,
   pool,
   currentPoolIndex,
 }: TrashPairProps) {
@@ -115,9 +121,9 @@ function PoolControllers({
     if (res) {
       const [data, length] = res;
       const stateHandlerWrap =
-        (onlyFirst: boolean) => (state: ParticipantType[][][]) => {
-          let firstList: ParticipantType[][] = [];
-          const allLists: ParticipantType[][][] = [];
+        (onlyFirst: boolean) => (state: [ParticipantType, ParticipantType][][]) => {
+          let firstList: [ParticipantType, ParticipantType][] = [];
+          const allLists: [ParticipantType, ParticipantType][][] = [];
           if (onlyFirst) {
             for (let i = 0; i < Math.floor(data.length / length); i++) {
               firstList.push([
@@ -188,7 +194,7 @@ function PoolControllers({
       });
       setPools((state) => stateHandlerWrap(true)(state));
       setDuels((state) => {
-        const buf: ParticipantType[][][][] = JSON.parse(JSON.stringify(state));
+        const buf: [ParticipantType, ParticipantType][][][] = JSON.parse(JSON.stringify(state));
         buf[pool] = [];
         buf[pool] = stateHandlerWrap(false)(buf[pool]);
         setIsPlayoff((isEnds) => {
@@ -204,11 +210,11 @@ function PoolControllers({
       });
       setParticipants((state) => {
         const buf = [...state];
-        const virtualArr: ParticipantType[][][] = new Array(pool + 1);
-        virtualArr[pool] = [...buf];
+        const virtualArr: [ParticipantType, ParticipantType][][] = new Array(pool + 1);
+        virtualArr[pool] = [...buf] as [ParticipantType, ParticipantType][];
         buf[pool] = stateHandlerWrap(true)(virtualArr)
           [pool].flat()
-          .filter((item) => item.name !== "—");
+          .filter((item) => item.name !== "—") as [ParticipantType, ParticipantType];
         return buf;
       });
     }
@@ -216,6 +222,7 @@ function PoolControllers({
 
   return (
     <div className={styles.poolController}>
+      {isEnd && <CheckCircle color="var(--accent)" />}
       <Upload className={styles.trashIcon} onClick={importFile} />
       {pool !== 0 ? (
         <Trash2 className={styles.trashIcon} onClick={deleteHandler} />
@@ -224,6 +231,23 @@ function PoolControllers({
       )}
     </div>
   );
+}
+
+type PoolContentProps = {
+  pairs: [ParticipantType, ParticipantType][];
+  nominationId: number|undefined;
+  nominations: NominationType[];
+}
+
+function PoolContent({ pairs, nominationId, nominations }:PoolContentProps) {
+  return <>
+    {nominationId && <span style={{ color: "var(--accent)" }}>{nominations.find(nom=>nom.id === nominationId)?.title}</span>}
+    {pairs.map((pair, idx) => (
+      <span key={idx}>
+        {`${getName(pair[0].name)} VS ${getName(pair[1].name)}`}
+      </span>
+    ))}
+  </>
 }
 
 function App() {
@@ -238,11 +262,12 @@ function App() {
   const [pools, setPools] = useAtom(poolsAtom);
   const [currentPairIndex, setCurrentPairIndex] = useAtom(currentPairIndexAtom);
   const [currentPoolIndex, setСurrentPoolIndex] = useAtom(currentPoolIndexAtom);
+  const [currentPoolId, setCurrentPoolId] = useAtom(currentPoolIdAtom);
   const [language, setLanguage] = useAtom(languageAtom);
   const [tournamentSystem, setTournamentSystem] = useAtom(tournamentSystemAtom);
   const [, setDuels] = useAtom(duelsAtom);
   const [hotKeys, setHotKeys] = useAtom(hotKeysAtom);
-  const [, setIsPlayoff] = useAtom(isPlayoffAtom);
+  const [isPlayoff, setIsPlayoff] = useAtom(isPlayoffAtom);
   const [participants, setParticipants] = useAtom(participantsAtom);
   const [, setPlayoff] = useAtom(playoffAtom);
   const [, setDoubleHits] = useAtom(doubleHitsAtom);
@@ -257,11 +282,14 @@ function App() {
   const [weaponId, setWeaponId] = useAtom(currentWeaponIdAtom)
   const [nominationId, setNominationId] = useAtom(currentNominationIdAtom)
 
-  const { tournaments } = useOrganizerTournaments(user?.id || null, language)
-  const { participants: tournamentParticipants } = useParticipants(currentTournament?.id || null, currentTournament?.nominationsIds || [])
-
+  const { tournaments } = useOrganizerTournaments(user?.id, language)
+  const { tournaments: tournamentsOfModerator } = useTournamentsByIds(user?.moderatorTournamentsIds, language)
+  const { pools: poolsFromServer } = usePool(currentTournament?.id)
+  const { participants: tournamentParticipants } = useParticipants(currentTournament?.id, currentTournament?.nominationsIds || [])
+  const { nominations } = useNominations(language)
   /* ---------- состояние ---------- */
   const [currentTournamentParticipants, setCurrentTournamentParticipants] = useState<NominationUser[]>([])
+  const [currentModeratorId, setCurrentModeratorId] = useState("")
   const [newName, setNewName] = useState("");
   const [isSounds, setIsSounds] = useState(true);
   const hotKeysActions = [
@@ -291,6 +319,78 @@ function App() {
       value: TournamentSystem.SWISS
     }
   ]
+
+  useEffect(()=>{
+    if (poolsFromServer && poolsFromServer.length) {
+      for (let poolIndex in poolsFromServer) {
+        setFighterPairs(state=>{
+          const buf = [...state]
+          buf[poolIndex] = poolsFromServer[poolIndex].pairs.map(pair=>[
+            pair[0] !== null ?
+            {
+              ...fighterDefault,
+              name: pair[0].username,
+              id: pair[0].id,
+              club: pair[0].club.title
+            } : {...fighterDefault},
+            pair[1] !== null ?
+            {
+              ...fighterDefault,
+              name: pair[1].username,
+              id: pair[1].id,
+              club: pair[1].club.title
+            } : {...fighterDefault}
+          ])
+
+          setPools([...buf])
+          return buf
+        })
+        setParticipants(state=>{
+          const buf = [...state]
+          buf[poolIndex] = poolsFromServer[poolIndex].pairs.map(pair=>{
+            const fighters: ParticipantType[] = []
+            if (pair[0] !== null)
+              fighters.push({
+                ...fighterDefault,
+                name: pair[0].username,
+                id: pair[0].id,
+                club: pair[0].club.title
+              })
+            if (pair[1] !== null)
+              fighters.push({
+                ...fighterDefault,
+                name: pair[1].username,
+                id: pair[1].id,
+                club: pair[1].club.title
+              })
+            return fighters
+          }).flat()
+
+          return buf
+        })
+        setCurrentPairIndex(state => {
+          const buf = [...state]
+          buf[poolIndex] = 0
+          return buf
+        });
+        setDuels(state => {
+          const buf = [...state]
+          buf[poolIndex] = []
+          return buf
+        });
+        setIsPlayoff(state=>{
+          const buf = [...state]
+          buf[poolIndex] = poolsFromServer[poolIndex].isEnd || false
+          return buf
+        })
+      }
+      setTournamentSystem(poolsFromServer[0].system)
+      setCurrentPoolId(poolsFromServer[0].id)
+      setСurrentPoolIndex(0)
+      setHitZones(poolsFromServer[0].hitZones)
+      setFightTime(poolsFromServer[0].time)
+    }
+  }, [poolsFromServer])
 
   useEffect(()=>{
     if (tournamentParticipants && nominationId && tournamentParticipants[nominationId]) {
@@ -510,6 +610,31 @@ function App() {
     }
   }
 
+  const savePool = async ()=>{
+    if (currentTournament && nominationId) {
+      const data: PoolCreatedType = {
+          tournamentId: currentTournament.id,
+          nominationId,
+          time: fightTime,
+          system: tournamentSystem,
+          hitZones,
+          moderatorId: currentModeratorId,
+          pairsIds: fighterPairs[currentPoolIndex].map(pair=>[pair[0].id, pair[1].id])
+      }
+      if (currentPoolId) {
+        const res = await updatePool(currentPoolId, data)
+        if (res) {
+          toast.success(t("poolsSaved"))
+        }
+      } else {
+        const res = await createPool(data)
+        if (res) {
+          toast.success(t("poolsSaved"))
+        }
+      }
+    }
+  }
+
   const resetAll = async () => {
     setFightTime(fightTimeDefault);
     setHitZones(hitZonesDefault);
@@ -528,6 +653,8 @@ function App() {
     })();
   }, [isSounds]);
 
+  const isSimpleMode = !poolsFromServer || user?.id === currentTournament?.organizerId
+
   return (
     <div className={styles.container}>
       <div className={styles.pool} style={{ paddingLeft: "30px" }}>
@@ -537,6 +664,7 @@ function App() {
             <Section title={t("pool") + " " + (i * 2 + 1).toString()} key={i}>
               <PoolControllers
                 pool={i * 2}
+                isEnd={isPlayoff[i * 2]}
                 setIsPlayoff={setIsPlayoff}
                 currentPoolIndex={currentPoolIndex}
                 setDuels={setDuels}
@@ -545,11 +673,7 @@ function App() {
                 setСurrentPoolIndex={setСurrentPoolIndex}
                 setParticipants={setParticipants}
               />
-              {pairs.map((pair, idx) => (
-                <span key={idx}>
-                  {`${getName(pair[0].name)} VS ${getName(pair[1].name)}`}
-                </span>
-              ))}
+              <PoolContent nominationId={poolsFromServer?.[i * 2]?.nominationId || nominationId} pairs={pairs} nominations={nominations} />
             </Section>
           ))}
       </div>
@@ -564,35 +688,46 @@ function App() {
           </button>
         </div>
 
-        {!!tournaments.length &&
+        {(!!tournaments.length || !!tournamentsOfModerator?.length) && user &&
         (
           <Section title={t("tournaments")}>
             <Select
               placeholder={t("yourTournamets")}
               setValue={(val)=>setCurrentTournament(JSON.parse(val))}
               value={JSON.stringify(currentTournament)}
-              options={tournaments.filter(t=>t.status === TournamentStatus.ACTIVE).map(t=>({ label: t.title, value: JSON.stringify(t) }))}
+              options={(tournaments.length ? tournaments : tournamentsOfModerator!).filter(t=>t.status === TournamentStatus.ACTIVE).map(t=>({ label: t.title, value: JSON.stringify(t) }))}
             />
-            {currentTournament &&
+            {currentTournament && !!tournaments.length &&
             <>
-            <WeaponNominationsSelect
-            nominations={currentTournament.nominations}
-            weaponId={weaponId}
-            nominationId={nominationId}
-            setNominationId={setNominationId}
-            setWeaponId={setWeaponId}
-            />
-            {tournamentParticipants && nominationId &&
-            <>
-            <span style={{ marginTop: "10px" }}>{t("participants")}</span>
-            {currentTournamentParticipants?.filter(p=>p.status === ParticipantStatus.CONFIRMED).map((p, idx)=>
-              <div key={idx} className={styles.participantRow}>
-                <span className={styles.participantTxt}>{p.username}</span>
-                <button onClick={()=>addParticipant(p.username, p.id, p.club.title)}>
-                  <Plus size={22} color="var(--fg)" />
-                </button>
-              </div>
-            )}
+              <WeaponNominationsSelect
+              nominations={currentTournament.nominations}
+              weaponId={weaponId}
+              nominationId={nominationId}
+              setNominationId={setNominationId}
+              setWeaponId={setWeaponId}
+              />
+              {tournamentParticipants && nominationId && currentTournament.organizerId === user.id &&
+              <>
+              <span style={{ marginTop: "10px" }}>{t("participants")}</span>
+              {currentTournamentParticipants?.filter(p=>p.status === ParticipantStatus.CONFIRMED).map((p, idx)=>
+                <div key={idx} className={styles.participantRow}>
+                  <span className={styles.participantTxt}>{p.username}</span>
+                  <button onClick={()=>addParticipant(p.username, p.id, p.club.title)}>
+                    <Plus size={22} color="var(--fg)" />
+                  </button>
+                </div>
+              )}
+              <span>{t("moderator")}</span>
+              <Select
+              options={currentTournament.moderators.map(m=>({ label: m.username, value: m.id }))}
+              value={currentModeratorId}
+              setValue={setCurrentModeratorId}
+              />
+              <Button
+              title={t("savePoolsForModerator")}
+              onClick={savePool}
+              disabled={!currentModeratorId || !fighterPairs[currentPoolIndex].length}
+              />
             </>
             }
             </>
@@ -617,7 +752,7 @@ function App() {
               <Plus size={28} color="var(--fg)" />
             </Button>
 
-            {participants[currentPoolIndex]?.map((p, idx) => (
+            {isSimpleMode && participants[currentPoolIndex]?.map((p, idx) => (
               <div key={idx} className={styles.participantRow}>
                 <span className={styles.participantTxt}>{p.name}</span>
                 <button
@@ -646,12 +781,20 @@ function App() {
                     setDuels((state) => [...state, []]);
                     setIsPlayoff((state) => [...state, false]);
                   }
-                  setСurrentPoolIndex(pool - 1);
+
+                  if (poolsFromServer && poolsFromServer.length >= pool) {
+                    setСurrentPoolIndex(pool - 1);
+                    setCurrentPoolId(poolsFromServer[pool - 1].id)
+                    setHitZones(poolsFromServer[pool - 1].hitZones)
+                    setFightTime(poolsFromServer[pool - 1].time)
+                  } else if (isSimpleMode)
+                    setСurrentPoolIndex(pool - 1);
                 }}
                 min={1}
+                max={!isSimpleMode ? poolsFromServer.length : undefined}
               />
             </div>
-            <RadioGroup name="system" onChange={(val)=>setTournamentSystem(val)} value={tournamentSystem} options={systems} />
+            <RadioGroup disabled={!isSimpleMode} name="system" onChange={(val)=>setTournamentSystem(val)} value={tournamentSystem} options={systems} />
           </>
 
           <Button
@@ -682,7 +825,7 @@ function App() {
           currentPairIndex={currentPairIndex[currentPoolIndex]}
           selectPair={selectPair}
           onPairsReordered={setFighterPairs}
-          setPools={setPools}
+          setPools={isSimpleMode ? setPools : undefined}
           onDeletePair={(id1, id2)=>{ removeParticipant(id1); removeParticipant(id2) }}
           manualMode
         />
@@ -795,6 +938,7 @@ function App() {
             <Section title={t("pool") + " " + ((i + 1) * 2).toString()} key={i}>
               <PoolControllers
                 pool={(i + 1) * 2 - 1}
+                isEnd={isPlayoff[(i + 1) * 2 - 1]}
                 setIsPlayoff={setIsPlayoff}
                 currentPoolIndex={currentPoolIndex}
                 setDuels={setDuels}
@@ -803,11 +947,7 @@ function App() {
                 setСurrentPoolIndex={setСurrentPoolIndex}
                 setParticipants={setParticipants}
               />
-              {pairs?.map((pair, idx) => (
-                <span key={idx}>
-                  {`${getName(pair[0].name)} VS ${getName(pair[1].name)}`}
-                </span>
-              ))}
+              <PoolContent nominationId={poolsFromServer?.[(i + 1) * 2 - 1]?.nominationId || nominationId} pairs={pairs} nominations={nominations} />
             </Section>
           ))}
       </div>

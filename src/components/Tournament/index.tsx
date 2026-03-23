@@ -1,11 +1,15 @@
 import { ReactNode, useEffect, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import {
-  Calendar, MapPin, Users, Sword,
+  Calendar, MapPin, Users,
   CheckCircle, Circle,
   ChevronRight,
   UsersRound,
-  Ban
+  Ban,
+  Info,
+  Star,
+  FileCheck,
+  UserRoundPen
 } from 'lucide-react';
 import Button from '@/components/Button';
 import Section from '@/components/Section';
@@ -28,13 +32,18 @@ import { useTournament } from '@/hooks/useTournaments';
 import { useParticipants } from '@/hooks/useParticipants';
 import { addParticipant, addParticipantInfo } from '@/utils/api';
 import toast from 'react-hot-toast';
+import FightersScores from '../FightersScores';
+import { useMatches } from '@/hooks/useRatings';
 
-export default function Tournament({ id }:{id: number|null}) {
+export default function Tournament({ id }:{id: number|undefined}) {
   const { t } = useTranslation();
   const lang = useAtomValue(languageAtom)
   const user = useAtomValue(userAtom)
   const { tournament: tournamentData } = useTournament(id, lang)
   const { participants } = useParticipants(id, tournamentData?.nominationsIds||[])
+  const [currentNomination, setCurrentNomination] = useState<number>()
+  const [showMatch, setShowMatch] = useState(false)
+  const { matches } = useMatches(tournamentData?.id, currentNomination)
   const [activeTab, setActiveTab] = useState('tournament');
   const [selectedNomination, setSelectedNomination] = useState<number | null>(null);
   const [showApplications, setShowApplications] = useState(false);
@@ -54,29 +63,39 @@ export default function Tournament({ id }:{id: number|null}) {
 
     if (additionsFields.trainerName && additionsFields.age && tournamentData?.isAdditions["isChildlike"]) {
       result = true
-    } else {
-      return false
-    }
-
-    if (additionsFields.cityId && tournamentData.isAdditions["isCity"]) {
+    } else if (!tournamentData?.isAdditions["isChildlike"]) {
       result = true
     } else {
       return false
     }
 
-    if (additionsFields.fullName && tournamentData.isAdditions["isFullName"]) {
+    if (additionsFields.cityId && tournamentData?.isAdditions["isCity"]) {
+      result = true
+    } else if (!tournamentData?.isAdditions["isCity"]) {
       result = true
     } else {
       return false
     }
 
-    if (additionsFields.otherContacts && tournamentData.isAdditions["isOtherContacts"]) {
+    if (additionsFields.fullName && tournamentData?.isAdditions["isFullName"]) {
+      result = true
+    } else if (!tournamentData?.isAdditions["isFullName"]) {
       result = true
     } else {
       return false
     }
 
-    if (additionsFields.phone && tournamentData.isAdditions["isPhone"]) {
+    if (additionsFields.otherContacts && tournamentData?.isAdditions["isOtherContacts"]) {
+      result = true
+    } else if (!tournamentData?.isAdditions["isOtherContacts"]) {
+      result = true
+    } else {
+      return false
+    }
+
+    if (additionsFields.phone && tournamentData?.isAdditions["isPhone"]) {
+      result = true
+    } else if (!tournamentData?.isAdditions["isPhone"]) {
       result = true
     } else {
       return false
@@ -123,7 +142,12 @@ export default function Tournament({ id }:{id: number|null}) {
   };
 
   const handleApply = async () => {
-    if (isAdditionsFill() && user) {
+    if (tournamentData?.isAdditions["isChildlike"] &&
+      tournamentData?.isAdditions["isCity"] &&
+      tournamentData?.isAdditions["isFullName"] &&
+      tournamentData?.isAdditions["isOtherContacts"] &&
+      tournamentData?.isAdditions["isPhone"] &&
+      isAdditionsFill() && user) {
       await addParticipantInfo(tournamentData.id, user.id, additionsFields, lang)
     }
     for (let nominationId of selectedNominations) {
@@ -135,7 +159,7 @@ export default function Tournament({ id }:{id: number|null}) {
   if (tournamentData.status === TournamentStatus.PENDING) {
     return (
       <div className={styles.container}>
-        <h1 className={[styles.wait, "title"].join(" ")}>{t("waitAnnouncement")}</h1>
+        <h1 className="title wait">{t("waitAnnouncement")}</h1>
       </div>
     )
   }
@@ -164,7 +188,7 @@ export default function Tournament({ id }:{id: number|null}) {
       {/* Табы */}
       <Tabs
       tabs={tabs}
-      titles={[t('tournament'), t('nominations'), t('applications'), t('registration')]}
+      titles={[<><Info size={20} color="var(--fg)" />{t('tournament')}</>, <><Star size={20} color="var(--fg)" />{t('nominations')}</>, <><FileCheck size={20} color="var(--fg)" />{t('applications')}</>, <><UserRoundPen size={20} color="var(--fg)" />{t('registration')}</>]}
       activeTab={activeTab}
       setActiveTab={setActiveTab}
       />
@@ -186,7 +210,7 @@ export default function Tournament({ id }:{id: number|null}) {
                   onClick={() => setActiveTab('registration')}
                   className={styles.applyButton}
                 >
-                  <Sword size={20} />
+                  <UserRoundPen size={20} color="var(--fg)" />
                   <span>{t('apply')}</span>
                 </Button>
                 <Button
@@ -195,7 +219,7 @@ export default function Tournament({ id }:{id: number|null}) {
                   className={styles.viewButton}
                   stroke
                 >
-                  <Users size={20} />
+                  <FileCheck size={20} color="var(--fg)" />
                   <span>{t('viewApplications')}</span>
                 </Button>
               </div>
@@ -211,7 +235,7 @@ export default function Tournament({ id }:{id: number|null}) {
         {activeTab === 'nominations' && (
           <div className={styles.nominationsGrid}>
             {nominations.map((nomination) => (
-              <div key={nomination.id} className={styles.nominationCard}>
+              <div key={nomination.id} className={styles.nominationCard} onClick={()=>setCurrentNomination(nomination.id)}>
                 <div className={styles.nominationImage}>
                   <span className={styles.weaponEmoji}>{<Icon type={nomination.weaponId} />}</span>
                 </div>
@@ -230,6 +254,20 @@ export default function Tournament({ id }:{id: number|null}) {
                 <ChevronRight size={20} className={styles.nominationArrow} />
               </div>
             ))}
+            <ModalWindow isOpen={showMatch} onClose={()=>setShowMatch(false)}>
+              {!!matches.length &&
+              <FightersScores
+              data={matches.map(m=>({
+                nameRed: m.red.username,
+                nameBlue: m.blue.username,
+                scoreRed: m.scoreRed,
+                scoreBlue: m.scoreBlue,
+                idRed: m.red.id,
+                idBlue: m.blue.id
+              }))}
+              />
+              }
+            </ModalWindow>
           </div>
         )}
 

@@ -1,22 +1,30 @@
+/* components/index.module.css */
 .container {
   background-color: var(--surface);
   border-radius: 8px;
-  overflow: hidden;
+  overflow-x: auto;
+  overflow-y: auto;
   width: 100%;
+  position: relative;
 }
 
-.header {
-  display: flex;
+.table {
+  width: 100%;
+  border-collapse: collapse;
+  min-width: 600px;
+}
+
+/* Заголовки */
+.headerRow {
   background-color: rgba(var(--fg), 0.07);
   border-bottom: 1px solid rgba(var(--fg), 0.2);
 }
 
 .headerCell {
-  flex: 1;
   padding: 16px 12px;
   text-align: center;
   font-weight: 600;
-  width: 100px;
+  white-space: nowrap;
 }
 
 .headerText {
@@ -25,14 +33,14 @@
   font-size: 14px;
 }
 
-.body {
-  max-height: 400px;
-  overflow-y: auto;
+/* Тело таблицы */
+.row {
+  border-bottom: 1px solid rgba(var(--fg), 0.1);
+  transition: background-color 0.2s ease;
 }
 
-.row {
-  display: flex;
-  border-bottom: 1px solid rgba(var(--fg), 0.1);
+.row:hover {
+  background-color: rgba(var(--fg), 0.05);
 }
 
 .row:last-child {
@@ -40,22 +48,41 @@
 }
 
 .cell {
-  flex: 1;
   padding: 16px 12px;
-  display: flex;
-  flex-direction: column;
-  justify-content: center;
-  align-items: center;
   text-align: center;
-  min-height: 60px;
+  vertical-align: middle;
+  white-space: normal;
+  word-break: break-word;
+}
+
+/* Фиксированная ширина колонок (опционально) */
+/*
+.table {
+  table-layout: fixed;
+}
+
+.headerCell:first-child,
+.cell:first-child {
+  width: 80px;
+}
+
+.headerCell:nth-child(2),
+.cell:nth-child(2) {
+  width: 120px;
+}
+
+.headerCell:last-child,
+.cell:last-child {
   width: 100px;
 }
+*/
 
 .text {
   color: var(--fg);
   font-family: var(--font-regular);
   font-size: 14px;
   line-height: 1.4;
+  display: block;
 }
 
 .hint {
@@ -63,18 +90,21 @@
   font-family: var(--font-regular);
   font-size: 12px;
   margin-top: 4px;
+  display: block;
 }
 
 /* Адаптивность */
 @media (max-width: 768px) {
   .headerCell {
     padding: 12px 8px;
-    font-size: 12px;
   }
 
   .cell {
     padding: 12px 8px;
-    min-height: 50px;
+  }
+
+  .headerText {
+    font-size: 12px;
   }
 
   .text {
@@ -87,20 +117,27 @@
 }
 
 /* Стили для скролла */
-.body.scrollable::-webkit-scrollbar {
-  width: 6px;
+.container::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
 }
 
-.body.scrollable::-webkit-scrollbar-track {
+.container::-webkit-scrollbar-track {
   background: rgba(var(--fg), 0.1);
-  border-radius: 3px;
+  border-radius: 4px;
 }
 
-.body.scrollable::-webkit-scrollbar-thumb {
+.container::-webkit-scrollbar-thumb {
   background: rgba(var(--fg), 0.3);
-  border-radius: 3px;
+  border-radius: 4px;
 }
 
-.body.scrollable::-webkit-scrollbar-thumb:hover {
+.container::-webkit-scrollbar-thumb:hover {
   background: rgba(var(--fg), 0.5);
+}
+
+/* Для Firefox */
+.container {
+  scrollbar-width: thin;
+  scrollbar-color: rgba(var(--fg), 0.3) rgba(var(--fg), 0.1);
 }

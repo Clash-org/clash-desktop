@@ -4,7 +4,7 @@ import styles from "./index.module.css"
 
 type TabsProps<T> = {
     titles: string[]|ReactNode[],
-    tabs: T[],
+    tabs: readonly T[],
     activeTab: T;
     setActiveTab: (val: T)=>void;
 }

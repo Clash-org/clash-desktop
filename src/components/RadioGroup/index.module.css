@@ -12,16 +12,10 @@
   flex-direction: column;
 }
 
-.container.disabled {
-  opacity: 0.6;
-  cursor: not-allowed;
-}
-
 .radioLabel {
   display: flex;
   align-items: center;
   gap: 12px;
-  cursor: pointer;
   padding: 8px 12px;
   border-radius: 8px;
   transition: all 0.2s ease;
@@ -34,6 +28,7 @@
   background: rgba(var(--accent-rgb), 0.1);
   border-color: var(--accent);
   transform: translateY(-2px);
+  cursor: pointer;
 }
 
 .radioLabel.checked {
@@ -48,7 +43,6 @@
 .radioLabel.optionDisabled {
   opacity: 0.5;
   cursor: not-allowed;
-  pointer-events: none;
 }
 
 .hiddenInput {
@@ -70,7 +64,7 @@
   background: var(--bg);
 }
 
-.radioLabel:hover .radioCustom {
+.radioLabel:hover:not(.optionDisabled) .radioCustom {
   border-color: var(--accent);
 }
 

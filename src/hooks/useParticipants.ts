@@ -4,7 +4,7 @@ import { NominationUsersType } from '@/typings';
 import { useApi } from './useApi';
 
 export function useParticipants(
-  tournamentId: number | null,
+  tournamentId: number | undefined,
   nominationIds: number[]
 ) {
   const { api } = useApi()
