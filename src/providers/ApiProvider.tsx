@@ -14,6 +14,14 @@ export class ApiConfig {
     return this._baseUrl;
   }
 
+  get deeplink(): string {
+    return `${this.base}open/`
+  }
+
+  get policy(): string {
+    return `${this.base}privacy-policy`
+  }
+
   get auth(): string {
     return `${this._baseUrl}auth/`;
   }
@@ -64,6 +72,10 @@ export class ApiConfig {
 
   get covers(): string {
     return `${this._baseUrl}uploads/images/covers/`;
+  }
+
+  get profiles(): string {
+    return `${this._baseUrl}uploads/images/profiles/`;
   }
 
   // Метод для изменения базового хоста

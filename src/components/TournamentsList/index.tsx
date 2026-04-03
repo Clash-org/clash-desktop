@@ -1,5 +1,4 @@
-// components/TournamentsList/index.tsx
-import { useEffect, useState } from 'react';
+import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Calendar, MapPin, ChevronRight } from 'lucide-react';
 import Section from '@/components/Section';
@@ -12,7 +11,6 @@ import { formatDate } from '@/utils/helpers';
 import { useTournaments } from '@/hooks/useTournaments';
 import { useApi } from '@/hooks/useApi';
 import { PageParams, Pages, usePage } from '@/hooks/usePage';
-import LoadBtn from '../LoadWrap';
 import LoadWrap from '../LoadWrap';
 
 type ContentProps = {
@@ -85,7 +83,7 @@ export default function TournamentsList() {
   const lang = useAtomValue(languageAtom)
   const [page, setPage] = useState(1)
   const { tournaments, tournamentsCount, isLoading } = useTournaments(lang, page, true)
-  const [currentTournaments, setCurrentTournaments] = useState<TournamentShortType[]>([])
+  const [currentTournaments, setCurrentTournaments] = useState<TournamentShortType[]>([...tournaments])
   const { api } = useApi()
 
   const upcomingTournaments: TournamentShortType[] = [];
@@ -103,7 +101,6 @@ export default function TournamentsList() {
       {/* Заголовок */}
       <div className={styles.header}>
         <h1 className="title">{t('tournaments')}</h1>
-        <p className={styles.subtitle}>{t('findYourTournament')}</p>
       </div>
       <div className={styles.content}>
         <LoadWrap loading={isLoading} totalCount={tournamentsCount} page={page} setPage={setPage} data={tournaments} setData={setCurrentTournaments}>

@@ -140,6 +140,19 @@ button:disabled {
   -webkit-text-fill-color: transparent;
   background-clip: text;
   animation: gradientShift 5s ease infinite;
+  text-align: center;
+}
+
+@media (max-width: 768px) {
+  .title {
+    font-size: 36px;
+  }
+}
+
+@media (max-width: 480px) {
+  .title {
+    font-size: 28px;
+  }
 }
 
 @keyframes gradientShift {

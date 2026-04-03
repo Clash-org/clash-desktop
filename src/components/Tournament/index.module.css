@@ -13,6 +13,7 @@
   padding: 24px;
   border-radius: 16px;
   border: 1px solid var(--accent);
+  position: relative;
 }
 
 .title {
@@ -104,6 +105,7 @@
   border: 1px solid var(--accent-transparent);
   transition: all 0.2s ease;
   cursor: pointer;
+  user-select: none;
 }
 
 .nominationCard:hover {
@@ -331,6 +333,13 @@
 
 .age > input {
   width: 100%;
+}
+
+.headerLink {
+  position: absolute;
+  right: 20px;
+  top: 40px;
+  min-width: 50px;
 }
 
 /* Адаптивность */

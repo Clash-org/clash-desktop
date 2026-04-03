@@ -1,17 +1,18 @@
+import { fighterDefault } from "@/store";
 import { ParticipantType } from "@/typings";
 
-export const getTopThreeFighters = (duels: ParticipantType[][][]): string[] => {
+export const getTopThreeFighters = (duels: ParticipantType[][][]): ParticipantType[] => {
   // Создаем объект для подсчета побед
-  const winsMap: Record<string, { fighter: string; wins: number }> = {};
+  const winsMap: Record<string, ParticipantType> = {};
 
   // Перебираем все дуэли и бои
   duels.forEach(round => {
     round.forEach(match => {
       match.forEach(fighter => {
-        const key = fighter.name;
+        const key = fighter.id;
 
         if (!winsMap[key]) {
-          winsMap[key] = { fighter: key, wins: 0 };
+          winsMap[key] = { ...fighter };
         }
 
         winsMap[key].wins += fighter.wins;
@@ -22,10 +23,10 @@ export const getTopThreeFighters = (duels: ParticipantType[][][]): string[] => {
   // Преобразуем в массив и сортируем по количеству побед
   const fightersWithWins = Object.values(winsMap);
   fightersWithWins.sort((a, b) => b.wins - a.wins);
-  if (fightersWithWins.length < 3) fightersWithWins.push({ fighter: "", wins: 0 })
+  if (fightersWithWins.length < 3) fightersWithWins.push({ ...fighterDefault })
 
   // Берем топ-3 и возвращаем только информацию о бойцах
-  return fightersWithWins.slice(0, 3).map(item => item.fighter);
+  return fightersWithWins.slice(0, 3);
 };
 
 /**
@@ -35,7 +36,7 @@ export const getTopThreeFighters = (duels: ParticipantType[][][]): string[] => {
 export function getWinnersRobin(
   participants: ParticipantType[]
 ): {
-  winners: string[];
+  winners: ParticipantType[];
   ranking: ParticipantType[]; // полный рейтинг на случай если нужно
 } {
   if (participants.length < 3) {
@@ -99,7 +100,7 @@ export function getWinnersRobin(
   // }));
 
   return {
-    winners: [sorted[0].name, sorted[1].name, sorted[2].name],
+    winners: [sorted[0], sorted[1], sorted[2]],
     ranking: sorted
   };
 }
@@ -139,7 +140,7 @@ export function getWinnersSwiss(participants: ParticipantType[]) {
   });
 
   return {
-    winners: sortedParticipants.slice(0, 3).map(item => item.name),
+    winners: sortedParticipants.slice(0, 3),
     ranking: sortedParticipants
   }
 }

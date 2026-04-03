@@ -74,7 +74,7 @@ export const currentPairIndexAtom = atom([0]); // Индекс текущей в
 
 export const currentPoolIndexAtom = atom(0); // Индекс текущего пула
 
-export const isPlayoffAtom = atom<boolean[]>([false]); // Содержит информацию об окончании битв в пулах
+export const isPoolEndAtom = atom<boolean[]>([false]); // Содержит информацию об окончании битв в пулах
 
 export const playoffAtom = atom<ParticipantPlayoffType[][][]>([]);
 
@@ -97,3 +97,8 @@ export const currentWeaponIdAtom = atom<number>()
 export const currentNominationIdAtom = atom<number>()
 
 export const currentPoolIdAtom = atom<number>()
+
+export const blockchain = atom({
+    wallet: "0xf39Fd6e51aad88F6F4ce6aB8827279cffFb92266",
+    privateKey: "0xac0974bec39a17e36ba4a6b4d238ff944bacb478cbed5efcae784d7bf4f2ff80"
+})

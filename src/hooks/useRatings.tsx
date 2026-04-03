@@ -1,4 +1,4 @@
-import { Leaderboard, MatchType, StatsType } from "@/typings";
+import { LeaderboardType, MatchType, StatsType } from "@/typings";
 import { fetcher } from "@/utils/api";
 import useSWR from "swr";
 import { useApi } from "./useApi";
@@ -22,10 +22,10 @@ export function useUserRating(userId?: string) {
   };
 }
 
-export function useLeaderboard(weaponId?: number, nominationId?: number, limit?: number) {
+export function useLeaderboard(page: number, weaponId?: number, nominationId?: number, limit?: number) {
   const { api } = useApi()
-  const { data, error, isLoading, mutate } = useSWR<Leaderboard[]>(
-    weaponId && nominationId ? `${api.ratings}/leaderboard?weaponId=${weaponId}&nominationId=${nominationId}&limit=${limit}` : null,
+  const { data, error, isLoading, mutate } = useSWR<{ users: LeaderboardType[], usersCount: number }>(
+    weaponId && nominationId ? `${api.ratings}/leaderboard?weaponId=${weaponId}&nominationId=${nominationId}&limit=${limit}&page=${page}` : null,
     fetcher,
     {
       revalidateOnFocus: false,
@@ -34,7 +34,8 @@ export function useLeaderboard(weaponId?: number, nominationId?: number, limit?:
   )
 
   return {
-    leaderboard: data,
+    leaderboard: data?.users,
+    count: data?.usersCount,
     isLoading,
     error,
     mutate,

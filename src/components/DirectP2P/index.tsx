@@ -3,7 +3,7 @@ import { useState, useEffect, useRef } from 'react';
 import { QRCodeCanvas as QRCode} from 'qrcode.react';
 import { Html5QrcodeScanner } from 'html5-qrcode';
 import { useAtom } from 'jotai';
-import { fighterPairsAtom, duelsAtom, playoffAtom, participantsAtom, poolsAtom, isPlayoffAtom } from '@/store';
+import { fighterPairsAtom, duelsAtom, playoffAtom, participantsAtom, poolsAtom, isPoolEndAtom } from '@/store';
 import Button from '@/components/Button';
 import styles from './index.module.css';
 import InputText from '../InputText';
@@ -65,14 +65,14 @@ export default function DirectP2P({ onPeerConnected }: DirectP2PProps) {
   const [playoff, setPlayoff] = useAtom(playoffAtom);
   const [participants, setParticipants] = useAtom(participantsAtom);
   const [pools, setPools] = useAtom(poolsAtom);
-  const [isPlayoff, setIsPlayoff] = useAtom(isPlayoffAtom);
+  const [isPoolEnd, setIsPoolEnd] = useAtom(isPoolEndAtom);
 
   const fighterPairsRef = useRef(fighterPairs);
   const participantsRef = useRef(participants);
   const poolsRef = useRef(pools);
   const duelsRef = useRef(duels);
   const playoffRef = useRef(playoff);
-  const isPlayoffRef = useRef(isPlayoff);
+  const isPoolEndRef = useRef(isPoolEnd);
 
   const scannerRef = useRef<Html5QrcodeScanner | null>(null);
   const SimplePeerRef = useRef<any>(null);
@@ -82,7 +82,7 @@ export default function DirectP2P({ onPeerConnected }: DirectP2PProps) {
   useEffect(() => { poolsRef.current = pools; }, [pools]);
   useEffect(() => { duelsRef.current = duels; }, [duels]);
   useEffect(() => { playoffRef.current = playoff; }, [playoff]);
-  useEffect(() => { isPlayoffRef.current = isPlayoff; }, [isPlayoff]);
+  useEffect(() => { isPoolEndRef.current = isPoolEnd; }, [isPoolEnd]);
 
   const initPeer = async () => {
     try {
@@ -250,7 +250,7 @@ export default function DirectP2P({ onPeerConnected }: DirectP2PProps) {
       fighterPairs: fighterPairsRef.current,
       participants: participantsRef.current,
       pools: poolsRef.current,
-      isPlayoff: isPlayoffRef.current,
+      isPoolEnd: isPoolEndRef.current,
       duels: duelsRef.current,
       playoff: playoffRef.current,
       sourceId: isServer ? 'server' : myPeerId
@@ -266,7 +266,7 @@ export default function DirectP2P({ onPeerConnected }: DirectP2PProps) {
       type: 'pool',
       payload: {
         poolIndex,
-        isPoolPlayoff: isPlayoffRef.current[poolIndex],
+        isPoolPlayoff: isPoolEndRef.current[poolIndex],
         duels: duelsRef.current,
         fighterPairs: fighterPairsRef.current,
         pools: poolsRef.current,
@@ -424,7 +424,7 @@ export default function DirectP2P({ onPeerConnected }: DirectP2PProps) {
         if (data.pools) setPools(data.pools);
         if (data.duels) setDuels(data.duels);
         if (data.playoff) setPlayoff(data.playoff);
-        if (data.isPlayoff) setIsPlayoff(data.isPlayoff)
+        if (data.isPoolEnd) setIsPoolEnd(data.isPoolEnd)
         toast.success(t('p2pDataSynced'))
         addMessage(t('p2pDataSynced'));
         break;
@@ -440,7 +440,7 @@ export default function DirectP2P({ onPeerConnected }: DirectP2PProps) {
           setDuels(state=>{
             const buf = JSON.parse(JSON.stringify(state))
             buf[payload.poolIndex] = payload.duels[payload.poolIndex]
-            setIsPlayoff(isEnds=>{
+            setIsPoolEnd(isEnds=>{
               const bufEnds = [...isEnds]
               bufEnds[payload.poolIndex] = payload.isPoolPlayoff
               return bufEnds

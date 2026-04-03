@@ -72,6 +72,7 @@ export default function SelectPair({
             }
 
             // Создаём глубокую копию с гарантией нового референса
+            // @ts-ignore
             const newPairs: [ParticipantType, ParticipantType][][] = fighterPairs.map(pool =>
                 pool.map(pair =>
                     pair.map(participant => ({ ...participant }))
@@ -194,6 +195,7 @@ export default function SelectPair({
                                 className={styles.deletePair}
                                 onClick={()=>{
                                     const buf = [...fighterPairs]
+                                    // @ts-ignore
                                     buf[poolIndex][originalIdx] = []
                                     buf[poolIndex] = buf[poolIndex].filter(pairs=>pairs.length)
                                     onPairsReordered(buf)

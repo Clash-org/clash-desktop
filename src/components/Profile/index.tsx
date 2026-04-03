@@ -1,12 +1,12 @@
-import { useEffect, useState } from 'react';
+import { useCallback, useEffect, useState } from 'react';
 import { useTranslation } from 'react-i18next';
-import { MapPin, Calendar, Award, Target, Sword, TrendingUp, Flag, LogOut, Mars, Venus } from 'lucide-react';
+import { MapPin, Calendar, Award, Sword, TrendingUp, Flag, LogOut, Mars, Venus, Swords, Trophy, Trash2 } from 'lucide-react';
 import Button from '@/components/Button';
 import Section from '@/components/Section';
 import styles from './index.module.css';
 import { useAtom } from 'jotai';
 import { languageAtom, userAtom } from '@/store';
-import { capitalizeFirstLetter, formatDate } from '@/utils/helpers';
+import { capitalizeFirstLetter, formatDate, getNewImageName, getNominationTitleByTournaments } from '@/utils/helpers';
 import Tabs from '../Tabs';
 import { Pages, usePage } from '@/hooks/usePage';
 import { useUserRating } from '@/hooks/useRatings';
@@ -15,15 +15,23 @@ import { useNominations } from '@/hooks/useNominations';
 import Table from '../Table';
 import InputText from '../InputText';
 import { useAuth } from '@/hooks/useAuth';
-import { getPredict, updateUser } from '@/utils/api';
+import { deleteUser, getPredict, updateUser } from '@/utils/api';
 import { useUser, useUsers } from '@/hooks/useUsers';
 import Select from '../Select';
-import { PredictType } from "@/typings"
+import { PredictType, WinnersByNomination } from "@/typings"
+import ErrorPage from '../ErrorPage';
+import { useTournamentsByUserId } from '@/hooks/useTournaments';
+import ImageUploader from '../ImageUploader';
+import { useApi } from '@/hooks/useApi';
+import toast from 'react-hot-toast';
+import { ShareButton } from '../ShareButton';
+import ModalWindow from '../ModalWindow';
 
 export default function Profile({ id }:{ id?: string }) {
   const { t } = useTranslation();
   const { setPage } = usePage()
   const { logout } = useAuth()
+  const { api } = useApi()
   const tabs = ['info', 'stats', 'predictions', 'weaponDetails'] as const
   const [activeTab, setActiveTab] = useState<typeof tabs[number]>('info');
   const [lang] = useAtom(languageAtom)
@@ -36,48 +44,82 @@ export default function Profile({ id }:{ id?: string }) {
     nominationId: undefined,
     result: {} as PredictType
   })
+  const [avatar, setAvatar] = useState(new FormData())
+  const [avatarName, setAvatarName] = useState("")
   const [username, setUsername] = useState("")
   const [email, setEmail] = useState("")
   const [password, setPassword] = useState("")
   const [weaponId, setWeaponId] = useState<number>()
   const [nominationId, setNominationId] = useState<number>()
+  const [showDelete, setShowDelete] = useState(false)
   const { nominations } = useNominations(lang)
-  const user = anotherUser || meUser
+  const user = id ? anotherUser : meUser
+  const { tournaments } = useTournamentsByUserId(user?.id, lang)
+  const tournamentsCount = tournaments?.length || 0
   const { stats } = useUserRating(user?.id)
-  if (!user) return
+
+  const getUserWinsByNomination = useCallback((
+  winnersArray: WinnersByNomination[],
+  userId: string
+  ) => {
+    const result: Record<number, number> = {};
+
+    for (const winners of winnersArray) {
+      for (const [nominationId, winnerIds] of Object.entries(winners)) {
+        const id = Number(nominationId);
+        const wins = winnerIds.filter(id => id === userId).length;
+
+        if (wins > 0) {
+          result[id] = (result[id] || 0) + wins;
+        }
+      }
+    }
+
+    return result;
+  }, [tournaments])
 
   useEffect(()=>{
     if (predictionsStates.opponent) {
       (async ()=>{
+        // @ts-ignore
         const res = await getPredict(user.id, predictionsStates.opponent, predictionsStates.weaponId, predictionsStates.nominationId)
         handlePredictionsStates("result", res)
       })()
     }
   }, [predictionsStates.opponent])
 
+  if (!user) return <ErrorPage message={t("notFound")} />
+
+  const winsCount = tournaments?.map(t=>Object.values(t.winners)).flat().flat().filter(userId=>userId === user.id).length
+
   const handlePredictionsStates = (field: keyof typeof predictionsStates, value: any) => {
     setPredictionsStates(state=>({ ...state, [field]: value }))
   }
 
+  const nominationsWins = getUserWinsByNomination(tournaments?.map(t=>t.winners) || [], user.id)
+
   const updateInfo = async () => {
+    const fileName = await getNewImageName(user.image, avatar, "profiles")
     const res = await updateUser({
       password,
       email,
       username,
-      id: user.id
+      id: user.id,
+      image: fileName
     }, lang)
-    setUser(res)
+    if (res) {
+      toast.success(t("dataUpdated"))
+      setUser(res)
+    }
   }
 
-  const tournamentsCount = user.totalMatches;
+  const isI = meUser?.id === user.id
 
-  return (
+  return !!user && (
     <div className={styles.container}>
       {/* Шапка профиля */}
       <div className={styles.header}>
-        <div className={styles.avatar}>
-          {user.username.charAt(0).toUpperCase()}
-        </div>
+        <ImageUploader disabled={!isI} name={user.username} type="avatar" value={user.image ? api.profiles + user.image : null} setValue={setAvatar} setFileName={(filename)=>setAvatarName(filename)} />
         <div className={styles.headerInfo}>
           <h1 className={styles.username}>{user.username}</h1>
           <div className={styles.userMeta}>
@@ -94,13 +136,27 @@ export default function Profile({ id }:{ id?: string }) {
               <span>{t('registered')}: {formatDate(user.createdAt, lang)}</span>
             </div>
           </div>
-          <Button
-          stroke
-          className={styles.logout}
-          onClick={async () => { await logout(); setUser(undefined); setPage(Pages.SETTINGS) }}
-          >
-            <LogOut size={28} color="var(--fg)" />
-          </Button>
+          <div className={styles.links}>
+            {isI &&
+            <>
+            <Button
+            stroke
+            className={styles.delete}
+            onClick={()=>setShowDelete(true)}
+            >
+              <Trash2 size={28} color="var(--fg)" />
+            </Button>
+            <Button
+            stroke
+            className={styles.logout}
+            onClick={async () => { await logout(); setUser(undefined); setPage(Pages.SETTINGS) }}
+            >
+              <LogOut size={28} color="var(--fg)" />
+            </Button>
+            </>
+            }
+            <ShareButton className={styles.link} type="profile" id={user.id} />
+          </div>
         </div>
       </div>
 
@@ -114,16 +170,16 @@ export default function Profile({ id }:{ id?: string }) {
           </div>
         </div>
         <div className={styles.statCard}>
-          <Target size={24} color="var(--accent)" />
+          <Trophy size={24} color="var(--accent)" />
           <div className={styles.statInfo}>
-            <span className={styles.statValue}>0</span>
-            <span className={styles.statLabel}>{t('predictions')}</span>
+            <span className={styles.statValue}>{winsCount}</span>
+            <span className={styles.statLabel}>{t('win')}</span>
           </div>
         </div>
         <div className={styles.statCard}>
-          <Sword size={24} color="var(--accent)" />
+          <Swords size={24} color="var(--accent)" />
           <div className={styles.statInfo}>
-            <span className={styles.statValue}>0</span>
+            <span className={styles.statValue}>{user.totalMatches}</span>
             <span className={styles.statLabel}>{t('fights')}</span>
           </div>
         </div>
@@ -141,14 +197,14 @@ export default function Profile({ id }:{ id?: string }) {
       <Section>
         {activeTab === 'info' && (
           <div className={styles.infoContent}>
+            {isI &&
+            <>
             <InputText placeholder={t("email")} type="email" value={email} setValue={setEmail} />
             <InputText placeholder={t("username")} value={username} setValue={setUsername} />
             <InputText placeholder={t("password")} type="password" value={password} setValue={setPassword} />
             <Button title={t("updateData")} onClick={()=>updateInfo()}/>
-            <div className={styles.infoRow}>
-              <span className={styles.infoLabel}>ID:</span>
-              <span className={styles.infoValue}>{user.id}</span>
-            </div>
+            </>
+            }
             <div className={styles.infoRow}>
               <span className={styles.infoLabel}>{t('email')}:</span>
               <span className={styles.infoValue}>{user.email}</span>
@@ -159,47 +215,37 @@ export default function Profile({ id }:{ id?: string }) {
                 {user.gender ? <Mars size={20} color="var(--fg)" /> : <Venus size={20} color="var(--fg)" />}
               </span>
             </div>
-            <div className={styles.infoRow}>
-              <span className={styles.infoLabel}>{t('tournamentsCount')}:</span>
-              <span className={styles.infoValue}>{tournamentsCount}</span>
-            </div>
-            {tournamentsCount > 0 && (
-              <div className={styles.tournamentsList}>
-                <span className={styles.infoLabel}>{t('tournamentsList')}:</span>
-                <div className={styles.tournamentIds}>
-                  {/* {user.tournamentsIds.map((id, index) => (
-                    <span key={id} className={styles.tournamentId}>
-                      #{id}
-                      {index < tournamentsCount - 1 && ', '}
-                    </span>
-                  ))} */}
-                </div>
-              </div>
-            )}
           </div>
         )}
         {activeTab === "stats" && (
           <div className={styles.statsContent}>
+            {tournamentsCount > 0 && tournaments && (
+              <div className={styles.statRow}>
+                <span>{t('tournamentsList')}:</span>
+                <span className={styles.statNumber}>&nbsp;
+                  {tournaments.map((t, index) => (
+                    <span key={t.id} className="link" style={{ color: "var(--accent)" }} onClick={()=>setPage(Pages.TOURNAMENT, { id: t.id })}>
+                      {t.title}
+                      {index < tournamentsCount - 1 && ', '}
+                    </span>
+                  ))}
+                </span>
+              </div>
+            )}
+            {!!tournaments &&
             <div className={styles.statRow}>
-              <span>{t('totalFights')}</span>
-              <span className={styles.statNumber}>0</span>
+              <span>{t('win')}</span>
+              <span className={styles.statNumber}>
+                {Object.keys(nominationsWins).map((nomId, index)=>`${getNominationTitleByTournaments(tournaments, Number(nomId))}: ${nominationsWins[Number(nomId)]} ${index < Object.keys(nominationsWins).length - 1 ? ', ' : ""}`)}
+              </span>
             </div>
-            <div className={styles.statRow}>
-              <span>{t('wins')}</span>
-              <span className={styles.statNumber}>0</span>
-            </div>
-            <div className={styles.statRow}>
-              <span>{t('losses')}</span>
-              <span className={styles.statNumber}>0</span>
-            </div>
+            }
+            {!!tournaments &&
             <div className={styles.statRow}>
               <span>{t('winRate')}</span>
-              <span className={styles.statNumber}>0%</span>
+              <span className={styles.statNumber}>{(Object.keys(nominationsWins).length / tournaments.length) * 100}%</span>
             </div>
-            <div className={styles.statRow}>
-              <span>{t('averageScore')}</span>
-              <span className={styles.statNumber}>0</span>
-            </div>
+            }
           </div>
         )}
         {activeTab === "predictions" &&
@@ -237,15 +283,25 @@ export default function Profile({ id }:{ id?: string }) {
             setNominationId={setNominationId}
             setWeaponId={setWeaponId}
             />
-            {stats && nominationId &&
+            {stats && stats.ratings && nominationId &&
             <Table
             titles={[t("rating"), t("rank"), t("volatility"), "RD", capitalizeFirstLetter(t("stage"))]}
-            data={[stats.ratings?.find(r=>r.id === nominationId)]?.map(r=>[String(r.rating.toFixed(2)), String(r.rank), String(r.volatility.toFixed(2)), String(r.rd.toFixed(2)), String(r.matches)])}
+            // @ts-ignore
+            data={[stats.ratings.find(r=>r.id === nominationId)].map(r=>[String(r.rating.toFixed(2)), String(r.rank), String(r.volatility.toFixed(2)), String(r.rd.toFixed(2)), String(r.matches)])}
             />
             }
           </>
         )}
       </Section>
+      <ModalWindow isOpen={showDelete} onClose={()=>setShowDelete(false)}>
+        <Section title={t("realyDelete")}>
+          <Button
+          onClick={async () => { await deleteUser(user.id); await logout(); setUser(undefined); setPage(Pages.SETTINGS) }}
+          >
+            <Trash2 size={28} color="var(--fg)" />
+          </Button>
+        </Section>
+      </ModalWindow>
     </div>
   );
 }

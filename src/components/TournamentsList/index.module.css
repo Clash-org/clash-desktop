@@ -15,14 +15,6 @@
   margin-bottom: 48px;
 }
 
-.subtitle {
-  font-size: 18px;
-  color: var(--placeholder);
-  max-width: 600px;
-  margin: 0 auto;
-  line-height: 1.6;
-}
-
 .section {
   margin-bottom: 48px;
 }
@@ -170,14 +162,6 @@
     padding: 24px 16px;
   }
 
-  .title {
-    font-size: 36px;
-  }
-
-  .subtitle {
-    font-size: 16px;
-  }
-
   .tournamentsGrid {
     grid-template-columns: 1fr;
   }
@@ -196,10 +180,6 @@
 }
 
 @media (max-width: 480px) {
-  .title {
-    font-size: 28px;
-  }
-
   .cardContent {
     padding: 16px;
   }

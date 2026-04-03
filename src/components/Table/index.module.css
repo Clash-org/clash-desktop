@@ -55,28 +55,6 @@
   word-break: break-word;
 }
 
-/* Фиксированная ширина колонок (опционально) */
-/*
-.table {
-  table-layout: fixed;
-}
-
-.headerCell:first-child,
-.cell:first-child {
-  width: 80px;
-}
-
-.headerCell:nth-child(2),
-.cell:nth-child(2) {
-  width: 120px;
-}
-
-.headerCell:last-child,
-.cell:last-child {
-  width: 100px;
-}
-*/
-
 .text {
   color: var(--fg);
   font-family: var(--font-regular);
@@ -114,30 +92,4 @@
   .hint {
     font-size: 10px;
   }
-}
-
-/* Стили для скролла */
-.container::-webkit-scrollbar {
-  width: 8px;
-  height: 8px;
-}
-
-.container::-webkit-scrollbar-track {
-  background: rgba(var(--fg), 0.1);
-  border-radius: 4px;
-}
-
-.container::-webkit-scrollbar-thumb {
-  background: rgba(var(--fg), 0.3);
-  border-radius: 4px;
-}
-
-.container::-webkit-scrollbar-thumb:hover {
-  background: rgba(var(--fg), 0.5);
-}
-
-/* Для Firefox */
-.container {
-  scrollbar-width: thin;
-  scrollbar-color: rgba(var(--fg), 0.3) rgba(var(--fg), 0.1);
 }

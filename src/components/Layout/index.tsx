@@ -140,7 +140,7 @@ function LayoutContent() {
                         <Button stroke onClick={()=>setPage(Pages.INFO)} style={btnStyle}>
                             <Info size={28} color="var(--fg)" />
                         </Button>
-                        <Button stroke onClick={()=>setPage(Pages.SERVERS)} style={btnStyle}>
+                        <Button stroke onClick={()=>setPage(Pages.BLOCKCHAIN)} style={btnStyle}>
                             <Boxes size={28} color="var(--fg)" strokeWidth={1.5} />
                         </Button>
                         <Button stroke onClick={()=>setPage(Pages.SERVERS)} style={btnStyle}>
@@ -156,7 +156,7 @@ function LayoutContent() {
                 <DirectP2P />
             </ModalWindow>
             <ModalWindow isOpen={showAuth} onClose={()=>setShowAuth(!showAuth)}>
-                <Auth profileActivate={()=>setPage(Pages.PROFILE)} onClose={()=>setShowAuth(!showAuth)} />
+                <Auth profileActivate={()=>setPage(Pages.PROFILE)} onClose={()=>setShowAuth(!showAuth)} setPage={()=>setPage(Pages.INFO)} />
             </ModalWindow>
         </div>
     )

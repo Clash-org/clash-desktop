@@ -9,22 +9,23 @@
   position: relative;
 }
 
-.section_title {
+.sectionTitle {
   color: var(--fg);
   font-size: 18px;
   margin-bottom: 12px;
   font-family: var(--font-bold);
   margin: 0;
+  white-space: pre-line;
 }
 
-.section_content, .section_row {
+.sectionContent, .sectionRow {
   display: flex;
   gap: 8px;
   flex-direction: column;
   flex-wrap: nowrap;
 }
 
-.section_row {
+.sectionRow {
   flex-direction: row;
   flex-wrap: wrap;
 }

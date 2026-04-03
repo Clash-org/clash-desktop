@@ -20,7 +20,7 @@ function getTitleForBook(index: number, data: ParticipantType[][][]|ParticipantP
 export async function exportExcel(
   data: ParticipantType[][][]|ParticipantPlayoffType[][][],
   fileName = 'tournament.xlsx',
-  isPlayoff = false
+  isPoolEnd = false
 ) {
   try {
     const wb = XLSX.utils.book_new();
@@ -28,7 +28,7 @@ export async function exportExcel(
     /* заголовки */
     data.forEach((pair, i) => {
       const wsData: any[][] = [];
-      wsData.push([isPlayoff ? getTitleForBook(i, data) : `${i + 1} ${i18n.t('stage')}`]);
+      wsData.push([isPoolEnd ? getTitleForBook(i, data) : `${i + 1} ${i18n.t('stage')}`]);
       wsData.push([
         i18n.t('name'),
         i18n.t('warnings'),
@@ -60,7 +60,7 @@ export async function exportExcel(
       });
 
       const ws = XLSX.utils.aoa_to_sheet(wsData);
-      XLSX.utils.book_append_sheet(wb, ws, isPlayoff ? getTitleForBook(i, data) : `${i + 1} ${i18n.t('stage')}`);
+      XLSX.utils.book_append_sheet(wb, ws, isPoolEnd ? getTitleForBook(i, data) : `${i + 1} ${i18n.t('stage')}`);
     });
 
     // Генерируем Excel файл

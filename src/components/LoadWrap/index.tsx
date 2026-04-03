@@ -9,21 +9,24 @@ type LoadWrapProps<T> = {
     children: ReactNode;
     totalCount: number;
     loading: boolean;
+    showCount?: number;
+    filterKey?: string;
 }
 
-export default function LoadWrap<T>({ page, data, setData, totalCount, setPage, loading, children }:LoadWrapProps<T>) {
+export default function LoadWrap<T>({ page, data, setData, totalCount, setPage, loading, showCount, filterKey="id", children }:LoadWrapProps<T>) {
     const loadMore = () => {
         setPage(page+1);
     };
     useEffect(()=>{
         setData(state=>{
-        if (JSON.stringify(state) !== JSON.stringify(data))
-            return [...state, ...data]
-        return state
+            const filteredState = state.filter(stateItem =>
+            !data.some(dataItem => dataItem?.[filterKey] === stateItem?.[filterKey])
+            );
+            return [...filteredState, ...data]
         })
     }, [page, data])
     return <>
     {children}
-    <LoadBtn page={page} loadMore={loadMore} loading={loading} totalCount={totalCount} />
+    <LoadBtn page={page} loadMore={loadMore} loading={loading} totalCount={totalCount} showCount={showCount} />
     </>
 }

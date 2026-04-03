@@ -1,6 +1,5 @@
 import { languageAtom, userAtom } from "@/store";
-import { Gender, RegistrationType } from "@/typings";
-import { LocalStorage } from "@/utils/helpers";
+import { Gender } from "@/typings";
 import Button from "@components/Button";
 import InputText from "@components/InputText";
 import { useAtomValue, useSetAtom } from "jotai";
@@ -11,8 +10,9 @@ import { GenderSwitch } from "../GenderSwitch";
 import CitySelect from "../CitySelect";
 import ClubSelect from "../ClubSelect";
 import { useAuth } from "@/hooks/useAuth";
+import Checkbox from "../Checkbox";
 
-export default function Auth({ profileActivate, onClose }:{ profileActivate: ()=>void; onClose: ()=>void; }) {
+export default function Auth({ profileActivate, onClose, setPage }:{ profileActivate: ()=>void; onClose: ()=>void; setPage: ()=>void }) {
     const { register, login } = useAuth()
     const { t } = useTranslation()
     const [isLogin, setIsLogin] = useState(true)
@@ -24,20 +24,17 @@ export default function Auth({ profileActivate, onClose }:{ profileActivate: ()=
     const [cityId, setCityId] = useState<number>()
     const [clubId, setClubId] = useState<number>()
     const [password, setPassword] = useState("")
+    const [isAgree, setIsAgree] = useState(false)
 
     const setUser = useSetAtom(userAtom)
     const lang = useAtomValue(languageAtom)
 
-    const userSetter = async (res: RegistrationType) => {
-        await LocalStorage.setItem("accessToken", res.accessToken)
-        setUser(res.user)
-    }
     const authHandler = async () => {
         if (isLogin) {
             if (email && password) {
                 const res = await login(email, password, lang)
                 if (res) {
-                    await userSetter(res)
+                    setUser(res.user)
                     profileActivate()
                     onClose()
                 }
@@ -48,7 +45,7 @@ export default function Auth({ profileActivate, onClose }:{ profileActivate: ()=
             if (username && email && password) {
                 const res = await register(email, username, password, cityId||null, clubId||null, Boolean(gender), lang, city, club)
                 if (res) {
-                    await userSetter(res)
+                    setUser(res.user)
                     profileActivate()
                     onClose()
                 }
@@ -65,10 +62,11 @@ export default function Auth({ profileActivate, onClose }:{ profileActivate: ()=
             {!isLogin && <InputText required placeholder={t("username")} value={username} setValue={setUsername} /> }
             {!isLogin && <GenderSwitch gender={gender} setGender={setGender} />}
             {!isLogin && <CitySelect city={city} setCity={setCity} cityId={cityId} setCityId={setCityId} />}
-            {!isLogin && <span style={hintStyle}>Если не нашли город, то просто введите свой</span> }
+            {!isLogin && <span style={hintStyle}>{t("enterIfNotFound")}</span> }
             {!isLogin && <ClubSelect clubId={clubId} setClubId={setClubId} club={club} setClub={setClub} />}
-            {!isLogin && <span style={hintStyle}>Если не нашли клуб, то просто введите свой</span> }
+            {!isLogin && <span style={hintStyle}>{t("enterIfNotFound")}</span> }
             <InputText required placeholder={t("password")} type="password" value={password} setValue={setPassword} />
+            {!isLogin && <Checkbox title={t("youAgree")} postfix={<span onClick={(e)=>{ e.stopPropagation(); e.preventDefault(); setPage(); onClose() }} style={{ borderBottom: "1px dashed var(--accent)" }}>{t("privacyPolicy")}</span>} value={isAgree} setValue={(val)=>setIsAgree(val)} />}
             <Button onClick={authHandler} title={isLogin ? t("enter") : t("register")} />
             <span onClick={()=>setIsLogin(!isLogin)} style={{ color: "var(--accent)", cursor: "pointer", alignSelf: "center" }}>{!isLogin ? t("enter") : t("register")}</span>
         </div>

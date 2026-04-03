@@ -17,13 +17,11 @@ import ModalWindow from '@/components/ModalWindow';
 import styles from './index.module.css';
 import { ParticipantStatus, TournamentStatus } from '@/typings';
 import SocialMedias from '../SocialMedias';
-import remarkGfm from 'remark-gfm';
-import Markdown from 'react-markdown'
 import { useAtomValue } from 'jotai';
 import { languageAtom, userAtom } from '@/store';
 import Checkbox from '../Checkbox';
 import Tabs from '../Tabs';
-import { getSymbolCurrencyByCode } from '@/utils/helpers';
+import { getMatchesByPools, getSymbolCurrencyByCode } from '@/utils/helpers';
 import InputText from '../InputText';
 import InputNumber from '../InputNumber';
 import CitySelect from '../CitySelect';
@@ -34,6 +32,9 @@ import { addParticipant, addParticipantInfo } from '@/utils/api';
 import toast from 'react-hot-toast';
 import FightersScores from '../FightersScores';
 import { useMatches } from '@/hooks/useRatings';
+import ErrorPage from '../ErrorPage';
+import Markdown from '../Markdown';
+import { ShareButton } from '../ShareButton';
 
 export default function Tournament({ id }:{id: number|undefined}) {
   const { t } = useTranslation();
@@ -44,6 +45,7 @@ export default function Tournament({ id }:{id: number|undefined}) {
   const [currentNomination, setCurrentNomination] = useState<number>()
   const [showMatch, setShowMatch] = useState(false)
   const { matches } = useMatches(tournamentData?.id, currentNomination)
+  const matchesByPools = getMatchesByPools(matches)
   const [activeTab, setActiveTab] = useState('tournament');
   const [selectedNomination, setSelectedNomination] = useState<number | null>(null);
   const [showApplications, setShowApplications] = useState(false);
@@ -148,6 +150,7 @@ export default function Tournament({ id }:{id: number|undefined}) {
       tournamentData?.isAdditions["isOtherContacts"] &&
       tournamentData?.isAdditions["isPhone"] &&
       isAdditionsFill() && user) {
+      // @ts-ignore
       await addParticipantInfo(tournamentData.id, user.id, additionsFields, lang)
     }
     for (let nominationId of selectedNominations) {
@@ -157,11 +160,7 @@ export default function Tournament({ id }:{id: number|undefined}) {
   };
 
   if (tournamentData.status === TournamentStatus.PENDING) {
-    return (
-      <div className={styles.container}>
-        <h1 className="title wait">{t("waitAnnouncement")}</h1>
-      </div>
-    )
+    return <ErrorPage message={t("waitAnnouncement")} className={styles.container} />
   }
 
   return (
@@ -183,6 +182,7 @@ export default function Tournament({ id }:{id: number|undefined}) {
             <span>{tournamentData.participants.length} {t('participants')}</span>
           </div>
         </div>
+        <ShareButton className={styles.headerLink} type="tournament" id={tournamentData.id} />
       </div>
 
       {/* Табы */}
@@ -199,7 +199,7 @@ export default function Tournament({ id }:{id: number|undefined}) {
           <div className={styles.tournamentContent}>
             <div className={styles.description}>
               <h3>{t('aboutTournament')}</h3>
-              <Markdown remarkPlugins={[remarkGfm]}>{tournamentData.description}</Markdown>
+              <Markdown text={tournamentData.description} />
             </div>
 
             <div className={styles.actionBlock}>
@@ -235,7 +235,7 @@ export default function Tournament({ id }:{id: number|undefined}) {
         {activeTab === 'nominations' && (
           <div className={styles.nominationsGrid}>
             {nominations.map((nomination) => (
-              <div key={nomination.id} className={styles.nominationCard} onClick={()=>setCurrentNomination(nomination.id)}>
+              <div key={nomination.id} className={styles.nominationCard} onClick={()=>{ setCurrentNomination(nomination.id); setShowMatch(true) }}>
                 <div className={styles.nominationImage}>
                   <span className={styles.weaponEmoji}>{<Icon type={nomination.weaponId} />}</span>
                 </div>
@@ -254,18 +254,23 @@ export default function Tournament({ id }:{id: number|undefined}) {
                 <ChevronRight size={20} className={styles.nominationArrow} />
               </div>
             ))}
-            <ModalWindow isOpen={showMatch} onClose={()=>setShowMatch(false)}>
-              {!!matches.length &&
-              <FightersScores
-              data={matches.map(m=>({
-                nameRed: m.red.username,
-                nameBlue: m.blue.username,
-                scoreRed: m.scoreRed,
-                scoreBlue: m.scoreBlue,
-                idRed: m.red.id,
-                idBlue: m.blue.id
-              }))}
-              />
+            <ModalWindow isOpen={showMatch && !!matchesByPools[0]?.length} onClose={()=>setShowMatch(false)} style={{ minWidth: "100vw", height: "100%" }}>
+              {!!matchesByPools[0]?.length &&
+              matchesByPools.map((pool, i)=>(
+                <>
+                <h1 style={{ textAlign: "center", fontSize: "20px" }}>{t("pool")} {i+1}</h1>
+                <FightersScores
+                data={pool.map(m=>({
+                  nameRed: m.red.username,
+                  nameBlue: m.blue.username,
+                  scoreRed: m.scoreRed,
+                  scoreBlue: m.scoreBlue,
+                  idRed: m.red.id,
+                  idBlue: m.blue.id
+                }))}
+                />
+                </>
+              ))
               }
             </ModalWindow>
           </div>
@@ -348,6 +353,7 @@ export default function Tournament({ id }:{id: number|undefined}) {
                     />
                     <InputNumber
                     placeholder={t("age")}
+                    // @ts-ignore
                     value={additionsFields.age}
                     setValue={val=>handlerAdditionsFields("age", val)}
                     className={styles.age}

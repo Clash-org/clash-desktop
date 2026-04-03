@@ -53,7 +53,7 @@ const ModalWindow: React.FC<ModalWindowProps> = ({ isOpen, onClose, children, st
           </button>
 
           {/* Content */}
-          <div style={{ display: "flex", flexDirection: "column" }}>{children}</div>
+          <div style={{ display: "flex", flexDirection: "column", gap: "10px" }}>{children}</div>
         </div>
       </div>
     </>

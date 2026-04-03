@@ -1,4 +1,5 @@
 import { Pages, usePage } from "@/hooks/usePage";
+import { useTranslation } from "react-i18next";
 import styles from "./index.module.css"
 
 type FightersScoresProps = {
@@ -9,21 +10,57 @@ type FightersScoresProps = {
         nameBlue: string;
         idBlue: string;
         scoreBlue: number;
-    }[]
+    }[],
+    withoutLinks?: boolean
 }
 
-export default function FightersScores({ data }:FightersScoresProps) {
-    const { setPage } = usePage()
+export default function FightersScores({ data, withoutLinks=false }: FightersScoresProps) {
+    const { setPage } = usePage();
+    const { t } = useTranslation();
+    const goToProfile = (id: string) => {
+        setPage(Pages.PROFILE, { id })
+    }
+
     return (
-        <div className={styles.wrap}>
-            {data.map((d, i)=>(
-                <div key={i} className={styles.cell}>
-                    <span><span className="link" onClick={()=>setPage(Pages.PROFILE, { id: d.idRed })}>{d.nameRed}</span></span>
-                    <span className={d.scoreRed > d.scoreBlue ? styles.win : ""}>{d.scoreRed}</span>
-                    <span className={d.scoreBlue > d.scoreRed ? styles.win : ""}>{d.scoreBlue}</span>
-                    <span><span className="link" onClick={()=>setPage(Pages.PROFILE, { id: d.idBlue })}>{d.nameBlue}</span></span>
-                </div>
-            ))}
+        <div className={styles.container}>
+            <table className={styles.table}>
+                <thead>
+                    <tr className={styles.headerRow}>
+                        <th className={styles.headerCell}>{t("name")}</th>
+                        <th className={styles.headerCell}>{t("score")}</th>
+                        <th className={styles.headerCell}>{t("score")}</th>
+                        <th className={styles.headerCell}>{t("name")}</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {data.map((d, i) => (
+                        <tr key={i} className={styles.row}>
+                            <td className={styles.cell}>
+                                <span
+                                    className={!withoutLinks ? "link" : ""}
+                                    onClick={!withoutLinks ? () => goToProfile(d.idRed) : undefined}
+                                >
+                                    {d.nameRed}
+                                </span>
+                            </td>
+                            <td className={`${styles.cell} ${styles.scoreCell} ${d.scoreRed > d.scoreBlue ? styles.win : ''}`}>
+                                {d.scoreRed}
+                            </td>
+                            <td className={`${styles.cell} ${styles.scoreCell} ${d.scoreBlue > d.scoreRed ? styles.win : ''}`}>
+                                {d.scoreBlue}
+                            </td>
+                            <td className={styles.cell}>
+                                <span
+                                    className={!withoutLinks ? "link" : ""}
+                                    onClick={!withoutLinks ? () => goToProfile(d.idBlue) : undefined}
+                                >
+                                    {d.nameBlue}
+                                </span>
+                            </td>
+                        </tr>
+                    ))}
+                </tbody>
+            </table>
         </div>
     )
 }

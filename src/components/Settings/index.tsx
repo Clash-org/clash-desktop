@@ -34,7 +34,7 @@ import {
   hotKeysAtom,
   hotKeysDefault,
   HotKeysType,
-  isPlayoffAtom,
+  isPoolEndAtom,
   isPoolRatingAtom,
   tournamentSystemAtom,
   languageAtom,
@@ -71,7 +71,7 @@ import { useParticipants } from "@/hooks/useParticipants";
 import { useOrganizerTournaments, usePool, useTournamentsByIds } from "@/hooks/useTournaments";
 import Select from "../Select";
 import WeaponNominationsSelect from "../WeaponNominationsSelect";
-import { createPool, updatePool } from "@/utils/api";
+import { createPool, getMathes, updatePool } from "@/utils/api";
 import { useNominations } from "@/hooks/useNominations";
 
 type TrashPairProps = {
@@ -80,7 +80,7 @@ type TrashPairProps = {
   setСurrentPoolIndex: React.Dispatch<React.SetStateAction<number>>;
   setParticipants: Dispatch<SetStateAction<ParticipantType[][]>>;
   setDuels: Dispatch<SetStateAction<[ParticipantType, ParticipantType][][][]>>;
-  setIsPlayoff: Dispatch<SetStateAction<boolean[]>>;
+  setIsPoolEnd: Dispatch<SetStateAction<boolean[]>>;
   currentPoolIndex: number;
   isEnd: boolean;
   pool: number;
@@ -92,7 +92,7 @@ function PoolControllers({
   setDuels,
   setСurrentPoolIndex,
   setParticipants,
-  setIsPlayoff,
+  setIsPoolEnd,
   isEnd,
   pool,
   currentPoolIndex,
@@ -113,7 +113,7 @@ function PoolControllers({
       const buf = [...state].filter((_, index) => index !== pool);
       return buf;
     });
-    setIsPlayoff((state) => state.filter((_, idx) => idx !== pool));
+    setIsPoolEnd((state) => state.filter((_, idx) => idx !== pool));
   };
 
   const importFile = async () => {
@@ -197,7 +197,7 @@ function PoolControllers({
         const buf: [ParticipantType, ParticipantType][][][] = JSON.parse(JSON.stringify(state));
         buf[pool] = [];
         buf[pool] = stateHandlerWrap(false)(buf[pool]);
-        setIsPlayoff((isEnds) => {
+        setIsPoolEnd((isEnds) => {
           const bufEnds = [...isEnds];
           if (isPoolEndByDuels(buf, pool)) {
             bufEnds[pool] = true;
@@ -265,9 +265,9 @@ function App() {
   const [currentPoolId, setCurrentPoolId] = useAtom(currentPoolIdAtom);
   const [language, setLanguage] = useAtom(languageAtom);
   const [tournamentSystem, setTournamentSystem] = useAtom(tournamentSystemAtom);
-  const [, setDuels] = useAtom(duelsAtom);
+  const [duels, setDuels] = useAtom(duelsAtom);
   const [hotKeys, setHotKeys] = useAtom(hotKeysAtom);
-  const [isPlayoff, setIsPlayoff] = useAtom(isPlayoffAtom);
+  const [isPoolEnd, setIsPoolEnd] = useAtom(isPoolEndAtom);
   const [participants, setParticipants] = useAtom(participantsAtom);
   const [, setPlayoff] = useAtom(playoffAtom);
   const [, setDoubleHits] = useAtom(doubleHitsAtom);
@@ -321,8 +321,8 @@ function App() {
   ]
 
   useEffect(()=>{
-    if (poolsFromServer && poolsFromServer.length) {
-      for (let poolIndex in poolsFromServer) {
+    if (poolsFromServer && poolsFromServer.length && duels[currentPoolIndex].length === 0) {
+      for (let [poolIndex] of poolsFromServer.entries()) {
         setFighterPairs(state=>{
           const buf = [...state]
           buf[poolIndex] = poolsFromServer[poolIndex].pairs.map(pair=>[
@@ -330,15 +330,13 @@ function App() {
             {
               ...fighterDefault,
               name: pair[0].username,
-              id: pair[0].id,
-              club: pair[0].club.title
+              id: pair[0].id
             } : {...fighterDefault},
             pair[1] !== null ?
             {
               ...fighterDefault,
               name: pair[1].username,
-              id: pair[1].id,
-              club: pair[1].club.title
+              id: pair[1].id
             } : {...fighterDefault}
           ])
 
@@ -353,15 +351,13 @@ function App() {
               fighters.push({
                 ...fighterDefault,
                 name: pair[0].username,
-                id: pair[0].id,
-                club: pair[0].club.title
+                id: pair[0].id
               })
             if (pair[1] !== null)
               fighters.push({
                 ...fighterDefault,
                 name: pair[1].username,
-                id: pair[1].id,
-                club: pair[1].club.title
+                id: pair[1].id
               })
             return fighters
           }).flat()
@@ -373,22 +369,61 @@ function App() {
           buf[poolIndex] = 0
           return buf
         });
-        setDuels(state => {
-          const buf = [...state]
-          buf[poolIndex] = []
-          return buf
-        });
-        setIsPlayoff(state=>{
+        setIsPoolEnd(state=>{
           const buf = [...state]
           buf[poolIndex] = poolsFromServer[poolIndex].isEnd || false
           return buf
         })
+        setIsPoolRating(poolsFromServer[poolIndex].isPoolRating)
+        setPoolCountDelete(poolsFromServer[poolIndex].poolCountDelete)
+        if (poolsFromServer[poolIndex].isEnd) {
+          (async ()=>{
+            const matches = await getMathes(poolsFromServer[poolIndex].tournamentId, poolsFromServer[poolIndex].nominationId)
+            if (Object.keys(matches).length) {
+              setDuels(state=>{
+                const buf = [...state]
+                // @ts-ignore
+                buf[poolIndex] = matches.filter(m=>m.poolIndex === poolIndex).map(match=>[[
+                  {
+                    ...fighterDefault,
+                    id: match.red.id,
+                    name: match.red.username,
+                    wins: match.resultRed,
+                    scores: match.scoreRed!,
+                    warnings: match.warningsRed!,
+                    protests: match.protestsRed!,
+                    doubleHits: match.doubleHits!,
+                  },
+                  {
+                    ...fighterDefault,
+                    id: match.blue.id,
+                    name: match.blue.username,
+                    wins: match.resultRed === 1 ? 0 : 1,
+                    scores: match.scoreBlue!,
+                    warnings: match.warningsBlue!,
+                    protests: match.protestsBlue!,
+                    doubleHits: match.doubleHits!,
+                  },
+                ]]).reverse()
+                return buf
+              })
+            }
+          })()
+        } else {
+          setDuels(state => {
+            const buf = [...state]
+            buf[poolIndex] = []
+            return buf
+          });
+        }
       }
       setTournamentSystem(poolsFromServer[0].system)
       setCurrentPoolId(poolsFromServer[0].id)
       setСurrentPoolIndex(0)
       setHitZones(poolsFromServer[0].hitZones)
       setFightTime(poolsFromServer[0].time)
+      setNominationId(poolsFromServer[0].nominationId)
+      setWeaponId(nominations.find(nom=>nom.id === poolsFromServer[0].nominationId)?.weapon.id)
     }
   }, [poolsFromServer])
 
@@ -457,7 +492,7 @@ function App() {
         buf[currentPoolIndex] = [];
         return buf;
       });
-    setIsPlayoff((state) => {
+    setIsPoolEnd((state) => {
       const buf = [...state];
       buf[currentPoolIndex] = false;
       return buf;
@@ -509,7 +544,7 @@ function App() {
     }))
   }
 
-  const addParticipant = (nameProp = "", id="", club="") => {
+  const addParticipant = (nameProp = "", id="") => {
     if (nameProp && id)
       setCurrentTournamentParticipants(state=>state.filter(s=>s.id !== id))
     const name = nameProp || newName.trim();
@@ -518,7 +553,7 @@ function App() {
       const buf = [...state];
       buf[currentPoolIndex] = [
         ...buf[currentPoolIndex],
-        { ...fighterDefault, name, id: id || generateId(name), club },
+        { ...fighterDefault, name, id: id || generateId(name)},
       ];
       return buf;
     });
@@ -619,17 +654,19 @@ function App() {
           system: tournamentSystem,
           hitZones,
           moderatorId: currentModeratorId,
-          pairsIds: fighterPairs[currentPoolIndex].map(pair=>[pair[0].id, pair[1].id])
+          pairsIds: fighterPairs[currentPoolIndex].map(pair=>[pair[0].id, pair[1].id]),
+          isPoolRating,
+          poolCountDelete
       }
       if (currentPoolId) {
         const res = await updatePool(currentPoolId, data)
         if (res) {
-          toast.success(t("poolsSaved"))
+          toast.success(t("saved"))
         }
       } else {
         const res = await createPool(data)
         if (res) {
-          toast.success(t("poolsSaved"))
+          toast.success(t("saved"))
         }
       }
     }
@@ -664,8 +701,8 @@ function App() {
             <Section title={t("pool") + " " + (i * 2 + 1).toString()} key={i}>
               <PoolControllers
                 pool={i * 2}
-                isEnd={isPlayoff[i * 2]}
-                setIsPlayoff={setIsPlayoff}
+                isEnd={isPoolEnd[i * 2]}
+                setIsPoolEnd={setIsPoolEnd}
                 currentPoolIndex={currentPoolIndex}
                 setDuels={setDuels}
                 setPools={setPools}
@@ -712,7 +749,7 @@ function App() {
               {currentTournamentParticipants?.filter(p=>p.status === ParticipantStatus.CONFIRMED).map((p, idx)=>
                 <div key={idx} className={styles.participantRow}>
                   <span className={styles.participantTxt}>{p.username}</span>
-                  <button onClick={()=>addParticipant(p.username, p.id, p.club.title)}>
+                  <button onClick={()=>addParticipant(p.username, p.id)}>
                     <Plus size={22} color="var(--fg)" />
                   </button>
                 </div>
@@ -779,7 +816,7 @@ function App() {
                     setParticipants((state) => [...state, []]);
                     setCurrentPairIndex((state) => [...state, 0]);
                     setDuels((state) => [...state, []]);
-                    setIsPlayoff((state) => [...state, false]);
+                    setIsPoolEnd((state) => [...state, false]);
                   }
 
                   if (poolsFromServer && poolsFromServer.length >= pool) {
@@ -787,6 +824,8 @@ function App() {
                     setCurrentPoolId(poolsFromServer[pool - 1].id)
                     setHitZones(poolsFromServer[pool - 1].hitZones)
                     setFightTime(poolsFromServer[pool - 1].time)
+                    setNominationId(poolsFromServer[pool - 1].nominationId)
+                    setWeaponId(nominations.find(nom=>nom.id === poolsFromServer[pool - 1].nominationId)!.weapon.id)
                   } else if (isSimpleMode)
                     setСurrentPoolIndex(pool - 1);
                 }}
@@ -938,8 +977,8 @@ function App() {
             <Section title={t("pool") + " " + ((i + 1) * 2).toString()} key={i}>
               <PoolControllers
                 pool={(i + 1) * 2 - 1}
-                isEnd={isPlayoff[(i + 1) * 2 - 1]}
-                setIsPlayoff={setIsPlayoff}
+                isEnd={isPoolEnd[(i + 1) * 2 - 1]}
+                setIsPoolEnd={setIsPoolEnd}
                 currentPoolIndex={currentPoolIndex}
                 setDuels={setDuels}
                 setPools={setPools}

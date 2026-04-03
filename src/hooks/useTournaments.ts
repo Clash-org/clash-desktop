@@ -88,6 +88,25 @@ export function useTournamentsByIds(ids: number[] | undefined, lang: LangType) {
   };
 }
 
+// GET /tournaments/participants/:id
+export function useTournamentsByUserId(userId: string | undefined, lang: LangType) {
+  const { api } = useApi()
+  const { data, error, isLoading, mutate } = useSWR<TournamentType[]>(
+    userId ? `${api.tournaments}/participants/${userId}?lang=${lang}` : null,
+    fetcher,
+    {
+      revalidateOnFocus: false,
+    }
+  );
+
+  return {
+    tournaments: data,
+    isLoading,
+    error,
+    mutate,
+  };
+}
+
 // GET /tournaments/organizer/:uuid
 export function useOrganizerTournaments(uuid: string | undefined, lang: LangType) {
   const { api } = useApi()

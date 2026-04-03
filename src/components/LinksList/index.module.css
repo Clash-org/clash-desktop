@@ -1,0 +1,31 @@
+.links {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  margin-top: 12px;
+}
+
+.link {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 10px 12px;
+  background: var(--accent-transparent);
+  border-radius: 8px;
+  font-size: 14px;
+}
+
+.removeBtn {
+  background: none;
+  border: none;
+  color: var(--placeholder);
+  cursor: pointer;
+  padding: 4px;
+  border-radius: 4px;
+  transition: all 0.2s ease;
+}
+
+.removeBtn:hover {
+  color: var(--accent);
+  background: rgba(255, 68, 68, 0.1);
+}

@@ -12,12 +12,14 @@ interface ImageUploaderProps {
   value?: string | null;
   setValue?: (formData: FormData) => void;
   onChange?: (base64: string | null) => void;
-  setFileName?: (name: string | null) => void;
+  setFileName?: (name: string) => void;
   className?: string;
   placeholder?: string;
   disabled?: boolean;
   maxSize?: number; // в байтах, по умолчанию 5MB
   aspectRatio?: number; // например 16/9, 4/3, 1/1
+  type?: "avatar"|"uploader";
+  name?: string;
 }
 
 export default function ImageUploader({
@@ -29,12 +31,13 @@ export default function ImageUploader({
   placeholder,
   disabled = false,
   maxSize = 5 * 1024 * 1024, // 5MB по умолчанию
+  type = "uploader",
+  name = "",
   aspectRatio
 }: ImageUploaderProps) {
   const { t } = useTranslation();
   const [isDragging, setIsDragging] = useState(false);
   const [previewUrl, setPreviewUrl] = useState<string | null>(value || null);
-  const fileInputRef = useRef<HTMLInputElement>(null);
   const dropZoneRef = useRef<HTMLDivElement>(null);
 
   const defaultPlaceholder = t('imageUploaderPlaceholder');
@@ -155,10 +158,19 @@ export default function ImageUploader({
   const handleRemove = () => {
     setPreviewUrl(null);
     onChange?.(null);
-    if (fileInputRef.current) {
-      fileInputRef.current.value = '';
-    }
   };
+
+  if (type === "avatar")
+    return (
+        <div
+        ref={dropZoneRef}
+        className={isDragging ? `${styles.dragging} ${styles.avatar}` : styles.avatar}
+        style={{ backgroundImage: `url('${previewUrl}')` }}
+        onClick={!disabled ? handleFileSelect : undefined}
+        >
+          {!previewUrl ? name.charAt(0).toUpperCase() : ""}
+        </div>
+    )
 
   return (
     <div className={`${styles.container} ${className}`}>
@@ -208,19 +220,6 @@ export default function ImageUploader({
           </div>
         )}
       </div>
-
-      {/* Скрытый input для file (на случай если понадобится) */}
-      <input
-        ref={fileInputRef}
-        type="file"
-        accept="image/*"
-        onChange={(e) => {
-          if (e.target.files?.[0]) {
-            handleFile(e.target.files[0]);
-          }
-        }}
-        style={{ display: 'none' }}
-      />
     </div>
   );
 }

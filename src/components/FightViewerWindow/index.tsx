@@ -16,9 +16,10 @@ interface FightData {
   doubleHits: number;
   timeLeft: number;
   isRunning: boolean;
-  fighter1: string;
-  fighter2: string;
-  isPlayOff: boolean;
+  redName: string;
+  blueName: string;
+  nextRedName: string;
+  nextBlueName: string;
   isFinished?: boolean;
   winner?: string;
 }
@@ -36,9 +37,10 @@ export default function FightViewerWindow() {
     doubleHits: 0,
     timeLeft: 180,
     isRunning: false,
-    fighter1: '',
-    fighter2: '',
-    isPlayOff: false,
+    redName: '',
+    blueName: '',
+    nextRedName: '',
+    nextBlueName: '',
     isFinished: false,
     winner: ''
   });
@@ -92,7 +94,7 @@ export default function FightViewerWindow() {
   }, []);
 
   // Если нет имен бойцов, показываем загрузку
-  if (!fightData.fighter1 && !fightData.fighter2) {
+  if (!fightData.redName && !fightData.blueName) {
     return (
       <div className={styles.viewerContainer} style={{ flexDirection: "row" }}>
         <div className={styles.viewerCenter}>
@@ -105,9 +107,9 @@ export default function FightViewerWindow() {
   return (
     <div className={styles.viewerContainer}>
       {/* Левая сторона - Красный угол */}
-      <div className={`${styles.viewerSide} ${styles.red} ${fightData.winner === fightData.fighter1 ? styles.winnerSide : ''}`}>
+      <div className={`${styles.viewerSide} ${styles.red} ${fightData.winner === fightData.redName ? styles.winnerSide : ''}`}>
         <div className={styles.viewerName}>
-          {fightData.fighter1 ? truncateFullName(fightData.fighter1, 15).split(' ').map((line, idx) => (
+          {fightData.redName ? truncateFullName(fightData.redName, 15).split(' ').map((line, idx) => (
             <span key={idx}>{line}<br /></span>
           )) : '—'}
         </div>
@@ -123,6 +125,7 @@ export default function FightViewerWindow() {
             <span className={styles.statValue}>{fightData.warnings1}</span>
           </div>
         </div>
+        <span className={styles.nextPair}>{truncateFullName(fightData.nextRedName, 15)}</span>
       </div>
 
       {/* Центральная панель */}
@@ -148,9 +151,9 @@ export default function FightViewerWindow() {
       </div>
 
       {/* Правая сторона - Синий угол */}
-      <div className={`${styles.viewerSide} ${styles.blue} ${fightData.winner === fightData.fighter2 ? styles.winnerSide : ''}`}>
+      <div className={`${styles.viewerSide} ${styles.blue} ${fightData.winner === fightData.blueName ? styles.winnerSide : ''}`}>
         <div className={styles.viewerName}>
-          {fightData.fighter2 ? truncateFullName(fightData.fighter2, 15).split(' ').map((line, idx) => (
+          {fightData.blueName ? truncateFullName(fightData.blueName, 15).split(' ').map((line, idx) => (
             <span key={idx}>{line}<br /></span>
           )) : '—'}
         </div>
@@ -166,6 +169,7 @@ export default function FightViewerWindow() {
             <span className={styles.statValue}>{fightData.warnings2}</span>
           </div>
         </div>
+        <span className={styles.nextPair}>{truncateFullName(fightData.nextBlueName, 15)}</span>
       </div>
     </div>
   );

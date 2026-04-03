@@ -1,14 +1,16 @@
-// components/Playoff/index.tsx
 import { useState, useEffect } from 'react';
-import { ParticipantPlayoffType } from '@/typings';
+import { ParticipantPlayoffType, TournamentMatchType } from '@/typings';
 import Button from '@/components/Button';
 import { useTranslation } from 'react-i18next';
 import styles from './index.module.css';
 import { useAtom } from 'jotai';
-import { doubleHitsAtom, historyAtom, playoffAtom, playoffIndexAtom, playoffMatchIndexAtom, protests1Atom, protests2Atom, score1Atom, score2Atom, warnings1Atom, warnings2Atom } from '@/store';
-import { Save } from 'lucide-react';
+import { currentNominationIdAtom, currentTournamentAtom, currentWeaponIdAtom, doubleHitsAtom, historyAtom, playoffAtom, playoffIndexAtom, playoffMatchIndexAtom, protests1Atom, protests2Atom, score1Atom, score2Atom, warnings1Atom, warnings2Atom } from '@/store';
+import { HardDriveUpload, Save } from 'lucide-react';
 import { exportExcel } from '@/utils/exportExcel';
 import { Pages, usePage } from '@/hooks/usePage';
+import { processTournament } from '@/utils/api';
+import { createMatches, getMatchesFromDuels } from '@/utils/helpers';
+import toast from 'react-hot-toast';
 
 interface PlayoffProps {
   onTournamentComplete?: (winner: ParticipantPlayoffType) => void;
@@ -19,6 +21,9 @@ export default function Playoff({
 }: PlayoffProps) {
   const { t } = useTranslation();
   const { setPage } = usePage()
+  const [currentTournament] = useAtom(currentTournamentAtom)
+  const [currentWeaponId] = useAtom(currentWeaponIdAtom)
+  const [currentNominationId] = useAtom(currentNominationIdAtom)
   const [playoff, setPlayoff] = useAtom(playoffAtom)
   const [winners, setWinners] = useState<{ [key: string]: number }>({}); // Индекс победителя в паре (0 или 1)
   const [champion, setChampion] = useState<ParticipantPlayoffType | null>(null);
@@ -43,6 +48,17 @@ export default function Playoff({
     third: null,
     fourth: null
   });
+
+  const saveOnServer = async () => {
+    if (currentTournament && currentNominationId && currentWeaponId) {
+      const matches: TournamentMatchType[] = getMatchesFromDuels(playoff, undefined, "playoff")
+      await createMatches(currentTournament.id, currentWeaponId, currentNominationId, matches)
+
+      const res = await processTournament(currentTournament.id, currentWeaponId, currentNominationId, [String(podium.first?.id), String(podium.second?.id), String(podium.third?.id)], undefined, new Date(currentTournament.date))
+      if (res)
+        toast.success(t("saved"))
+    }
+  }
 
   // Обработчик клика для выбора победителя
   const handleFighterClick = (roundIndex: number, matchIndex: number, fighterIndex: number) => {
@@ -398,6 +414,14 @@ export default function Playoff({
         />
       </div>
     )}
+    {podium.first && currentTournament && currentNominationId && currentWeaponId &&
+      <Button
+      onClick={saveOnServer}
+      style={{ width: "100%", marginBottom: "10px" }}
+      >
+        <HardDriveUpload size={28} color="var(--fg)" />
+      </Button>
+    }
 
     <Button onClick={() => exportExcel(playoff, `${t('playoff')}.xlsx`, true)} style={{ width: "100%" }}>
       <Save size={28} />

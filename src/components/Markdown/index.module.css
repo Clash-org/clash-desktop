@@ -1,0 +1,244 @@
+.markdown {
+  color: var(--fg);
+  font-family: "OnestRegular", sans-serif;
+  line-height: 1.6;
+  font-size: 16px;
+}
+
+/* Заголовки */
+.markdown h1 {
+  font-family: "OnestBold", sans-serif;
+  font-size: 32px;
+  margin: 0.5em 0 0.75em 0;
+  color: var(--fg);
+  border-left: 4px solid var(--accent);
+  padding-left: 20px;
+}
+
+.markdown h2 {
+  font-family: "OnestBold", sans-serif;
+  font-size: 28px;
+  margin: 1.25em 0 0.5em 0;
+  color: var(--fg);
+  border-bottom: 2px solid var(--accent-transparent);
+  padding-bottom: 8px;
+}
+
+.markdown h3 {
+  font-family: "OnestBold", sans-serif;
+  font-size: 24px;
+  margin: 1em 0 0.5em 0;
+  color: var(--fg);
+}
+
+.markdown h4 {
+  font-family: "OnestBold", sans-serif;
+  font-size: 20px;
+  margin: 0.75em 0 0.5em 0;
+  color: var(--fg);
+}
+
+.markdown h5, .markdown h6 {
+  font-family: "OnestBold", sans-serif;
+  font-size: 18px;
+  margin: 0.5em 0 0.25em 0;
+  color: var(--fg);
+}
+
+/* Параграфы */
+.markdown p {
+  margin: 1em 0;
+  line-height: 1.6;
+}
+
+/* Списки */
+.markdown ul, .markdown ol {
+  margin: 1em 0;
+  padding-left: 2em;
+}
+
+.markdown li {
+  margin: 0.5em 0;
+  line-height: 1.6;
+}
+
+.markdown li::marker {
+  color: var(--accent);
+}
+
+/* Ссылки */
+.markdown a {
+  color: var(--accent);
+  text-decoration: none;
+  border-bottom: 1px solid var(--accent-transparent);
+  transition: all 0.2s ease;
+}
+
+.markdown a:hover {
+  color: var(--accent-dark);
+  border-bottom-color: var(--accent);
+}
+
+/* Блоки кода */
+.markdown pre {
+  background: var(--surface-2);
+  border-radius: 12px;
+  padding: 16px;
+  overflow-x: auto;
+  margin: 1em 0;
+  border: 1px solid var(--accent-transparent);
+}
+
+.markdown code {
+  font-family: 'Fira Code', 'Courier New', monospace;
+  font-size: 14px;
+  background: var(--surface-2);
+  padding: 2px 6px;
+  border-radius: 6px;
+  color: var(--accent);
+}
+
+.markdown pre code {
+  background: none;
+  padding: 0;
+  color: var(--fg);
+}
+
+/* Цитаты */
+.markdown blockquote {
+  border-left: 4px solid var(--accent);
+  margin: 1em 0;
+  padding: 0.5em 0 0.5em 1.5em;
+  background: var(--accent-transparent);
+  border-radius: 0 12px 12px 0;
+  font-style: italic;
+  color: var(--fg);
+}
+
+/* Таблицы */
+.markdown table {
+  width: 100%;
+  border-collapse: collapse;
+  margin: 1em 0;
+  overflow-x: auto;
+  display: block;
+}
+
+.markdown thead {
+  background: var(--accent-transparent);
+  border-bottom: 2px solid var(--accent);
+}
+
+.markdown th {
+  padding: 12px 16px;
+  text-align: left;
+  font-family: "OnestMedium", sans-serif;
+  font-weight: 600;
+  color: var(--fg);
+}
+
+.markdown td {
+  padding: 10px 16px;
+  border-bottom: 1px solid var(--accent-transparent);
+}
+
+.markdown tr:last-child td {
+  border-bottom: none;
+}
+
+.markdown tr:hover {
+  background: var(--accent-transparent);
+}
+
+/* Горизонтальная линия */
+.markdown hr {
+  border: none;
+  height: 1px;
+  background: linear-gradient(to right, transparent, var(--accent), transparent);
+  margin: 2em 0;
+}
+
+/* Изображения */
+.markdown img {
+  max-width: 100%;
+  height: auto;
+  border-radius: 12px;
+  margin: 1em 0;
+  border: 1px solid var(--accent-transparent);
+}
+
+/* Жирный и курсив */
+.markdown strong {
+  font-family: "OnestBold", sans-serif;
+  color: var(--fg);
+}
+
+.markdown em {
+  font-style: italic;
+  color: var(--placeholder);
+}
+
+/* Чекбоксы (для задач) */
+.markdown input[type="checkbox"] {
+  width: 18px;
+  height: 18px;
+  margin-right: 8px;
+  accent-color: var(--accent);
+  cursor: pointer;
+  vertical-align: middle;
+}
+
+.markdown .task-list-item {
+  list-style: none;
+  margin-left: -1.5em;
+}
+
+/* Адаптивность */
+@media (max-width: 768px) {
+  .markdown {
+    font-size: 14px;
+  }
+
+  .markdown h1 {
+    font-size: 28px;
+  }
+
+  .markdown h2 {
+    font-size: 24px;
+  }
+
+  .markdown h3 {
+    font-size: 20px;
+  }
+
+  .markdown h4 {
+    font-size: 18px;
+  }
+
+  .markdown pre {
+    padding: 12px;
+  }
+
+  .markdown th, .markdown td {
+    padding: 8px 12px;
+  }
+}
+
+/* Скроллбар для блоков кода */
+.markdown pre::-webkit-scrollbar {
+  height: 8px;
+}
+
+.markdown pre::-webkit-scrollbar-track {
+  background: var(--surface-2);
+  border-radius: 4px;
+}
+
+.markdown pre::-webkit-scrollbar-thumb {
+  background: var(--placeholder);
+  border-radius: 4px;
+}
+
+.markdown pre::-webkit-scrollbar-thumb:hover {
+  background: var(--accent);
+}

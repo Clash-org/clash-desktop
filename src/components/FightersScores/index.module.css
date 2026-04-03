@@ -1,28 +1,108 @@
-.wrap {
-    display: flex;
-    flex-direction: column;
+/* index.module.css */
+.container {
     margin: 0 auto;
+    overflow-x: auto;
+    width: 100%;
+}
+
+.table {
+    width: 100%;
+    border-collapse: collapse;
+    background: var(--accent-transparent);
+    border-radius: 16px;
+    overflow: hidden;
+}
+
+/* Заголовки */
+.headerRow {
+    background-color: var(--accent);
+}
+
+.headerCell {
+    padding: 12px 15px;
+    text-align: center;
+    font-size: 18px;
+    font-weight: 600;
+    color: var(--bg);
+    border-right: 2px solid var(--fg);
+    border-bottom: 2px solid var(--fg);
+}
+
+.headerCell:last-child {
+    border-right: none;
+}
+
+/* Тело таблицы */
+.row {
+    border-bottom: 2px solid var(--fg);
+}
+
+.row:last-child {
+    border-bottom: none;
 }
 
 .cell {
-    border: 2px solid var(--accent);
-    display: flex;
-    width: fit-content;
-    font-size: 26px;
-    border-radius: 16px;
-    overflow: hidden;
-    background: var(--accent-transparent);
-}
-
-.cell > span {
     padding: 15px;
+    text-align: center;
+    font-size: 26px;
+    border-right: 2px solid var(--fg);
+    max-width: 200px;
+    width: 200px;
 }
 
-.cell > span:not(:last-child) {
-    border-right: 2px solid var(--accent);
+.cell:last-child {
+    border-right: none;
+}
+
+.scoreCell {
+    font-weight: 600;
+    min-width: 80px;
+    width: 80px;
+    color: rgba(255, 255, 255, .5)
 }
 
 .win {
     color: var(--fg);
+    background-color: rgba(var(--accent-rgb), .6);
+}
+
+.win:hover {
     background-color: var(--accent);
+}
+
+/* Цвета углов (опционально) */
+.redCell {
+    background-color: rgba(255, 0, 0, 0.1);
+}
+
+.blueCell {
+    background-color: rgba(0, 0, 255, 0.1);
+}
+
+/* Адаптивность */
+@media (max-width: 768px) {
+    .headerCell {
+        padding: 8px 12px;
+        font-size: 14px;
+    }
+
+    .cell {
+        padding: 10px;
+        font-size: 18px;
+    }
+
+    .scoreCell {
+        min-width: 60px;
+    }
+}
+
+/* Стили для скролла на мобильных */
+@media (max-width: 640px) {
+    .container {
+        overflow-x: auto;
+    }
+
+    .table {
+        min-width: 500px;
+    }
 }

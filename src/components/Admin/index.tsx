@@ -10,20 +10,27 @@ import { formatDate, translateStatus } from "@/utils/helpers";
 import styles from "./index.module.css"
 import { TournamentShortType } from "@/typings";
 import { Pages, usePage } from "@/hooks/usePage";
-import { Swords, Trash2, Trophy, UsersRound } from "lucide-react";
+import { Building2, Swords, Trash2, Trophy, UsersRound } from "lucide-react";
 import { deleteTournament } from "@/utils/api";
 import ModalWindow from "../ModalWindow";
 import Button from "../Button";
 import UsersPage from "./UsersPage";
 import WeaponsCreate from "./WeaponsCreate";
 import LoadWrap from "../LoadWrap";
+import toast from "react-hot-toast";
+import CityUpdate from "./CityUpdate";
 
 export default function Admin() {
     const { t } = useTranslation()
     const { setPage: setGlobalPage } = usePage()
     const [lang] = useAtom(languageAtom)
-    const tabs = ["tournaments", "users", "weapons"] as const
-    const titles = [<><Trophy size={20} color="var(--fg)" />{t("tournaments")}</>, <><UsersRound size={20} color="var(--fg)" />{t("fighters")}</>, <><Swords size={20} color="var(--fg)" />{t("weapons")}</>]
+    const tabs = ["tournaments", "users", "weapons", "cities"] as const
+    const titles = [
+        <><Trophy size={20} color="var(--fg)" />{t("tournaments")}</>,
+        <><UsersRound size={20} color="var(--fg)" />{t("fighters")}</>,
+        <><Swords size={20} color="var(--fg)" />{t("weapons")}</>,
+        <><Building2 size={20} color="var(--fg)" />{t("city")}</>
+    ]
     const [activeTab, setActiveTab] = useState<typeof tabs[number]>("tournaments")
     const [page, setPage] = useState(1)
     const { tournaments, tournamentsCount, isLoading } = useTournaments(lang, page, true)
@@ -54,8 +61,14 @@ export default function Admin() {
                 </LoadWrap>
 
                 <ModalWindow isOpen={showDelete && tournamentId > 0} onClose={()=>setShowDelete(false)}>
-                    <Section title={t("realyDeleteTournament") + ` ID: ${tournamentId}`}>
-                        <Button onClick={()=>{ deleteTournament(tournamentId) }}>
+                    <Section title={t("realyDelete") + `\nID: ${tournamentId}`}>
+                        <Button onClick={async ()=>{
+                            const res = await deleteTournament(tournamentId)
+                            if (res) {
+                                toast.success(t("dataUpdated"))
+                                setShowDelete(false)
+                            }
+                        }}>
                             <Trash2 color="var(--fg)" />
                         </Button>
                     </Section>
@@ -64,6 +77,7 @@ export default function Admin() {
             }
             {activeTab === "users" && <UsersPage lang={lang} t={t} setPage={setGlobalPage} />}
             {activeTab === "weapons" && <WeaponsCreate lang={lang} t={t} />}
+            {activeTab === "cities" && <CityUpdate lang={lang} t={t} />}
             </Section>
         </div>
     )

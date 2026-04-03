@@ -20,7 +20,7 @@ import {
   warnings2Atom,
   historyAtom,
   currentPoolIndexAtom,
-  isPlayoffAtom,
+  isPoolEndAtom,
   playoffAtom,
   playoffIndexAtom,
   playoffMatchIndexAtom,
@@ -42,7 +42,7 @@ import { storage } from '@/utils/storage';
 
 export default function FightScreen() {
   const [bellSound, setBellSound] = useState(new Howl({ src: ['/sounds/bell.mp3'] }));
-  const { t: translate } = useTranslation()
+  const { t } = useTranslation()
   const [currentPairIndex, setCurrentPairIndex] = useAtom(currentPairIndexAtom);
   const [currentPoolIndex] = useAtom(currentPoolIndexAtom);
   const [isRunning, setIsRunning] = useAtom(isRunningAtom);
@@ -55,8 +55,8 @@ export default function FightScreen() {
   const [warnings2, setWarnings2] = useAtom(warnings2Atom);
   const [score1, setScore1] = useAtom(score1Atom);
   const [score2, setScore2] = useAtom(score2Atom);
-  const [isPlayoff] = useAtom(isPlayoffAtom);
-  const isPlayOff = !isPlayoff.includes(false)
+  const [isPoolEnd] = useAtom(isPoolEndAtom);
+  const isPlayoff = !isPoolEnd.includes(false)
   const [playoff, setPlayoff] = useAtom(playoffAtom)
   const [fighterPairs, setFighterPairs] = useAtom(fighterPairsAtom);
   const [history, setHistory] = useAtom(historyAtom)
@@ -76,7 +76,7 @@ export default function FightScreen() {
     let name1 = '', name2 = '', id1 = '', id2 = '';
 
     try {
-      if (isPlayOff) {
+      if (isPlayoff) {
         if (playoff?.[playoffIndex]?.[playoffMatchIndex]?.[0]) {
           name1 = playoff[playoffIndex][playoffMatchIndex][0]?.name || '';
           name2 = playoff[playoffIndex][playoffMatchIndex][1]?.name || '';
@@ -96,10 +96,16 @@ export default function FightScreen() {
       console.error('Ошибка получения данных бойцов:', e);
     }
 
-    return { fighter1: name1, fighter2: name2, fighterId1: id1, fighterId2: id2 };
+    return { redName: name1, blueName: name2, fighterId1: id1, fighterId2: id2 };
   };
 
-  const { fighter1, fighter2, fighterId1, fighterId2 } = getFighterData();
+  const { redName, blueName, fighterId1, fighterId2 } = getFighterData();
+  let nextRedName = fighterPairs[currentPoolIndex]?.[currentPairIndex[currentPoolIndex] + 1]?.[0]?.name || ""
+  let nextBlueName = fighterPairs[currentPoolIndex]?.[currentPairIndex[currentPoolIndex] + 1]?.[1]?.name || ""
+  if (nextRedName === "—" || nextBlueName === "—") {
+    nextRedName = ""
+    nextBlueName = ""
+  }
 
   const sendDataToViewer = async () => {
     try {
@@ -113,9 +119,10 @@ export default function FightScreen() {
         doubleHits,
         timeLeft,
         isRunning,
-        fighter1,
-        fighter2,
-        isPlayOff,
+        redName,
+        blueName,
+        nextRedName,
+        nextBlueName,
         isFinished,
         winner
       });
@@ -133,9 +140,8 @@ export default function FightScreen() {
     doubleHits,
     timeLeft,
     isRunning,
-    fighter1,
-    fighter2,
-    isPlayOff
+    redName,
+    blueName
   ]);
   // @ts-ignore
   const timeoutRef = useRef<NodeJS.Timeout>();
@@ -171,14 +177,14 @@ export default function FightScreen() {
       }
       if (!isDraw) {
         if (score1 > score2) {
-          if (isPlayOff) {
+          if (isPlayoff) {
             changePlayoffScores()
           } else {
             incWin(score1, fighterId1, fighterId2, currentPairIndex[currentPoolIndex], currentPoolIndex, setFighterPairs, warnings1, protests1, doubleHits);
             incWin(score2, fighterId2, fighterId1, currentPairIndex[currentPoolIndex], currentPoolIndex, setFighterPairs, warnings2, protests2, doubleHits, true);
           }
         } else {
-          if (isPlayOff) {
+          if (isPlayoff) {
             changePlayoffScores()
           } else {
             incWin(score2, fighterId2, fighterId1, currentPairIndex[currentPoolIndex], currentPoolIndex, setFighterPairs, warnings2, protests2, doubleHits);
@@ -186,16 +192,16 @@ export default function FightScreen() {
           }
         }
       } else {
-        if (!isPlayOff) {
+        if (!isPlayoff) {
           incWin(score1, fighterId1, fighterId2, currentPairIndex[currentPoolIndex], currentPoolIndex, setFighterPairs, warnings1, protests1, doubleHits, false, 1);
           incWin(score2, fighterId2, fighterId1, currentPairIndex[currentPoolIndex], currentPoolIndex, setFighterPairs, warnings2, protests2, doubleHits, false, 1);
         }
       }
 
-      const winnerName = score1 > score2 ? fighter1 : fighter2
+      const winnerName = score1 > score2 ? redName : blueName
       setWinner(winnerName)
       setIsFinished(true)
-      toast.success(isDraw ? translate('draw') : `${translate('win')}: ${winnerName}`, {
+      toast.success(isDraw ? t('draw') : `${t('win')}: ${winnerName}`, {
         duration: 3000,
         style: {
           fontSize: '20px',
@@ -222,11 +228,11 @@ export default function FightScreen() {
 
     if (isRunning && timeLeft > 0) {
       interval = setInterval(() => {
-        setTimeLeft((t) => {
-          const next = t - 1;
+        setTimeLeft((leftTime) => {
+          const next = leftTime - 1;
 
           if (next === 15) {
-            toast(translate("last15seconds"), { icon: "ℹ️", style: { marginTop: '100px' } })
+            toast(t("last15seconds"), { icon: "ℹ️", style: { marginTop: '100px' } })
           }
 
           if (next === 0) {
@@ -340,7 +346,7 @@ export default function FightScreen() {
 
   const fighterData = [
     {
-      name: fighter1,
+      name: redName,
       score: score1,
       setScore: setScore1,
       protests: protests1,
@@ -350,7 +356,7 @@ export default function FightScreen() {
       styleWrap: styles.red
     },
     {
-      name: fighter2,
+      name: blueName,
       score: score2,
       setScore: setScore2,
       protests: protests2,
@@ -380,7 +386,7 @@ export default function FightScreen() {
               onClick={() => addPoints(data.setScore, zone as keyof typeof hitZones)}
             >
               <span className={styles.zoneTxt}>
-                {translate(zone)} (+{pts})
+                {t(zone)} (+{pts})
               </span>
             </button>
           ))}
@@ -392,16 +398,16 @@ export default function FightScreen() {
             <Minus size={28} color="var(--fg)" />
           </button>
 
-          <div className={styles.warnings} style={i === 0 ? { flexDirection: "row-reverse" }:{}}>
+          <div className={styles.warnings}>
             <Counter
-              label={translate('protests')}
+              label={t('protests')}
               value={data.protests}
               onInc={data.setProtests}
               onDec={data.setProtests}
             />
 
             <Counter
-              label={translate('warnings')}
+              label={t('warnings')}
               value={data.warnings}
               onInc={data.setWarnings}
               onDec={data.setWarnings}
@@ -413,9 +419,12 @@ export default function FightScreen() {
 
       {/* НИЖНЯЯ ПАНЕЛЬ */}
       <div className={styles.bottomBar}>
+        {isFinished && nextRedName && nextBlueName &&
+        <Button title={t("nextPair")} onClick={()=>setCurrentPairIndex(state=>{ const buf=[...state]; buf[currentPoolIndex] = buf[currentPoolIndex] + (fighterPairs[currentPoolIndex].length > buf[currentPoolIndex] + 1 ? 1 : 0); return buf })} style={{ position: "absolute", right: "30px", top: "25px" }} />
+        }
         <div className={styles.winsBar}>
           <Counter
-            label={translate('doubleHits')}
+            label={t('doubleHits')}
             value={doubleHits}
             onInc={setDoubleHits}
             onDec={setDoubleHits}

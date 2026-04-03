@@ -24,7 +24,6 @@ export type ParticipantType = {
   warnings: number;
   protests: number;
   doubleHits: number;
-  club?: string;
   // для швейцарской
   opponents: string[];     // уже сыгранные соперники (чтобы не повторяться)
   buchholz: number;        // доп. показатель, если понадобится
@@ -58,6 +57,7 @@ export type UserType = {
   id: string;
   email: string;
   username: string;
+  image: string;
   gender: boolean;
   isAdmin: boolean;
   city: CityType;
@@ -80,12 +80,17 @@ export const CURRENCY_CODES = [
 
 export type CurrencyType = typeof CURRENCY_CODES[number]
 
+export type WinnersByNomination = {
+  [nominationId: number]: string[];
+}
+
 export type TournamentType = {
   id: number;
   title: string;
   weaponsIds: number[];
   nominationsIds: number[];
   organizerId: string;
+  winners: WinnersByNomination;
   status: TournamentStatusType;
   image: string,
   date: string;
@@ -144,13 +149,6 @@ export const MatchTypes = {
 } as const;
 export type MatchTypesType = typeof MatchTypes[keyof typeof MatchTypes];
 
-export interface MatchMetadata {
-  // Видео
-  videoUrl?: string;
-  // Произвольные дополнительные данные
-  [key: string]: any;
-}
-
 export type TournamentMatchType = {
   redId: string;
   blueId: string;
@@ -163,6 +161,8 @@ export type TournamentMatchType = {
   protestsBlue?: number;
   warningsRed?: number;
   warningsBlue?: number;
+  metadata?: MatchMetadataType;
+  poolIndex?: number;
 }
 
 export type MatchType = Omit<TournamentMatchType, "redId"|"blueId"> & { red: UserType, blue: UserType }
@@ -222,6 +222,7 @@ export type FighterType = {
 export type StatsType = {
   fighter: FighterType,
   ratings: {
+    id: number;
     weaponSubtype: string;
     rating: number;
     rd: number;
@@ -231,7 +232,7 @@ export type StatsType = {
   }[]
 }
 
-export type Leaderboard = {
+export type LeaderboardType = {
     rank: number;
     userId: string;
     username: string;
@@ -252,6 +253,8 @@ export type PoolType = {
     time: number;
     pairs: [UserType|null, UserType|null][];
     isEnd: boolean | null;
+    isPoolRating: boolean;
+    poolCountDelete: number;
 }
 
 export type PoolCreatedType = Omit<PoolType, "createdAt"|"isEnd"|"pairs"|"id"> & { pairsIds: [string, string][] }
@@ -265,4 +268,9 @@ export type PredictType = {
         id: string;
         winProbability: number;
     };
+}
+
+export type MatchMetadataType = {
+  videoUrl?: string;
+  [key: string]: any;
 }

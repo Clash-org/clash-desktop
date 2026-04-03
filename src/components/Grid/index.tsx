@@ -3,13 +3,14 @@ import Table from "@/components/Table";
 import {
   currentNominationIdAtom,
   currentPairIndexAtom,
+  currentPoolIdAtom,
   currentPoolIndexAtom,
   currentTournamentAtom,
   currentWeaponIdAtom,
   doubleHitsAtom,
   duelsAtom,
   fighterPairsAtom,
-  isPlayoffAtom,
+  isPoolEndAtom,
   isPoolRatingAtom,
   playoffAtom,
   poolCountDeleteAtom,
@@ -22,43 +23,46 @@ import {
   warnings2Atom,
 } from "@/store";
 import { generatePairs } from "@/utils/generatePairs";
-import { isPoolEndByDuels, truncate } from "@/utils/helpers";
+import { createMatches, getMatchesFromDuels, isPoolEndByDuels, truncate } from "@/utils/helpers";
 import { useAtom } from "jotai";
 import { ChartColumn, HardDriveUpload, Save } from "lucide-react";
 import { useState } from "react";
 
 import styles from "./index.module.css";
-import { ParticipantType, TournamentMatchType, TournamentResponse, TournamentSystem } from "@/typings";
+import { ParticipantType, TournamentResponse, TournamentSystem } from "@/typings";
 import { useTranslation } from "react-i18next";
 import { calculateAllSD, getAllInOneParticipants, getTopThreeFighters, getWinnersRobin, getWinnersSwiss } from "@/utils/matchesHandlers";
 import { exportExcel } from "@/utils/exportExcel";
 import { generatePlayoffPairs } from "@/utils/generatePlayoffPairs";
 import Playoff from "../Playoff";
 import ModalWindow from "../ModalWindow";
-import { processTournament } from "@/utils/api";
+import { processTournament, updatePoolEnd } from "@/utils/api";
+import toast from "react-hot-toast";
+import FightersScores from "../FightersScores";
 
 export default function TournamentGridScreen() {
   const { t } = useTranslation();
   const [currentTournament] = useAtom(currentTournamentAtom)
   const [currentWeaponId] = useAtom(currentWeaponIdAtom)
   const [currentNominationId] = useAtom(currentNominationIdAtom)
+  const [currentPoolId] = useAtom(currentPoolIdAtom)
   const [poolCountDelete] = useAtom(poolCountDeleteAtom);
   const [isPoolRating] = useAtom(isPoolRatingAtom);
   const [fighterPairs, setFighterPairs] = useAtom(fighterPairsAtom);
   const [tournamentSystem] = useAtom(tournamentSystemAtom);
-  const [winners, setWinners] = useState<string[]>([]);
+  const [winners, setWinners] = useState<ParticipantType[]>([]);
   const [, setCurrentPairIndex] = useAtom(currentPairIndexAtom);
   const [currentPoolIndex] = useAtom(currentPoolIndexAtom);
   const [duels, setDuels] = useAtom(duelsAtom);
-  const [doubleHits, setDoubleHits] = useAtom(doubleHitsAtom);
-  const [protestsRed, setProtests1] = useAtom(protests1Atom);
-  const [protestsBlue, setProtests2] = useAtom(protests2Atom);
-  const [warningsRed, setWarnings1] = useAtom(warnings1Atom);
-  const [warningsBlue, setWarnings2] = useAtom(warnings2Atom);
-  const [scoreRed, setScore1] = useAtom(score1Atom);
-  const [scoreBlue, setScore2] = useAtom(score2Atom);
+  const [, setDoubleHits] = useAtom(doubleHitsAtom);
+  const [, setProtests1] = useAtom(protests1Atom);
+  const [, setProtests2] = useAtom(protests2Atom);
+  const [, setWarnings1] = useAtom(warnings1Atom);
+  const [, setWarnings2] = useAtom(warnings2Atom);
+  const [, setScore1] = useAtom(score1Atom);
+  const [, setScore2] = useAtom(score2Atom);
   const [playoff, setPlayoff] = useAtom(playoffAtom);
-  const [isEnd, setIsEnd] = useAtom(isPlayoffAtom);
+  const [isEnd, setIsEnd] = useAtom(isPoolEndAtom);
   const [showRank, setShowRank] = useState(false)
   const [rank, setRank] = useState<ParticipantType[]>([])
   const [idsSD, setIdsSD] = useState<Map<string, number>>(new Map<string, number>())
@@ -66,15 +70,6 @@ export default function TournamentGridScreen() {
   const [isRatingOpen, setIsRatingOpen] = useState(true)
 
   const isRound = tournamentSystem === TournamentSystem.HYBRID || tournamentSystem === TournamentSystem.ROBIN || tournamentSystem === TournamentSystem.SWISS
-
-  const headers = [
-    t("name"),
-    t("win"),
-    t("score"),
-    t("score"),
-    t("win"),
-    t("name"),
-  ];
 
   const headersRank = [
     t("name"),
@@ -88,31 +83,24 @@ export default function TournamentGridScreen() {
 
   const saveOnServer = async () => {
     if (currentTournament && currentNominationId && currentWeaponId) {
-      const matches: TournamentMatchType[] = []
-      duels[currentPoolIndex].forEach(pairs=>{
-        pairs.forEach(pair=>{
-          matches.push({
-            redId: pair[0].id,
-            blueId: pair[1].id,
-            resultRed: pair[0].wins === pair[1].wins ? 0.5: (pair[0].wins > pair[1].wins ? 1 : 0),
-            doubleHits,
-            protestsRed,
-            protestsBlue,
-            warningsRed,
-            warningsBlue,
-            scoreRed,
-            scoreBlue
-          })
-        })
-      })
-
-      const res = await processTournament(currentTournament.id, currentWeaponId, currentNominationId, matches, new Date(currentTournament.date))
-      setRating(res)
+      const matches = getMatchesFromDuels(duels[currentPoolIndex], currentPoolIndex)
+      if (tournamentSystem !== TournamentSystem.HYBRID) {
+        const res = await processTournament(currentTournament.id, currentWeaponId, currentNominationId, winners.map(w=>w.id), matches, new Date(currentTournament.date))
+        setRating(res)
+        if (currentPoolId)
+          await updatePoolEnd(currentPoolId, true)
+      } else {
+        const isCreate = await createMatches(currentTournament.id, currentWeaponId, currentNominationId, matches)
+        if (currentPoolId)
+          await updatePoolEnd(currentPoolId, true)
+        if (isCreate)
+          toast.success(t("saved"))
+      }
     }
   }
 
   const endTournament = (endFightersBuchholz?: {[id: string]: number}) => {
-    let winnersArr: string[] = new Array(3)
+    let winnersArr: ParticipantType[] = new Array(3)
     if (tournamentSystem === TournamentSystem.ROBIN) {
       const { winners, ranking } = getWinnersRobin(
         getAllInOneParticipants([fighterPairs[currentPoolIndex], ...duels[currentPoolIndex]])
@@ -169,7 +157,6 @@ export default function TournamentGridScreen() {
           .map((pair) => {
             if (tournamentSystem === TournamentSystem.SWISS) {
               const calculateBuchholz = (idx: number) => {
-                // const currentFighters = fighterPairs[currentPoolIndex].flat()
                 const allFighters = getAllInOneParticipants([fighterPairs[currentPoolIndex], ...duels[currentPoolIndex]])
 
                 if (allFighters.length) {
@@ -236,31 +223,21 @@ export default function TournamentGridScreen() {
   };
 
   const getDataTable = (data: ParticipantType[][]) => {
-    return {
-      data: data.map(([f1, f2]) => [
-        f1.club ? `${truncate(f1?.name || "")}\n${f1.club}` : truncate(f1?.name || ""),
-        f1.wins.toString(),
-        f1.scores.toString(),
-        f2.scores.toString(),
-        f2.wins.toString(),
-        f2.club ? `${truncate(f2?.name || "")}\n${f2.club}` : truncate(f2?.name || ""),
-      ]),
-      hints: data.map(([f1, f2]) => [
-        f1?.name,
-        "",
-        "",
-        "",
-        "",
-        f2?.name,
-      ])
-    }
+    return data.map(([f1, f2]) => ({
+        idRed: f1.id,
+        nameRed: truncate(f1?.name || "", 20),
+        scoreRed: f1.scores,
+        scoreBlue: f2.scores,
+        nameBlue: truncate(f2?.name || "", 20),
+        idBlue: f2.id
+    }))
   }
 
 
   const getDataRankTable = (data: ParticipantType[]) => {
     return {
       data: data.map((f) => [
-        f.club ? `${truncate(f.name || "")}\n${f.club}` : truncate(f.name || ""),
+        truncate(f.name || ""),
         f.wins.toString(),
         f.losses.toString(),
         f.draws.toString(),
@@ -317,15 +294,15 @@ export default function TournamentGridScreen() {
         <div className={styles.winners}>
           <span className={styles.winner}>
             <span>2</span>
-            <span>{winners[1]}</span>
+            <span>{winners[1].name}</span>
           </span>
           <span className={styles.first}>
             <span>1</span>
-            <span>{winners[0]}</span>
+            <span>{winners[0].name}</span>
           </span>
           <span className={styles.winner}>
             <span>3</span>
-            <span>{winners[2]}</span>
+            <span>{winners[2].name}</span>
           </span>
           {tournamentSystem !== TournamentSystem.OLYMPIC &&
           <Button stroke onClick={()=>setShowRank(true)} style={{ position: "absolute", right: "25px", minWidth: "8px" }}>
@@ -337,7 +314,7 @@ export default function TournamentGridScreen() {
       {sections.map((item, index) => (
         <div key={item.key} className={styles.duelWrap}>
           <h2 className={styles.duelTitle}>{item.title}</h2>
-          <Table data={item.content.data} hints={item.content.hints} titles={headers} />
+          <FightersScores data={item.content} withoutLinks />
 
           {index === 0 &&
           fighterPairs[currentPoolIndex].filter((p) => p.length).length &&
@@ -375,9 +352,10 @@ export default function TournamentGridScreen() {
       >
         <Save size={28} />
       </Button>
-      {!!winners.length && tournamentSystem !== TournamentSystem.HYBRID && currentTournament && currentNominationId && currentWeaponId &&
+      {!!winners.length && currentTournament && currentNominationId && currentWeaponId &&
       <Button
       onClick={saveOnServer}
+      style={{ width: "100%", marginTop: "10px" }}
       >
         <HardDriveUpload size={28} color="var(--fg)" />
       </Button>

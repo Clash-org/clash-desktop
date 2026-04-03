@@ -2,7 +2,7 @@
 import { useState, useEffect } from 'react';
 import { useTranslation } from 'react-i18next';
 import {
-  Plus, X,
+  Plus,
   ArrowLeft,
   ArrowRight,
   CirclePlus,
@@ -24,12 +24,12 @@ import styles from './index.module.css';
 import Checkbox from '../Checkbox';
 import ModalWindow from '../ModalWindow';
 import { CURRENCY_CODES, ParticipantStatus, ParticipantStatusType, TournamentFormData, TournamentStatus, TournamentType } from '@/typings';
-import { createTournament, deleteTournament, updateParticipantStatus, updateTournament, updateTournamentStatus, uploadImage } from '@/utils/api';
+import { createTournament, deleteTournament, updateParticipantStatus, updateTournament, updateTournamentStatus } from '@/utils/api';
 import ImageUploader from '../ImageUploader';
 import toast from 'react-hot-toast';
 import { useAtomValue } from 'jotai';
 import { languageAtom, userAtom } from '@/store';
-import { capitalizeFirstLetter, getFileNameFromPath, translateStatus } from '@/utils/helpers';
+import { getNewImageName, translateStatus } from '@/utils/helpers';
 import { useCities } from '@/hooks/useCities';
 import { useOrganizerTournaments } from '@/hooks/useTournaments';
 import { useNominations } from '@/hooks/useNominations';
@@ -40,6 +40,9 @@ import { useApi } from '@/hooks/useApi';
 import { useParticipantsInfo } from '@/hooks/useParticipantsInfo';
 import { openUrl } from '@tauri-apps/plugin-opener';
 import { useUsers } from '@/hooks/useUsers';
+import ErrorPage from '../ErrorPage';
+import { ShareButton } from '../ShareButton';
+import LinksList from '../LinksList';
 
 export default function CreateTournament() {
   const { t } = useTranslation();
@@ -63,6 +66,7 @@ export default function CreateTournament() {
   const [cover, setCover] = useState<FormData>(new FormData())
   const { api } = useApi()
 
+  // @ts-ignore
   const defaultTournametData: TournamentFormData = {
     title: '',
     description: '',
@@ -96,6 +100,7 @@ export default function CreateTournament() {
       handleInputChange("socialMedias", currentTournament.socialMedias)
       handleInputChange("title", currentTournament.title)
       handleInputChange("image", currentTournament.image)
+      handleInputChange("status", currentTournament.status)
       handleInputChange("isInternal", currentTournament.isInternal)
       handleInputChange("moderatorsIds", currentTournament.moderators.map(m=>m.id))
       handleInputChange("weaponsIds", nominations.filter(nom=>currentTournament.nominationsIds.includes(nom.id)).map(nom=>nom.weapon.id))
@@ -128,39 +133,29 @@ export default function CreateTournament() {
     }
   };
 
-  const handleRemoveSocialLink = (link: string) => {
+  const handleRemoveSocialLink = (links: string[]) => {
     setFormData(prev => ({
       ...prev,
-      socialMedias: prev.socialMedias.filter(l => l !== link),
+      socialMedias: links,
     }));
   };
 
   const handleUpdateParticipantStatus = async (tournamentId: number, nominationId: string, userId: string, status: ParticipantStatusType)=>{
     const res = await updateParticipantStatus(tournamentId, Number(nominationId), userId, status)
     if (res)
-      toast.success(capitalizeFirstLetter(t("updated")))
-  }
-
-  const getNewImageName = async () => {
-      let newName = formData.image || ""
-      if (cover.get("image")) {
-        const path = await uploadImage(cover, "covers")
-        if (path)
-          newName = getFileNameFromPath(path)
-      }
-      return newName
+      toast.success(t("dataUpdated"))
   }
 
   const handleSubmit = async () => {
     if (currentTournament) {
-      const newName = await getNewImageName()
+      const newName = await getNewImageName(formData.image, cover)
       const res = await updateTournament({ ...formData, image: newName }, currentTournament.id)
       if (res) {
         toast.success(t("dataUpdated"))
         setCurrentTournament(res)
       }
     } else {
-      const newName = await getNewImageName()
+      const newName = await getNewImageName(formData.image, cover)
       const data = await createTournament({ ...formData, image: newName })
       if (data) {
         toast.success(t("created"))
@@ -192,19 +187,13 @@ export default function CreateTournament() {
     label: weapon.title,
   }));
 
-  if (!user)
-    return (
-      <div className="container">
-        <h1 className="title wait">{t("registerFirst")}</h1>
-      </div>
-    )
+  if (!user) return <ErrorPage />
 
   return (
     <div className={["container", styles.container].join(" ")} style={{ gap: 0 }}>
       {/* Заголовок */}
       <div className={styles.header}>
         <h1 className="title">{t('createTournament')}</h1>
-        <p className={styles.subtitle}>{t('fillTournamentInfo')}</p>
       </div>
 
       {!!tournaments.length &&
@@ -225,10 +214,11 @@ export default function CreateTournament() {
         }
         {currentTournament &&
         <>
+        <ShareButton type="tournament" id={currentTournament.id} />
         <Select
         placeholder={t("status")}
         options={Object.values(TournamentStatus).map(s=>({ label: translateStatus(s, lang), value: s }))}
-        value={currentTournament.status}
+        value={formData.status}
         setValue={(val)=>handleInputChange("status", val)}
         />
         <Button
@@ -237,7 +227,7 @@ export default function CreateTournament() {
           const res = await updateTournamentStatus(formData.status, currentTournament.id)
           if (res) {
             setCurrentTournament(res)
-            toast.success(capitalizeFirstLetter(t("updated")))
+            toast.success(t("dataUpdated"))
           }
         }}
         />
@@ -493,21 +483,7 @@ export default function CreateTournament() {
                 </Button>
               </div>
 
-              {formData.socialMedias.length > 0 && (
-                <div className={styles.socialLinks}>
-                  {formData.socialMedias.map((link, index) => (
-                    <div key={index} className={styles.socialLink}>
-                      <span>{link}</span>
-                      <button
-                        onClick={() => handleRemoveSocialLink(link)}
-                        className={styles.removeButton}
-                      >
-                        <X size={16} />
-                      </button>
-                    </div>
-                  ))}
-                </div>
-              )}
+              <LinksList links={formData.socialMedias} setLinks={(links)=>handleRemoveSocialLink(links)} />
             </div>
           </div>
         )}
@@ -552,7 +528,7 @@ export default function CreateTournament() {
           </Section>
       </ModalWindow>
       <ModalWindow isOpen={showDelete} onClose={()=>setShowDelete(false)}>
-          <Section title={t("realyDeleteTournament")}>
+          <Section title={t("realyDelete")}>
             <Button onClick={()=>{ deleteTournament(currentTournament!.id); setCurrentTournament(undefined) }}>
               <Trash2 color="var(--fg)" />
             </Button>

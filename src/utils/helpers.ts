@@ -1,5 +1,6 @@
 import { langLabels, STORAGE_PREFIX } from "@/constants";
-import { CurrencyType, LangType, ParticipantType, TournamentStatusType } from "@/typings";
+import { CurrencyType, LangType, MatchMetadataType, MatchType, MatchTypesType, ParticipantPlayoffType, ParticipantType, TournamentMatchType, TournamentStatusType, TournamentType } from "@/typings";
+import { createMath, uploadImage } from "./api";
 
 export const truncate = (str: string, max = 9) => str?.length > max ? `${str.slice(0, max-2)}…` : (str ? str: '');
 
@@ -177,4 +178,73 @@ export function capitalizeFirstLetter(str: string) { return str.charAt(0).toUppe
 export function getFileNameFromPath(path: string) {
   const pathArr = path.split(/[\\/]/);
   return pathArr[pathArr.length - 1]
+}
+
+export function getMatchesFromDuels(data: [ParticipantType, ParticipantType][][]|ParticipantPlayoffType[][][], poolIndex?: number, type: MatchTypesType = "pool", metadata?: MatchMetadataType){
+  const matches: TournamentMatchType[] = []
+  data.forEach(pairs=>{
+    pairs.forEach(pair=>{
+      matches.push({
+        redId: pair[0].id,
+        blueId: pair[1].id,
+        resultRed: pair[0].wins === pair[1].wins ? 0.5: (pair[0].wins > pair[1].wins ? 1 : 0),
+        doubleHits: pair[0].doubleHits,
+        protestsRed: pair[0].protests,
+        protestsBlue: pair[1].protests,
+        warningsRed: pair[0].warnings,
+        warningsBlue: pair[1].warnings,
+        scoreRed: pair[0].scores,
+        scoreBlue: pair[1].scores,
+        poolIndex,
+        type,
+        metadata
+      })
+    })
+  })
+
+  return matches
+}
+
+export async function createMatches(tournamentId: number, weaponId: number, nominationId: number, matches: TournamentMatchType[]) {
+  const result: boolean[] = new Array(matches.length)
+  for (let [i, match] of matches.entries()) {
+    const res = await createMath(tournamentId, weaponId, nominationId, match)
+    result[i] = !!res
+  }
+  return !result.includes(false)
+}
+
+export function getNominationTitleByTournaments(
+  tournaments: TournamentType[],
+  nominationId: number
+): string | undefined {
+  for (const tournament of tournaments) {
+    const nomination = tournament.nominations.find(n => n.id === nominationId);
+    if (nomination) {
+      return nomination.title;
+    }
+  }
+  return undefined;
+}
+
+export const getNewImageName = async (value: string, formData: FormData, dir: "covers"|"profiles" = "covers") => {
+      let newName = value || ""
+      if (formData.get("image")) {
+        const path = await uploadImage(formData, dir)
+        if (path)
+          newName = getFileNameFromPath(path)
+      }
+      return newName
+}
+
+export function getMatchesByPools(matches: MatchType[]) {
+  const pools: MatchType[][] = [[]]
+  for (let match of matches) {
+    if (pools[match?.poolIndex || 0]) {
+      pools[match?.poolIndex || 0].push({...match})
+    } else {
+      pools[match?.poolIndex || 0] = [{...match}]
+    }
+  }
+  return pools
 }

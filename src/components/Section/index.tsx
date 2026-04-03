@@ -15,13 +15,13 @@ export default function Section({ title, children, row = false, className = '' }
     >
       {title && (
         <h3
-          className={styles.section_title}
+          className={styles.sectionTitle}
         >
           {title}
         </h3>
       )}
       <div
-        className={row ? styles.section_row : styles.section_content}
+        className={row ? styles.sectionRow : styles.sectionContent}
       >
         {children}
       </div>

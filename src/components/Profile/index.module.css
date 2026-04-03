@@ -21,22 +21,6 @@
   position: relative;
 }
 
-.avatar {
-  width: 100px;
-  height: 100px;
-  border-radius: 50%;
-  background: linear-gradient(135deg, var(--accent) 0%, var(--accent-dark) 100%);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  font-size: 48px;
-  font-weight: bold;
-  color: white;
-  text-transform: uppercase;
-  border: 3px solid var(--bg);
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
-}
-
 .headerInfo {
   flex: 1;
   display: flex;
@@ -138,28 +122,6 @@
   word-break: break-word;
 }
 
-.tournamentsList {
-  display: flex;
-  flex-direction: column;
-  gap: 8px;
-  padding: 12px 0;
-}
-
-.tournamentIds {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 4px;
-  background: var(--accent-transparent);
-  padding: 12px;
-  border-radius: 8px;
-}
-
-.tournamentId {
-  color: var(--accent);
-  font-family: monospace;
-  font-size: 14px;
-}
-
 .statsContent {
   display: flex;
   flex-direction: column;
@@ -185,10 +147,15 @@
   color: var(--accent);
 }
 
-.logout {
+.logout, .link, .delete {
+  min-width: 50px;
+}
+
+.links {
   position: absolute;
   right: 20px;
-  min-width: 50px;
+  display: flex;
+  gap: 10px;
 }
 
 /* Адаптивность */

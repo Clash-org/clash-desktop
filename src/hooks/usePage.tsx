@@ -13,6 +13,8 @@ import { PageContext } from '@/providers/PageProvider';
 import Leaderboard from '@/components/Leaderboard';
 import AppInfo from '@/components/AppInfo';
 import Admin from '@/components/Admin';
+import { DeepLinkHandler } from '@/components/DeepLinkHandler';
+import Blockchain from '@/components/Blockchain';
 
 // Перечисление всех страниц
 export enum Pages {
@@ -28,7 +30,8 @@ export enum Pages {
     SERVERS,
     LEADERBOARD,
     INFO,
-    ADMIN
+    ADMIN,
+    BLOCKCHAIN
 }
 
 // Типы параметров для каждой страницы
@@ -43,9 +46,10 @@ export type PageParams = {
     [Pages.TOURNAMENTS_CREATE]: undefined;
     [Pages.CLUB]: { id: number | null };
     [Pages.SERVERS]: undefined;
-    [Pages.LEADERBOARD]: undefined;
+    [Pages.LEADERBOARD]: { weaponId: number|undefined, nominationId: number|undefined };
     [Pages.INFO]: undefined;
     [Pages.ADMIN]: undefined;
+    [Pages.BLOCKCHAIN]: undefined;
 };
 
 // Тип для состояния страницы
@@ -193,12 +197,15 @@ export const PageRenderer: React.FC<{
                 return <AppInfo />
             case Pages.ADMIN:
                 return <Admin />
+            case Pages.BLOCKCHAIN:
+                return <Blockchain />
             default:
                 return <Settings />;
         }
     };
 
     return <PageContext.Provider value={contextValue}>
+        <DeepLinkHandler />
         {renderPage()}
     </PageContext.Provider>
 };

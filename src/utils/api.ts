@@ -1,4 +1,4 @@
-import { AdditionsFields, LangType, ParticipantStatusType, PoolCreatedType, PredictType, TournamentFormData, TournamentMatchType, TournamentResponse, TournamentStatusType, TournamentType, UserType } from '@/typings';
+import { AdditionsFields, LangType, MatchType, ParticipantStatusType, PoolCreatedType, PredictType, TournamentFormData, TournamentMatchType, TournamentResponse, TournamentStatusType, TournamentType, UserType } from '@/typings';
 import toast from 'react-hot-toast';
 import { mutate } from 'swr';
 import { getApiConfig } from '@/providers/ApiProvider';
@@ -26,7 +26,7 @@ export async function updateTournament(data: TournamentFormData, tournamentId: n
   });
 
   // Инвалидируем кэш
-  await mutate(`${host}/${tournamentId}`);
+  await mutate((key) => typeof key === 'string' && key.startsWith(host));
 
   return result as TournamentType;
 }
@@ -39,7 +39,7 @@ export async function updateTournamentStatus(status: TournamentStatusType, tourn
     body: JSON.stringify({ status, tournamentId }),
   });
 
-  await mutate(`${host}/${tournamentId}`);
+  await mutate((key) => typeof key === 'string' && key.startsWith(host));
 
   return result as TournamentType;
 }
@@ -117,11 +117,11 @@ export async function updateParticipantStatus(tournamentId: number, nominationId
 }
 
 // POST /ratings/process-tournament
-export async function processTournament(tournamentId: number, weaponId: number, nominationId: number, matches: TournamentMatchType[], tournamentDate: Date) {
+export async function processTournament(tournamentId: number, weaponId: number, nominationId: number, winners: string[], matches?: TournamentMatchType[], tournamentDate?: Date) {
   const host = getApiConfig().processTournament
   const result = await fetcher(host, {
     method: 'POST',
-    body: JSON.stringify({ tournamentId, weaponId, nominationId, matches, tournamentDate }),
+    body: JSON.stringify({ tournamentId, weaponId, nominationId, winners, matches, tournamentDate }),
   });
 
   // Инвалидируем кэш списка
@@ -142,6 +142,20 @@ export async function updateUser(user: (Partial<Omit<UserType, "id">> & { id: st
   await mutate((key) => typeof key === 'string' && key.startsWith(host));
 
   return result as UserType;
+}
+
+// DELETE /users
+export async function deleteUser(id: string) {
+  const host = getApiConfig().users
+  const result = await fetcher(host, {
+    method: 'DELETE',
+    body: JSON.stringify({ id })
+  });
+
+  // Инвалидируем кэш списка
+  await mutate((key) => typeof key === 'string' && key.startsWith(host));
+
+  return result as { success: boolean };
 }
 
 // POST /tournaments/:id/pool
@@ -174,12 +188,26 @@ export async function updatePool(poolId: number, pool: PoolCreatedType) {
   return result as { success: true };
 }
 
+// PATCH /tournaments/pool
+export async function updatePoolEnd(poolId: number, isEnd: boolean) {
+  const host = getApiConfig().tournaments
+  const result = await fetcher(host + `/pool`, {
+    method: 'PATCH',
+    body: JSON.stringify({ poolId, isEnd })
+  });
+
+  // Инвалидируем кэш списка
+  await mutate((key) => typeof key === 'string' && key.includes('/pool'));
+
+  return result as { success: true };
+}
+
 // POST /ratings/predict
-export async function getPredict(fighterRedId: string, fighterBlueId: string, weaponId: number, nominationId: number) {
+export async function getPredict(redId: string, blueId: string, weaponId: number, nominationId: number) {
   const host = getApiConfig().ratings
   const result = await fetcher(host + `/predict`, {
     method: 'POST',
-    body: JSON.stringify({ fighterBlueId, fighterRedId, weaponId, nominationId })
+    body: JSON.stringify({ blueId, redId, weaponId, nominationId })
   });
 
   // Инвалидируем кэш списка
@@ -188,7 +216,7 @@ export async function getPredict(fighterRedId: string, fighterBlueId: string, we
   return result as PredictType;
 }
 
-// POST /ratings/predict
+// POST /weapons & /nominations
 export async function createWeapons(weapon: string, nomination: string, weaponId?: number) {
   let result: { success: boolean } = { success: false }
   const hostWeapons = getApiConfig().weapons
@@ -215,6 +243,67 @@ export async function createWeapons(weapon: string, nomination: string, weaponId
   await mutate((key) => typeof key === 'string' && key.startsWith(hostNominations));
 
   return result;
+}
+
+// DELETE /weapons & /nominations
+export async function deleteWeapons(weaponId: number, nominationId?: number) {
+  let result: { success: boolean } = { success: false }
+  const hostWeapons = getApiConfig().weapons
+  const hostNominations = getApiConfig().nominations
+  if (!nominationId) {
+    result = await fetcher(hostWeapons, {
+      method: 'DELETE',
+      body: JSON.stringify({ id: weaponId })
+    })
+
+    await mutate((key) => typeof key === 'string' && key.startsWith(hostWeapons));
+  } else {
+    result = await fetcher(hostNominations, {
+      method: "DELETE",
+      body: JSON.stringify({ id: nominationId })
+    })
+  }
+
+  await mutate((key) => typeof key === 'string' && key.startsWith(hostNominations));
+
+  return result;
+}
+
+export async function updateCity(title: string, id: number, lang: LangType) {
+  const host = getApiConfig().cities
+  const result = await fetcher(host, {
+    method: "PATCH",
+    body: JSON.stringify({ title, id, lang })
+  })
+
+  await mutate((key) => typeof key === 'string' && key.startsWith(host));
+
+  return result;
+}
+
+// POST /matches
+export async function createMath(tournamentId: number, weaponId: number, nominationId: number, match: TournamentMatchType) {
+  const host = getApiConfig().matches
+  const result = await fetcher(host, {
+    method: 'POST',
+    body: JSON.stringify({ tournamentId, weaponId, nominationId,  ...match })
+  });
+
+  // Инвалидируем кэш списка
+  await mutate((key) => typeof key === 'string' && key.startsWith(host));
+
+  return result as TournamentMatchType;
+}
+
+// GET /matches
+export async function getMathes(tournamentId: number, nominationId: number) {
+  const host = getApiConfig().matches
+  const result = await fetcher(host + `?tournamentId=${tournamentId}&nominationId=${nominationId}`);
+
+  // Инвалидируем кэш списка
+  await mutate((key) => typeof key === 'string' && key.startsWith(host));
+
+  return result as MatchType[];
 }
 
 // Глобальное состояние access токена (в памяти, не localStorage!)
@@ -276,18 +365,12 @@ export const fetcher = async <T>(url: string, options: RequestInit = {}, without
     throw new Error('Session expired');
   }
 
-  if (!res.ok && !withoutMessage) {
+  if (!res.ok) {
     const error = await res.json().catch(() => ({ message: 'Request failed' }));
-    toast.error(error.error || res.statusText)
+    if (!withoutMessage)
+      toast.error(error.error || res.statusText)
     throw new Error(error.message);
   }
 
   return res.json() as T;
-};
-
-// Для публичных endpoint без токена
-export const fetcherPublic = async (url: string) => {
-  const res = await fetch(url, { credentials: 'include' });
-  if (!res.ok) throw new Error('Request failed');
-  return res.json();
 };

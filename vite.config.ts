@@ -18,6 +18,7 @@ export default defineConfig(async () => ({
       protocolImports: true,
     }),
   ],
+  assetsInclude: ['**/*.md'],
   define: {
     'global': "globalThis"
   },

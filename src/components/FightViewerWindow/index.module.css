@@ -25,6 +25,7 @@
   align-items: center;
   justify-content: center;
   padding: 40px;
+  padding-top: 0;
   position: relative;
   transition: all 0.3s ease;
 }
@@ -60,11 +61,9 @@
 .viewerScore {
   font-size: 10rem;
   font-weight: 900;
-  margin: 20px 0;
   line-height: 1;
   color: var(--fg);
   font-family: var(--font-bold);
-  text-shadow: 0 0 20px rgba(var(--accent-rgb), 0.3);
 }
 
 /* Статистика */
@@ -286,6 +285,14 @@
   overflow: hidden;
   text-overflow: ellipsis;
   max-width: 300px;
+}
+
+.nextPair {
+  color: var(--fg);
+  position: relative;
+  top: 25px;
+  font-size: 30px;
+  word-break: break-all;
 }
 
 @keyframes winnerGlow {
