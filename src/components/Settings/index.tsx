@@ -73,6 +73,7 @@ import Select from "../Select";
 import WeaponNominationsSelect from "../WeaponNominationsSelect";
 import { createPool, getMathes, updatePool } from "@/utils/api";
 import { useNominations } from "@/hooks/useNominations";
+import { useUpdater } from "@/hooks/useUpdater";
 
 type TrashPairProps = {
   setFighterPairs: React.Dispatch<React.SetStateAction<[ParticipantType, ParticipantType][][]>>;
@@ -252,6 +253,7 @@ function PoolContent({ pairs, nominationId, nominations }:PoolContentProps) {
 
 function App() {
   const { t, i18n } = useTranslation();
+  const { checkForUpdates } = useUpdater()
   /* ---------- атомы ---------- */
   const [user] = useAtom(userAtom);
   const [poolCountDelete, setPoolCountDelete] = useAtom(poolCountDeleteAtom);
@@ -292,6 +294,7 @@ function App() {
   const [currentModeratorId, setCurrentModeratorId] = useState("")
   const [newName, setNewName] = useState("");
   const [isSounds, setIsSounds] = useState(true);
+  const [showUpdates, setShowUpdates] = useState(true);
   const hotKeysActions = [
     t("addScoreRed"),
     t("removeScoreRed"),
@@ -436,7 +439,7 @@ function App() {
   useEffect(() => {
     (async () => {
       try {
-        const [t, z, p, h, s, r, c, lang] = await Promise.all([
+        const [t, z, p, h, s, r, c, lang, isShowUpdates] = await Promise.all([
           storage.get<number>("fightTime"),
           storage.get<HitZonesType>("hitZones"),
           storage.get<ParticipantType[][]>("participants"),
@@ -444,7 +447,8 @@ function App() {
           storage.get<boolean>("isSounds"),
           storage.get<boolean>("isPoolRating"),
           storage.get<number>("poolCountDelete"),
-          storage.get<string>("language")
+          storage.get<string>("language"),
+          storage.get<boolean>("showUpdates")
         ]);
 
         if (t) setFightTime(t);
@@ -459,6 +463,10 @@ function App() {
           setLanguage(lang);
           await i18n.changeLanguage(lang);
         }
+        if (isShowUpdates) {
+          setShowUpdates(isShowUpdates)
+        }
+        await checkForUpdates(isShowUpdates)
       } catch (error) {
         toast.error(t("settingsLoadError"));
       }
@@ -954,6 +962,14 @@ function App() {
             title={t("isPoolRating")}
             value={isPoolRating}
             setValue={setIsPoolRating}
+          />
+        </Section>
+
+        <Section title={t("notifications")}>
+          <Switch
+            title={t("applicationUpdates")}
+            value={showUpdates}
+            setValue={async (val)=>{ setShowUpdates(val); await storage.set<boolean>("showUpdates", val) }}
           />
         </Section>
 

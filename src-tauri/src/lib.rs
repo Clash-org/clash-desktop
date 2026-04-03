@@ -5,6 +5,8 @@ use tauri_plugin_deep_link::DeepLinkExt;
 pub fn run() {
     let port: u16 = 9527;
     tauri::Builder::default()
+        .plugin(tauri_plugin_process::init())
+        .plugin(tauri_plugin_updater::Builder::new().build())
         .plugin(tauri_plugin_deep_link::init())
         .setup(|app| {
             #[cfg(desktop)]
