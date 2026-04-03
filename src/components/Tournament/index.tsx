@@ -415,7 +415,7 @@ export default function Tournament({ id }:{id: number|undefined}) {
                   title={weapon}
                   values={weapons.filter(w=>additionsFields.weaponsRental[w])}
                   value={weapon}
-                  setValue={(val)=>handlerAdditionsFields("weaponsRental", { ...additionsFields.weaponsRental, [weapon]: val.includes(weapon) })}
+                  setValue={(val: string[])=>handlerAdditionsFields("weaponsRental", { ...additionsFields.weaponsRental, [weapon]: val.includes(weapon) })}
                   />
                 ))
                 )

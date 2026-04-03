@@ -20,6 +20,7 @@ export default function LoadWrap<T>({ page, data, setData, totalCount, setPage, 
     useEffect(()=>{
         setData(state=>{
             const filteredState = state.filter(stateItem =>
+            // @ts-ignore
             !data.some(dataItem => dataItem?.[filterKey] === stateItem?.[filterKey])
             );
             return [...filteredState, ...data]

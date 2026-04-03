@@ -1,6 +1,4 @@
 import Button from "@/components/Button";
-import CitySelect from "@/components/CitySelect";
-import InputText from "@/components/InputText";
 import ModalWindow from "@/components/ModalWindow";
 import Section from "@/components/Section";
 import WeaponNominationsSelect from "@/components/WeaponNominationsSelect";

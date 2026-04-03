@@ -45,7 +45,6 @@ export default function Profile({ id }:{ id?: string }) {
     result: {} as PredictType
   })
   const [avatar, setAvatar] = useState(new FormData())
-  const [avatarName, setAvatarName] = useState("")
   const [username, setUsername] = useState("")
   const [email, setEmail] = useState("")
   const [password, setPassword] = useState("")
@@ -119,7 +118,7 @@ export default function Profile({ id }:{ id?: string }) {
     <div className={styles.container}>
       {/* Шапка профиля */}
       <div className={styles.header}>
-        <ImageUploader disabled={!isI} name={user.username} type="avatar" value={user.image ? api.profiles + user.image : null} setValue={setAvatar} setFileName={(filename)=>setAvatarName(filename)} />
+        <ImageUploader disabled={!isI} name={user.username} type="avatar" value={user.image ? api.profiles + user.image : null} setValue={setAvatar} />
         <div className={styles.headerInfo}>
           <h1 className={styles.username}>{user.username}</h1>
           <div className={styles.userMeta}>

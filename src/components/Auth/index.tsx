@@ -66,7 +66,13 @@ export default function Auth({ profileActivate, onClose, setPage }:{ profileActi
             {!isLogin && <ClubSelect clubId={clubId} setClubId={setClubId} club={club} setClub={setClub} />}
             {!isLogin && <span style={hintStyle}>{t("enterIfNotFound")}</span> }
             <InputText required placeholder={t("password")} type="password" value={password} setValue={setPassword} />
-            {!isLogin && <Checkbox title={t("youAgree")} postfix={<span onClick={(e)=>{ e.stopPropagation(); e.preventDefault(); setPage(); onClose() }} style={{ borderBottom: "1px dashed var(--accent)" }}>{t("privacyPolicy")}</span>} value={isAgree} setValue={(val)=>setIsAgree(val)} />}
+            {!isLogin &&
+            <Checkbox
+            title={t("youAgree")}
+            postfix={<span onClick={(e)=>{ e.stopPropagation(); e.preventDefault(); setPage(); onClose() }}style={{ borderBottom: "1px dashed var(--accent)" }}>{t("privacyPolicy")}</span>}
+            value={isAgree}
+            setValue={(val)=>setIsAgree(val)}
+            />}
             <Button onClick={authHandler} title={isLogin ? t("enter") : t("register")} />
             <span onClick={()=>setIsLogin(!isLogin)} style={{ color: "var(--accent)", cursor: "pointer", alignSelf: "center" }}>{!isLogin ? t("enter") : t("register")}</span>
         </div>

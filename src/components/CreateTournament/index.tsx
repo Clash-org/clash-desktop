@@ -403,7 +403,7 @@ export default function CreateTournament() {
                     title={nomination.title}
                     value={nomination.id}
                     values={formData.nominationsIds}
-                    setValue={(val)=>{handleInputChange("nominationsIds", val); }}
+                    setValue={(val: number[])=>{handleInputChange("nominationsIds", val); }}
                     />
                 ))}
               </div>
