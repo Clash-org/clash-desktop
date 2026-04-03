@@ -1,7 +1,35 @@
-import BetAbi from "../../blockchain/abi/TournamentRegistry.json"
-import SynchronizationOracleAbi from "../../blockchain/abi/SynchronizationOracle.json"
-import UserRegistryAbi from "../../blockchain/abi/UserRegistry.json"
-import addresses from "../../blockchain/addresses.json"
+let TournamentRegistryAbi: any = { abi: [] };
+let SynchronizationOracleAbi: any = { abi: [] };
+let UserRegistryAbi: any = { abi: [] };
+let addresses: any = {
+    TournamentRegistry: "",
+    Oracle: "",
+    UserRegistry: ""
+};
+
+try {
+    TournamentRegistryAbi = require("../../blockchain/abi/TournamentRegistry.json");
+} catch {
+    console.warn('TournamentRegistry.json not found, using default');
+}
+
+try {
+    SynchronizationOracleAbi = require("../../blockchain/abi/SynchronizationOracle.json");
+} catch {
+    console.warn('SynchronizationOracle.json not found, using default');
+}
+
+try {
+    UserRegistryAbi= require("../../blockchain/abi/UserRegistry.json");
+} catch {
+    console.warn('UserRegistry.json not found, using default');
+}
+
+try {
+    addresses = require("../../blockchain/addresses.json");
+} catch {
+    console.warn('addresses.json not found, using default');
+}
 
 export const STORAGE_PREFIX = '@Clash_';
 
@@ -18,7 +46,7 @@ export const RPC_URL = import.meta.env.VITE_RPC_URL || "http://localhost:8545/"
 export const contractType = {
     tournamentRegistry: {
         address: addresses.TournamentRegistry || "",
-        abi: BetAbi || []
+        abi: TournamentRegistryAbi || []
     },
     synchronizationOracle: {
         address: addresses.Oracle || "",
