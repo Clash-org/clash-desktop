@@ -4,11 +4,11 @@ import { mutate } from 'swr';
 import { getApiConfig } from '@/providers/ApiProvider';
 
 // POST /tournaments
-export async function createTournament(data: TournamentFormData) {
+export async function createTournament(data: TournamentFormData, userWallet: string) {
   const host = getApiConfig().tournaments
   const result = await fetcher(host, {
     method: 'POST',
-    body: JSON.stringify(data),
+    body: JSON.stringify({ ...data, userWallet }),
   });
 
   // Инвалидируем кэш списка

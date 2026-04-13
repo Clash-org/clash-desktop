@@ -1,0 +1,157 @@
+.container {
+  width: 100%;
+  margin: 0 auto;
+  padding: 32px 24px;
+  background: var(--bg);
+  border-radius: 16px;
+  border: 1px solid var(--accent);
+}
+
+.title {
+  font-family: var(--font-bold);
+  font-size: 28px;
+  margin: 0 0 24px 0;
+  color: var(--fg);
+  text-align: center;
+}
+
+.serverInfo {
+  background: var(--accent-transparent);
+  border-radius: 12px;
+  padding: 16px;
+  margin-bottom: 24px;
+  border: 1px solid var(--accent);
+}
+
+.serverTitle {
+  font-family: var(--font-bold);
+  font-size: 18px;
+  margin: 0 0 12px 0;
+  color: var(--fg);
+}
+
+.serverDetails {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.infoRow {
+  display: flex;
+  align-items: baseline;
+  gap: 12px;
+  font-size: 14px;
+}
+
+.infoLabel {
+  color: var(--placeholder);
+  font-family: var(--font-medium);
+}
+
+.infoValue {
+  color: var(--fg);
+  font-family: monospace;
+  word-break: break-all;
+}
+
+.statusBadge {
+  display: inline-block;
+  padding: 4px 10px;
+  border-radius: 20px;
+  font-size: 12px;
+  font-family: var(--font-medium);
+}
+
+.statusActive {
+  background: rgba(76, 175, 80, 0.15);
+  color: #4caf50;
+  border: 1px solid #4caf50;
+}
+
+.statusInactive {
+  background: rgba(244, 67, 54, 0.15);
+  color: #f44336;
+  border: 1px solid #f44336;
+}
+
+.errorText {
+  color: #f44336;
+  font-size: 14px;
+  margin: 0;
+}
+
+.field {
+  margin-bottom: 20px;
+}
+
+.label {
+  display: block;
+  font-family: var(--font-medium);
+  font-size: 14px;
+  margin-bottom: 8px;
+  color: var(--fg);
+}
+
+/* Modal styles */
+.confirmContent {
+  padding-top: 15px;
+}
+
+.confirmRow {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 12px 0;
+  border-bottom: 1px solid var(--accent-transparent);
+}
+
+.confirmRow:last-of-type {
+  border-bottom: none;
+}
+
+.confirmLabel {
+  color: var(--placeholder);
+  font-family: var(--font-medium);
+}
+
+.confirmValue {
+  color: var(--fg);
+  font-family: var(--font-bold);
+}
+
+.confirmAmount {
+  color: var(--accent);
+  font-family: var(--font-bold);
+  font-size: 18px;
+}
+
+.confirmActions {
+  display: flex;
+  gap: 12px;
+  margin-top: 24px;
+}
+
+.full {
+  width: 100%;
+}
+
+.full > input {
+  width: 100%;
+}
+
+/* Адаптивность */
+@media (max-width: 640px) {
+  .container {
+    margin: 0;
+    border-radius: 0;
+    padding: 24px 16px;
+  }
+
+  .title {
+    font-size: 24px;
+  }
+
+  .confirmActions {
+    flex-direction: column;
+  }
+}

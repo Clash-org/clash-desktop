@@ -7,11 +7,12 @@ import { TFunction } from 'i18next';
 import { useAtomValue } from 'jotai';
 import { languageAtom } from '@/store';
 import { LangType, TournamentShortType, TournamentStatus } from '@/typings';
-import { formatDate } from '@/utils/helpers';
+import { formatDate, truncate } from '@/utils/helpers';
 import { useTournaments } from '@/hooks/useTournaments';
 import { useApi } from '@/hooks/useApi';
 import { PageParams, Pages, usePage } from '@/hooks/usePage';
 import LoadWrap from '../LoadWrap';
+import { PAGE_SIZE } from '@/constants';
 
 type ContentProps = {
     isPast?: boolean;
@@ -44,7 +45,7 @@ function Content({ isPast=false, t, coversHost, setGlobalPage, tournaments, lang
                 </div>
 
                 <div className={styles.cardContent}>
-                    <h3 className={styles.tournamentTitle}>{tournament.title}</h3>
+                    <h3 className={styles.tournamentTitle}>{truncate(tournament.title, 35)}</h3>
                     {!isPast && tournament.status === TournamentStatus.ACTIVE && (
                     <div className={styles.registrationBadge}>
                         {t('registrationOpen')}
@@ -82,7 +83,7 @@ export default function TournamentsList() {
   const { setPage: setGlobalPage } = usePage()
   const lang = useAtomValue(languageAtom)
   const [page, setPage] = useState(1)
-  const { tournaments, tournamentsCount, isLoading } = useTournaments(lang, page, true)
+  const { tournaments, tournamentsCount, isLoading } = useTournaments(lang, page, PAGE_SIZE, true)
   const [currentTournaments, setCurrentTournaments] = useState<TournamentShortType[]>([...tournaments])
   const { api } = useApi()
 
@@ -102,16 +103,16 @@ export default function TournamentsList() {
       <div className={styles.header}>
         <h1 className="title">{t('tournaments')}</h1>
       </div>
-      <div className={styles.content}>
-        <LoadWrap loading={isLoading} totalCount={tournamentsCount} page={page} setPage={setPage} data={tournaments} setData={setCurrentTournaments}>
-          {/* Секция предстоящих турниров */}
-          <Content lang={lang} setGlobalPage={setGlobalPage} coversHost={api.covers} t={t} tournaments={upcomingTournaments} />
+      <LoadWrap loading={isLoading} totalCount={tournamentsCount} page={page} setPage={setPage} data={tournaments} setData={setCurrentTournaments}>
+        {/* Секция предстоящих турниров */}
+        {upcomingTournaments.length > 0 &&
+        <Content lang={lang} setGlobalPage={setGlobalPage} coversHost={api.covers} t={t} tournaments={upcomingTournaments} />
+        }
 
-          {/* Секция прошедших турниров */}
-          {pastTournaments.length > 0 &&
-          <Content isPast lang={lang} setGlobalPage={setGlobalPage} coversHost={api.covers} t={t} tournaments={pastTournaments} />}
-        </LoadWrap>
-      </div>
+        {/* Секция прошедших турниров */}
+        {pastTournaments.length > 0 &&
+        <Content isPast lang={lang} setGlobalPage={setGlobalPage} coversHost={api.covers} t={t} tournaments={pastTournaments} />}
+      </LoadWrap>
     </div>
   );
 }

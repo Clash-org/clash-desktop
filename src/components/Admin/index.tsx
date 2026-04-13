@@ -10,7 +10,7 @@ import { formatDate, translateStatus } from "@/utils/helpers";
 import styles from "./index.module.css"
 import { TournamentShortType } from "@/typings";
 import { Pages, usePage } from "@/hooks/usePage";
-import { Building2, Swords, Trash2, Trophy, UsersRound } from "lucide-react";
+import { Building2, Server, Swords, Trash2, Trophy, UsersRound } from "lucide-react";
 import { deleteTournament } from "@/utils/api";
 import ModalWindow from "../ModalWindow";
 import Button from "../Button";
@@ -19,21 +19,24 @@ import WeaponsCreate from "./WeaponsCreate";
 import LoadWrap from "../LoadWrap";
 import toast from "react-hot-toast";
 import CityUpdate from "./CityUpdate";
+import Blockchain from "./Blockchain";
+import { PAGE_SIZE } from "@/constants";
 
 export default function Admin() {
     const { t } = useTranslation()
     const { setPage: setGlobalPage } = usePage()
     const [lang] = useAtom(languageAtom)
-    const tabs = ["tournaments", "users", "weapons", "cities"] as const
+    const tabs = ["tournaments", "users", "weapons", "cities", "servers"] as const
     const titles = [
         <><Trophy size={20} color="var(--fg)" />{t("tournaments")}</>,
         <><UsersRound size={20} color="var(--fg)" />{t("fighters")}</>,
         <><Swords size={20} color="var(--fg)" />{t("weapons")}</>,
-        <><Building2 size={20} color="var(--fg)" />{t("city")}</>
+        <><Building2 size={20} color="var(--fg)" />{t("city")}</>,
+        <><Server size={20} color="var(--fg)" />{t("server")}</>
     ]
     const [activeTab, setActiveTab] = useState<typeof tabs[number]>("tournaments")
     const [page, setPage] = useState(1)
-    const { tournaments, tournamentsCount, isLoading } = useTournaments(lang, page, true)
+    const { tournaments, tournamentsCount, isLoading } = useTournaments(lang, page, PAGE_SIZE, true)
     const [currentTournaments, setCurrentTournaments] = useState<TournamentShortType[]>([])
     const [showDelete, setShowDelete] = useState(false);
     const [tournamentId, setTournamentId] = useState(-1)
@@ -78,6 +81,7 @@ export default function Admin() {
             {activeTab === "users" && <UsersPage lang={lang} t={t} setPage={setGlobalPage} />}
             {activeTab === "weapons" && <WeaponsCreate lang={lang} t={t} />}
             {activeTab === "cities" && <CityUpdate lang={lang} t={t} />}
+            {activeTab === "servers" && <Blockchain t={t} />}
             </Section>
         </div>
     )

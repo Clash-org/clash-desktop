@@ -1,4 +1,4 @@
-import { PAGE_SIZE_TOURNAMENTS } from "@/constants";
+import { PAGE_SIZE } from "@/constants";
 import styles from "./index.module.css"
 import { CircleArrowDown } from "lucide-react";
 import Button from "@/components/Button";
@@ -11,7 +11,7 @@ type LoadBtnProps = {
     loading: boolean;
 }
 
-export default function LoadBtn({ totalCount, page, loadMore, loading, showCount=PAGE_SIZE_TOURNAMENTS }:LoadBtnProps) {
+export default function LoadBtn({ totalCount, page, loadMore, loading, showCount=PAGE_SIZE }:LoadBtnProps) {
     return page * showCount < totalCount && (
             <div className={styles.loadMoreWrapper}>
             <Button

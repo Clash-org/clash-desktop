@@ -274,3 +274,33 @@ export type MatchMetadataType = {
   videoUrl?: string;
   [key: string]: any;
 }
+
+export enum ServerStatus {
+  ACTIVE, // Сервер активен
+  INACTIVE // Отключён владельцем
+}
+
+export type ServerType = {
+  id: bigint;
+  owner: string;
+  host: string;
+  pricePerMonth: bigint;
+  status: bigint;
+  registeredAt: bigint;
+  exists: boolean;
+}
+
+// TypeScript интерфейс
+export type  PaymentType = {
+  id: bigint;
+  serverId: bigint;
+  payer: string;
+  amount: bigint;        // uint256 → bigint (или number если конвертируете)
+  createdAt: bigint;     // timestamp в секундах
+  releasedAt: bigint;    // timestamp в секундах
+  refundDeadline: bigint;
+  refundRequested: boolean;
+  ownerResponded: boolean;
+  refundReason: string;
+  expiresAt: bigint;     // timestamp в секундах
+}

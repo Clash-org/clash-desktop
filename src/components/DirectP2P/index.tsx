@@ -113,7 +113,7 @@ export default function DirectP2P({ onPeerConnected }: DirectP2PProps) {
       setMyPeerId(serverId);
 
       addMessage(t('p2pCreating'));
-      addMessage(`🆔 ${t('p2pServerId')}: ${serverId}`);
+      addMessage(`🆔 ${t('serverId')}: ${serverId}`);
 
     } catch (error) {
       console.error('Error creating server:', error);
@@ -631,7 +631,7 @@ export default function DirectP2P({ onPeerConnected }: DirectP2PProps) {
 
       {isServer && myPeerId && (
         <div className={styles.serverInfo}>
-          <h4>🎮 {t('p2pServerId')}:</h4>
+          <h4>🎮 {t('serverId')}:</h4>
           <div className={styles.serverId}>
             <code>SERVER:{myPeerId}</code>
             <Button

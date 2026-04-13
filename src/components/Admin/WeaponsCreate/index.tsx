@@ -2,6 +2,7 @@ import Button from "@/components/Button";
 import ModalWindow from "@/components/ModalWindow";
 import Section from "@/components/Section";
 import WeaponNominationsSelect from "@/components/WeaponNominationsSelect";
+import styles from "../index.module.css"
 import { useNominations } from "@/hooks/useNominations";
 import { LangType } from "@/typings";
 import { createWeapons, deleteWeapons } from "@/utils/api";
@@ -33,7 +34,7 @@ export default function WeaponsCreate({ lang, t }:{ lang: LangType, t: TFunction
     }
 
     return (
-        <>
+        <div className={styles.content}>
         <WeaponNominationsSelect
         nominations={nominations}
         weaponId={weaponId}
@@ -59,6 +60,6 @@ export default function WeaponsCreate({ lang, t }:{ lang: LangType, t: TFunction
                 </Button>
             </Section>
         </ModalWindow>
-        </>
+        </div>
     )
 }

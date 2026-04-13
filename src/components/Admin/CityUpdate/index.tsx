@@ -1,6 +1,7 @@
 import Button from "@/components/Button";
 import CitySelect from "@/components/CitySelect";
 import InputText from "@/components/InputText";
+import styles from "../index.module.css"
 import { LangType } from "@/typings";
 import { updateCity } from "@/utils/api";
 import { TFunction } from "i18next";
@@ -20,10 +21,10 @@ export default function CityUpdate({ t, lang }:{ lang: LangType, t: TFunction<"t
     }
 
     return (
-        <>
+        <div className={styles.content}>
         <CitySelect cityId={cityId} setCityId={setCityId} />
         <InputText value={newCity} setValue={setNewCity} placeholder={t("newValue")} />
         <Button onClick={updateCityName} title={t("updateData")} />
-        </>
+        </div>
     )
 }

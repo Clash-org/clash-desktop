@@ -4,7 +4,7 @@ import { LangType, PoolType, TournamentShortType, TournamentType } from '@/typin
 import { useApi } from './useApi';
 
 
-export function useTournaments(lang: LangType, page: number, short: true): {
+export function useTournaments(lang: LangType, page: number, pageSize: number, short: true): {
   tournaments: TournamentShortType[];
   tournamentsCount: number
   isLoading: boolean;
@@ -12,7 +12,7 @@ export function useTournaments(lang: LangType, page: number, short: true): {
   mutate: () => void;
 };
 
-export function useTournaments(lang: LangType, page: number, short?: false): {
+export function useTournaments(lang: LangType, page: number, pageSize: number, short?: false): {
   tournaments: TournamentType[];
   tournamentsCount: number
   isLoading: boolean;
@@ -21,14 +21,14 @@ export function useTournaments(lang: LangType, page: number, short?: false): {
 };
 
 // GET /tournaments?lang=&short=&page=
-export function useTournaments(lang: LangType, page: number, short?: boolean): {
+export function useTournaments(lang: LangType, page: number, pageSize: number, short?: boolean): {
   tournaments: TournamentShortType[]|TournamentType[];
   tournamentsCount: number;
   isLoading: boolean;
   error: any;
   mutate: () => void;
 } {
-  const query = new URLSearchParams({ lang, page: String(page) });
+  const query = new URLSearchParams({ lang, page: String(page), pageSize: String(pageSize) });
   if (short) query.set('short', 'true');
 
   const { api } = useApi()
@@ -93,7 +93,7 @@ export function useTournamentsByUserId(userId: string | undefined, lang: LangTyp
   const { api } = useApi()
   const { data, error, isLoading, mutate } = useSWR<TournamentType[]>(
     userId ? `${api.tournaments}/participants/${userId}?lang=${lang}` : null,
-    fetcher,
+    url => fetcher(url, undefined, true),
     {
       revalidateOnFocus: false,
     }

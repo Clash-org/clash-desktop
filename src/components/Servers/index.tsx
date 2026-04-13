@@ -8,12 +8,19 @@ import { useApi } from "@/hooks/useApi";
 import { ApiConfig, setGlobalApiConfig } from "@/providers/ApiProvider";
 import { Bookmark, Save } from "lucide-react";
 import LinksList from "../LinksList";
+import { useContract } from "@/hooks/useContract";
+import { ServerStatus, ServerType } from "@/typings";
+import { PaymentForm } from "../PaymentForm";
 
 export default function Servers() {
     const { t } = useTranslation()
+    const { useContractQuery, contract } = useContract("server")
+    const { data: totalServers } = useContractQuery<bigint>("totalServers")
+    const totalCount = Number(totalServers)
     const { setBaseUrl, baseUrl } = useApi()
     const [serverURL, setServerURL] = useState(baseUrl)
     const [servers, setServers] = useState<string[]>()
+    const [globalServers, setGlobalServers] = useState<ServerType[]>()
 
     const handleChangeBaseURL = async () => {
         try {
@@ -41,11 +48,19 @@ export default function Servers() {
     useEffect(()=>{
         (async ()=>{
             setServers(await storage.get<string[]>("servers"))
+            if (totalCount) {
+                const serversArr: ServerType[] = []
+                for (let i = 1; i <= totalCount; i++) {
+                    serversArr.push(await contract.getServer(i))
+
+                }
+                setGlobalServers(serversArr)
+            }
         })()
     }, [])
 
     return (
-        <div className="container">
+        <div className="container" style={{ paddingBottom: "100px" }}>
             <h1 className="title">{t("server")}</h1>
             <InputText placeholder={t("server")} value={serverURL} setValue={setServerURL} />
             <Button stroke title={t("change")} onClick={saveURL} style={{ width: "100%" }}>
@@ -59,6 +74,11 @@ export default function Servers() {
                         links={servers}
                         setLinks={async (links)=>{ setServers(links); await storage.set("servers", links) }}
                         />}
+            {globalServers && <LinksList
+                        onClick={(link)=>{setServerURL(link); handleChangeBaseURL()}}
+                        links={globalServers.map(ser=>`${Number(ser.status) === ServerStatus.ACTIVE ? "✅" : "❌"} ${ser.host}`)}
+                        />}
+            <PaymentForm />
         </div>
     )
 }

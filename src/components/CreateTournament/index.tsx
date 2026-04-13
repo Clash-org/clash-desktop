@@ -28,7 +28,7 @@ import { createTournament, deleteTournament, updateParticipantStatus, updateTour
 import ImageUploader from '../ImageUploader';
 import toast from 'react-hot-toast';
 import { useAtomValue } from 'jotai';
-import { languageAtom, userAtom } from '@/store';
+import { blockchainAtom, languageAtom, userAtom } from '@/store';
 import { getNewImageName, translateStatus } from '@/utils/helpers';
 import { useCities } from '@/hooks/useCities';
 import { useOrganizerTournaments } from '@/hooks/useTournaments';
@@ -48,11 +48,12 @@ export default function CreateTournament() {
   const { t } = useTranslation();
   const lang = useAtomValue(languageAtom)
   const user = useAtomValue(userAtom)
+  const blockchain = useAtomValue(blockchainAtom)
   const { tournaments } = useOrganizerTournaments(user?.id, lang)
   const { nominations } = useNominations(lang)
   const { weapons } = useWeapons(nominations)
   const { cities } = useCities(lang)
-  const { users } = useUsers(lang)
+  const { users } = useUsers(1, 1000, lang)
   const [currentStep, setCurrentStep] = useState(1);
   const [currentTournament, setCurrentTournament] = useState<TournamentType>();
   const { info: participantsInfo } = useParticipantsInfo(currentTournament?.id, lang)
@@ -156,7 +157,7 @@ export default function CreateTournament() {
       }
     } else {
       const newName = await getNewImageName(formData.image, cover)
-      const data = await createTournament({ ...formData, image: newName })
+      const data = await createTournament({ ...formData, image: newName }, blockchain.wallet)
       if (data) {
         toast.success(t("created"))
         setFormData(defaultTournametData)
@@ -286,7 +287,7 @@ export default function CreateTournament() {
               <label className={styles.label}>{t('tournamentTitle')} *</label>
               <InputText
                 value={formData.title}
-                setValue={(val) => handleInputChange('title', val)}
+                setValue={(val) => handleInputChange('title', val.trim())}
                 placeholder={t('enterTournamentTitle')}
               />
             </div>
@@ -470,7 +471,7 @@ export default function CreateTournament() {
                 <InputText
                   value={socialLink}
                   setValue={setSocialLink}
-                  placeholder="https://t.me/..."
+                  placeholder="https://vk.com/..."
                   className={styles.socialInputField}
                 />
                 <Button

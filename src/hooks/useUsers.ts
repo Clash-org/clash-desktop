@@ -22,10 +22,10 @@ export function useUsersByClubId(clubId: number|null) {
   };
 }
 
-export function useUsers(lang: LangType) {
+export function useUsers(page: number, pageSize: number, lang: LangType) {
   const { api } = useApi()
-  const { data, error, isLoading, mutate } = useSWR<UserType[]>(
-    api.users + `?lang=${lang}`,
+  const { data, error, isLoading, mutate } = useSWR<{ users: UserType[], usersCount: number }>(
+    api.users + `?lang=${lang}&page=${page}&pageSize=${pageSize}`,
     fetcher,
     {
       revalidateOnFocus: false,
@@ -34,7 +34,8 @@ export function useUsers(lang: LangType) {
   );
 
   return {
-    users: data || [],
+    users: data?.users || [],
+    usersCount: data?.usersCount || 0,
     isLoading,
     error,
     mutate,

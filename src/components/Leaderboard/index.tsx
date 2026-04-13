@@ -28,7 +28,7 @@ export default function Leaderboard() {
             setWeaponId={setWeaponId}
             setNominationId={setNominationId}
             />
-            {leaderboard && count &&
+            {leaderboard && !!count &&
             <LoadWrap filterKey="username" showCount={1} totalCount={count} loading={isLoading} data={leaderboard} setData={setCurrentData} page={page} setPage={setPage}>
                 <Table
                 titles={[t("username"), t("rating"), t("rank"), "RD"]}

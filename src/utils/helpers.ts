@@ -228,13 +228,13 @@ export function getNominationTitleByTournaments(
 }
 
 export const getNewImageName = async (value: string, formData: FormData, dir: "covers"|"profiles" = "covers") => {
-      let newName = value || ""
-      if (formData.get("image")) {
-        const path = await uploadImage(formData, dir)
-        if (path)
-          newName = getFileNameFromPath(path)
-      }
-      return newName
+  let newName = value || ""
+  if (formData.get("image")) {
+    const path = await uploadImage(formData, dir)
+    if (path)
+      newName = getFileNameFromPath(path)
+  }
+  return newName
 }
 
 export function getMatchesByPools(matches: MatchType[]) {
@@ -247,4 +247,30 @@ export function getMatchesByPools(matches: MatchType[]) {
     }
   }
   return pools
+}
+
+export function parseContractError(error: any): string {
+  // Вариант 1: error.message содержит текст
+  if (error.message) {
+    // Извлекаем reason из revert
+    const reasonMatch = error.message.match(/reason="([^"]+)"/);
+    if (reasonMatch) {
+      return reasonMatch[1];
+    }
+
+    // Или напрямую message
+    return error.message;
+  }
+
+  // Вариант 2: error.reason
+  if (error.reason) {
+    return error.reason;
+  }
+
+  // Вариант 3: error.data
+  if (error.data) {
+    return error.data;
+  }
+
+  return "";
 }

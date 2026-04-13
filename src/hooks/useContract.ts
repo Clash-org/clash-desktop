@@ -1,11 +1,11 @@
 import { contractType, RPC_URL } from '@/constants';
-import { blockchain } from '@/store';
+import { blockchainAtom } from '@/store';
 import { ethers, Overrides } from 'ethers';
 import { useAtomValue } from 'jotai';
 import useSWR, { mutate } from 'swr';
 
 export function useContract(type: keyof typeof contractType) {
-  const userData = useAtomValue(blockchain)
+  const userData = useAtomValue(blockchainAtom)
 
   const provider = new ethers.JsonRpcProvider(RPC_URL);
   const signer = new ethers.Wallet(userData.privateKey, provider);
@@ -13,10 +13,6 @@ export function useContract(type: keyof typeof contractType) {
   const fetcher = async (method: string, ...args: any[]) => {
     try {
       const result = await contract[method](...args);
-      if (method === "getLots") {
-        const [list, ids] = result
-        return { list, ids }
-      }
       return result;
     } catch (error) {
       console.error(`Error in ${method}:`, error);
@@ -72,6 +68,7 @@ async function mutateData<T = any>(
     useContractQuery,
     mutateData,
     contract,
+    provider,
     address: signer.address,
   }
 }

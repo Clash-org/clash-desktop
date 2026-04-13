@@ -13,6 +13,7 @@ interface InputNumberProps {
   placeholder?: string;
   size?: 'small' | 'medium' | 'large';
   required?: boolean;
+  style?: React.CSSProperties;
 }
 
 export default function InputNumber({
@@ -25,6 +26,7 @@ export default function InputNumber({
   className = '',
   placeholder = '0',
   size = 'medium',
+  style,
   required
 }: InputNumberProps) {
   const [inputValue, setInputValue] = useState(value.toString());
@@ -99,7 +101,7 @@ export default function InputNumber({
   const disabledClass = disabled ? styles.disabled : '';
 
   return (
-    <div className={`${styles.container} ${sizeClass} ${disabledClass} ${className}`} tabIndex={-1}>
+    <div className={`${styles.container} ${sizeClass} ${disabledClass} ${className}`} style={style} tabIndex={-1}>
       <button
         type="button"
         className={styles.button}

@@ -1,0 +1,178 @@
+.walletContainer {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.statusRow {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding-bottom: 8px;
+  border-bottom: 1px solid var(--border);
+}
+
+.statusIndicator {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.statusDot {
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+}
+
+.statusDot.connected {
+  background-color: #22c55e;
+  box-shadow: 0 0 4px #22c55e;
+}
+
+.statusDot.disconnected {
+  background-color: #ef4444;
+}
+
+.statusText {
+  font-size: 14px;
+  font-family: "IBMPlexSansMedium", sans-serif;
+  color: var(--fg);
+}
+
+.networkInfo {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 12px;
+}
+
+.networkLabel {
+  color: var(--fg-secondary);
+  font-family: "IBMPlexSansRegular", sans-serif;
+}
+
+.networkValue {
+  color: var(--accent);
+  font-family: "IBMPlexSansMedium", sans-serif;
+}
+
+.inputGroup {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.label {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 13px;
+  font-family: "IBMPlexSansMedium", sans-serif;
+  color: var(--fg-secondary);
+}
+
+.inputWithButton {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  position: relative;
+}
+
+.walletInput {
+  flex: 1;
+  background-color: var(--surface);
+  border-radius: 8px;
+  padding: 10px 12px;
+  font-family: "IBMPlexSansRegular", sans-serif;
+  font-size: 13px;
+  border: 1px solid var(--border);
+  transition: border-color 0.2s;
+  opacity: 1 !important;
+  cursor: default !important;
+}
+
+.copyBtn {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  padding: 8px;
+  cursor: pointer;
+  color: var(--fg-secondary);
+  transition: all 0.2s;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.copyBtn:hover {
+  border-color: var(--accent);
+  color: var(--accent);
+}
+
+.balanceInfo {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 12px;
+  padding: 4px 8px;
+  background-color: var(--surface);
+  border-radius: 6px;
+  width: fit-content;
+}
+
+.balanceLabel {
+  color: var(--fg-secondary);
+  font-family: "IBMPlexSansRegular", sans-serif;
+}
+
+.balanceValue {
+  color: var(--fg);
+  font-family: "IBMPlexSansSemiBold", sans-serif;
+}
+
+.refreshBtn {
+  background: none;
+  border: none;
+  cursor: pointer;
+  color: var(--fg-secondary);
+  padding: 2px;
+  display: flex;
+  align-items: center;
+  transition: color 0.2s;
+}
+
+.refreshBtn:hover {
+  color: var(--accent);
+}
+
+.keyHint {
+  font-size: 11px;
+  font-family: "IBMPlexSansRegular", sans-serif;
+  color: var(--fg-secondary);
+  padding-left: 4px;
+}
+
+.actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  margin-top: 8px;
+}
+
+.actionBtn {
+  flex: 1;
+  min-width: 120px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+}
+
+.disconnectBtn {
+  border-color: #ef4444;
+  color: #ef4444;
+}
+
+.disconnectBtn:hover {
+  background-color: rgba(239, 68, 68, 0.1);
+}

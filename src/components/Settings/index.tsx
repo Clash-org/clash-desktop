@@ -53,7 +53,8 @@ import {
   currentTournamentAtom,
   currentWeaponIdAtom,
   currentNominationIdAtom,
-  currentPoolIdAtom
+  currentPoolIdAtom,
+  blockchainAtom
 } from "@store";
 import { NominationType, NominationUser, ParticipantStatus, ParticipantType, PoolCreatedType, TournamentStatus, TournamentSystem } from "@typings";
 import { langLabels } from "@constants";
@@ -74,6 +75,7 @@ import WeaponNominationsSelect from "../WeaponNominationsSelect";
 import { createPool, getMathes, updatePool } from "@/utils/api";
 import { useNominations } from "@/hooks/useNominations";
 import { useUpdater } from "@/hooks/useUpdater";
+import { ethers } from "ethers";
 
 type TrashPairProps = {
   setFighterPairs: React.Dispatch<React.SetStateAction<[ParticipantType, ParticipantType][][]>>;
@@ -256,6 +258,7 @@ function App() {
   const { checkForUpdates } = useUpdater()
   /* ---------- атомы ---------- */
   const [user] = useAtom(userAtom);
+  const [, setBlockchain] = useAtom(blockchainAtom)
   const [poolCountDelete, setPoolCountDelete] = useAtom(poolCountDeleteAtom);
   const [isPoolRating, setIsPoolRating] = useAtom(isPoolRatingAtom);
   const [fightTime, setFightTime] = useAtom(fightTimeAtom);
@@ -439,7 +442,7 @@ function App() {
   useEffect(() => {
     (async () => {
       try {
-        const [t, z, p, h, s, r, c, lang, isShowUpdates] = await Promise.all([
+        const [t, z, p, h, s, r, c, lang, isShowUpdates, privateKey] = await Promise.all([
           storage.get<number>("fightTime"),
           storage.get<HitZonesType>("hitZones"),
           storage.get<ParticipantType[][]>("participants"),
@@ -448,7 +451,8 @@ function App() {
           storage.get<boolean>("isPoolRating"),
           storage.get<number>("poolCountDelete"),
           storage.get<string>("language"),
-          storage.get<boolean>("showUpdates")
+          storage.get<boolean>("showUpdates"),
+          storage.get<string>("privateKey")
         ]);
 
         if (t) setFightTime(t);
@@ -465,6 +469,13 @@ function App() {
         }
         if (isShowUpdates) {
           setShowUpdates(isShowUpdates)
+        }
+        if (privateKey) {
+          const wallet = new ethers.Wallet(privateKey);
+          setBlockchain({
+            wallet: wallet.address,
+            privateKey
+          })
         }
         await checkForUpdates(isShowUpdates)
       } catch (error) {

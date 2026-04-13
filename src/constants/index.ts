@@ -1,35 +1,8 @@
-let TournamentRegistryAbi: any = { abi: [] };
-let SynchronizationOracleAbi: any = { abi: [] };
-let UserRegistryAbi: any = { abi: [] };
-let addresses: any = {
-    TournamentRegistry: "",
-    Oracle: "",
-    UserRegistry: ""
-};
-
-try {
-    TournamentRegistryAbi = require("../../blockchain/abi/TournamentRegistry.json");
-} catch {
-    console.warn('TournamentRegistry.json not found, using default');
-}
-
-try {
-    SynchronizationOracleAbi = require("../../blockchain/abi/SynchronizationOracle.json");
-} catch {
-    console.warn('SynchronizationOracle.json not found, using default');
-}
-
-try {
-    UserRegistryAbi= require("../../blockchain/abi/UserRegistry.json");
-} catch {
-    console.warn('UserRegistry.json not found, using default');
-}
-
-try {
-    addresses = require("../../blockchain/addresses.json");
-} catch {
-    console.warn('addresses.json not found, using default');
-}
+import TournamentABI from "../../blockchain/abi/ClashTournament.json"
+import SynchronizationABI from "../../blockchain/abi/ClashSynchronization.json"
+import UserABI from "../../blockchain/abi/ClashUser.json"
+import ServerABI from "../../blockchain/abi/ClashServer.json"
+import addresses from "../../blockchain/addresses.json"
 
 export const STORAGE_PREFIX = '@Clash_';
 
@@ -39,21 +12,36 @@ export const langLabels: Record<string, string> = {
     cn: 'zh-CN',
 };
 
-export const PAGE_SIZE_TOURNAMENTS = 10
+export const PAGE_SIZE = 10
 
 export const RPC_URL = import.meta.env.VITE_RPC_URL || "http://localhost:8545/"
 
 export const contractType = {
-    tournamentRegistry: {
-        address: addresses.TournamentRegistry || "",
-        abi: TournamentRegistryAbi || []
+    tournament: {
+        address: addresses.Tournament || "",
+        abi: TournamentABI || []
     },
-    synchronizationOracle: {
+    synchronization: {
         address: addresses.Oracle || "",
-        abi: SynchronizationOracleAbi || []
+        abi: SynchronizationABI || []
     },
-    UserRegistry: {
-        address: addresses.UserRegistry || "",
-        abi: UserRegistryAbi || []
+    user: {
+        address: addresses.User || "",
+        abi: UserABI || []
+    },
+    server: {
+        address: addresses.Server,
+        abi: ServerABI || []
     }
 }
+
+export const NATIVE_CURRENCIES: Record<number, { symbol: string; network: string }> = {
+  1: { symbol: 'ETH', network: 'Ethereum' },
+  137: { symbol: 'MATIC', network: 'Polygon' },
+  56: { symbol: 'BNB', network: 'BNB Smart Chain' },
+  43114: { symbol: 'AVAX', network: 'Avalanche' },
+  10: { symbol: 'ETH', network: 'Optimism' },
+  42161: { symbol: 'ETH', network: 'Arbitrum' },
+  250: { symbol: 'FTM', network: 'Fantom' },
+  8453: { symbol: 'ETH', network: 'Base' },
+};

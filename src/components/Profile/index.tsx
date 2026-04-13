@@ -259,7 +259,7 @@ export default function Profile({ id }:{ id?: string }) {
           {predictionsStates.weaponId && predictionsStates.nominationId &&
           <Select
           placeholder={t("fighters")}
-          options={users.map(u=>({ label: u.username, value: u.id }))}
+          options={users.filter(u=>u.id !== user.id).map(u=>({ label: u.username, value: u.id }))}
           value={predictionsStates.opponent}
           setValue={(val)=>handlePredictionsStates("opponent", val)}
           style={{ marginTop: "10px" }}
@@ -282,7 +282,7 @@ export default function Profile({ id }:{ id?: string }) {
             setNominationId={setNominationId}
             setWeaponId={setWeaponId}
             />
-            {stats && stats.ratings && nominationId &&
+            {stats && !!stats.ratings.length && nominationId &&
             <Table
             titles={[t("rating"), t("rank"), t("volatility"), "RD", capitalizeFirstLetter(t("stage"))]}
             // @ts-ignore
