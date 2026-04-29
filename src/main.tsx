@@ -6,21 +6,24 @@ import Layout from "./components/Layout";
 import { Provider } from "jotai";
 import { AuthProvider } from './providers/AuthProvider';
 import { ApiProvider } from './providers/ApiProvider';
+import { ContractProvider } from './providers/ContractProvider';
 
 ReactDOM.createRoot(document.getElementById("root") as HTMLElement).render(
   <>
   <ApiProvider>
     <AuthProvider>
-      <Provider>
-        <Layout />
-      </Provider>
-      <Toaster toastOptions={{
-        style: {
-          wordBreak: "break-word",
-          overflowWrap: "break-word"
-        }
-      }}
-      />
+        <Provider>
+          <ContractProvider>
+            <Layout />
+          </ContractProvider>
+        </Provider>
+        <Toaster toastOptions={{
+          style: {
+            wordBreak: "break-word",
+            overflowWrap: "break-word"
+          }
+        }}
+        />
     </AuthProvider>
   </ApiProvider>
   </>,

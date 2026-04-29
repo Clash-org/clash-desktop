@@ -24,10 +24,12 @@ import {
   playoffAtom,
   playoffIndexAtom,
   playoffMatchIndexAtom,
+  isGroupBattleAtom,
+  isReverseSidesAtom,
 } from '@/store';
 import { formatTime, truncateFullName } from '@/utils/helpers';
 import { incWin } from '@/utils/incWin';
-import { History, Medal, Minus, Pause, Play, RefreshCw, UsersRound } from 'lucide-react';
+import { History, Medal, Minus, Pause, Play, Plus, RefreshCw, UsersRound } from 'lucide-react';
 import { toast } from 'react-hot-toast';
 
 import styles from './index.module.css';
@@ -43,6 +45,8 @@ import { storage } from '@/utils/storage';
 export default function FightScreen() {
   const [bellSound, setBellSound] = useState(new Howl({ src: ['/sounds/bell.mp3'] }));
   const { t } = useTranslation()
+  const [isGroupBattle] = useAtom(isGroupBattleAtom)
+  const [isReverseSides] = useAtom(isReverseSidesAtom);
   const [currentPairIndex, setCurrentPairIndex] = useAtom(currentPairIndexAtom);
   const [currentPoolIndex] = useAtom(currentPoolIndexAtom);
   const [isRunning, setIsRunning] = useAtom(isRunningAtom);
@@ -110,8 +114,8 @@ export default function FightScreen() {
   const sendDataToViewer = async () => {
     try {
       await emit('fight-data-updated', {
-        score1,
-        score2,
+        score1: score1,
+        score2: score2,
         protests1,
         protests2,
         warnings1,
@@ -123,6 +127,7 @@ export default function FightScreen() {
         blueName,
         nextRedName,
         nextBlueName,
+        isReverseSides,
         isFinished,
         winner
       });
@@ -141,7 +146,8 @@ export default function FightScreen() {
     timeLeft,
     isRunning,
     redName,
-    blueName
+    blueName,
+    isReverseSides
   ]);
   // @ts-ignore
   const timeoutRef = useRef<NodeJS.Timeout>();
@@ -198,7 +204,7 @@ export default function FightScreen() {
         }
       }
 
-      const winnerName = score1 > score2 ? redName : blueName
+      const winnerName = score1 > score2 ?  (isGroupBattle ? t("redTeam") : redName) : (isGroupBattle ? t("blueTeam") : blueName)
       setWinner(winnerName)
       setIsFinished(true)
       toast.success(isDraw ? t('draw') : `${t('win')}: ${winnerName}`, {
@@ -253,13 +259,15 @@ export default function FightScreen() {
   }, [isRunning, timeLeft]);
 
   const resetFight = () => {
-    setScore1(0);
-    setScore2(0);
+    if (!isGroupBattle) {
+      setScore1(0);
+      setScore2(0);
+      setProtests1(0);
+      setProtests2(0);
+      setWarnings1(0);
+      setWarnings2(0);
+    }
     setDoubleHits(0);
-    setProtests1(0);
-    setProtests2(0);
-    setWarnings1(0);
-    setWarnings2(0);
     setTimeLeft(fightTime);
     setIsRunning(false);
     setHistory([])
@@ -368,7 +376,7 @@ export default function FightScreen() {
   ];
 
   return (
-    <div className={styles.container}>
+    <div className={styles.container} style={isReverseSides ? { flexDirection: "row-reverse" } : {}}>
       {/* левая и правая половины */}
       {fighterData.map((data, i) => (
         <div key={i} className={`${styles.side} ${data.styleWrap}`}>
@@ -391,6 +399,12 @@ export default function FightScreen() {
             </button>
           ))}
 
+          <button
+            className={styles.zoneBtn}
+            onClick={() => data.setScore(s=>s+1)}
+          >
+            <Plus size={28} color="var(--fg)" />
+          </button>
           <button
             className={styles.zoneBtn}
             onClick={() => removePoints(data.setScore)}

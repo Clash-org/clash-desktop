@@ -1,4 +1,3 @@
-// utils/exportExcel.ts
 import { ParticipantPlayoffType, ParticipantType } from '@/typings';
 import i18n from './i18n';
 import { writeFile } from '@tauri-apps/plugin-fs';

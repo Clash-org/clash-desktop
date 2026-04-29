@@ -3,8 +3,11 @@ import styles from "./index.module.css"
 import React from "react"
 import { openUrl } from "@tauri-apps/plugin-opener"
 
-function SocialMedias({ socialMedias }:{socialMedias: string[]}) {
-    const getIconByLink = (link: string) => {
+function SocialMedias({ socialMedias, socialMediasText }:{ socialMedias: string[], socialMediasText?: string[] }) {
+    const getIconByLink = (link: string, idx: number) => {
+        if (socialMediasText && socialMediasText[idx]) {
+            return <span>{socialMediasText[idx]}</span>
+        }
         const domain = new URL(link).host
         switch (domain) {
             case "vk.ru":
@@ -23,8 +26,8 @@ function SocialMedias({ socialMedias }:{socialMedias: string[]}) {
     return (
         <div className={styles.socialLinks}>
             {socialMedias.map((link, i)=>(
-                <div key={i} onClick={async ()=> await openUrl(link)} className={styles.socialLink}>
-                    {getIconByLink(link)}
+                <div key={i} onClick={async ()=> await openUrl(link)} className={socialMediasText?.[i] ? styles.socialLinkText : styles.socialLink}>
+                    {getIconByLink(link, i)}
                 </div>
             ))}
         </div>

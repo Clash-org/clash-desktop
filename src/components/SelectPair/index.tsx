@@ -7,6 +7,8 @@ import { getName } from "@/utils/helpers"
 import { useTranslation } from "react-i18next"
 import { useState } from "react"
 import { Trash2 } from "lucide-react"
+import { useAtomValue } from "jotai"
+import { isGroupBattleAtom } from "@/store"
 
 type SelectPairProps = {
     poolIndex: number;
@@ -32,6 +34,7 @@ export default function SelectPair({
     setPools
 }: SelectPairProps) {
     const { t } = useTranslation()
+    const isGroupBattle = useAtomValue(isGroupBattleAtom)
     const [draggedParticipant, setDraggedParticipant] = useState<{
         pairIndex: number;
         position: 0 | 1;
@@ -137,6 +140,14 @@ export default function SelectPair({
     <>
         {fighterPairs[poolIndex]?.[0]?.[0] ? (
             <Section title={t('pairs') + ": " + t("pool") + " " + (poolIndex + 1)}>
+                {isGroupBattle ?
+                <div className={styles.teams}>
+                    <span>{t("redTeam")}</span>
+                    <span>{t("blueTeam")}</span>
+                </div>
+                :
+                <></>
+                }
                 <div className={styles.manualPairsContainer}>
                     {fighterPairs[poolIndex].map((pair, originalIdx) => {
                         // Пропускаем рендер пустых пар, если нужно

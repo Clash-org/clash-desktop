@@ -3,15 +3,22 @@ import { createContext, ReactNode, useCallback, useEffect, useState } from "reac
 
 export class ApiConfig {
   private _baseUrl: string;
+  private _rpcUrl: string;
   private readonly defaultHost = "http://localhost:3000/";
+  private readonly defaultRpc = "http://localhost:8545/";
 
-  constructor(initialHost?: string) {
+  constructor(initialHost?: string, initialRpc?: string) {
     this._baseUrl = initialHost || this.defaultHost;
+    this._rpcUrl = initialRpc || this.defaultRpc;
   }
 
   // Геттеры для всех endpoint'ов
   get base(): string {
     return this._baseUrl;
+  }
+
+  get rpc(): string {
+    return this._rpcUrl;
   }
 
   get deeplink(): string {
@@ -20,6 +27,10 @@ export class ApiConfig {
 
   get policy(): string {
     return `${this.base}privacy-policy`
+  }
+
+  get payServerLink(): string {
+    return `${this.base}pay-server-link`
   }
 
   get auth(): string {
@@ -89,6 +100,16 @@ export class ApiConfig {
     }
   }
 
+  setRpc(newUrl: string): void {
+    // Валидация URL
+    try {
+      new URL(newUrl);
+      this._rpcUrl = newUrl.endsWith('/') ? newUrl : `${newUrl}/`;
+    } catch (error) {
+      throw new Error('Invalid URL format');
+    }
+  }
+
   // Метод для сброса к хосту по умолчанию
   resetToDefault(): void {
     this._baseUrl = this.defaultHost;
@@ -98,6 +119,7 @@ export class ApiConfig {
   getAllEndpoints(): Record<string, string> {
     return {
       base: this.base,
+      rpc: this.rpc,
       auth: this.auth,
       users: this.users,
       cities: this.cities,
@@ -131,7 +153,9 @@ export const getApiConfig = (): ApiConfig => {
 export interface ApiContextType {
   api: ApiConfig;
   baseUrl: string;
+  rpc: string;
   setBaseUrl: (newUrl: string) => void;
+  setRpc: (newUrl: string) => void;
   resetToDefault: () => void;
   updateConfig: (newConfig: ApiConfig) => void;
 }
@@ -151,15 +175,24 @@ export const ApiProvider: React.FC<ApiProviderProps> = ({
 }) => {
   const [api] = useState(() => initialConfig || new ApiConfig());
   const [baseUrl, setBaseUrlState] = useState(api.base);
+  const [rpc, setRpcState] = useState(api.rpc);
   const [, setUpdateTrigger] = useState(0);
 
   useEffect(()=>{
         (async ()=>{
             await storage.init()
             const server = await storage.get<string>("server")
-            if (server) {
+            const rpc = await storage.get<string>("rpc")
+            if (server && rpc) {
+              setGlobalApiConfig(new ApiConfig(server, rpc))
+              setBaseUrl(server)
+              setRpc(rpc)
+            } else if (server) {
               setGlobalApiConfig(new ApiConfig(server))
               setBaseUrl(server)
+            } else if (rpc) {
+              setGlobalApiConfig(new ApiConfig(baseUrl, rpc))
+              setRpc(rpc)
             }
         })()
   }, [])
@@ -168,6 +201,17 @@ export const ApiProvider: React.FC<ApiProviderProps> = ({
     try {
       api.setBaseUrl(newUrl);
       setBaseUrlState(api.base);
+      setUpdateTrigger(prev => prev + 1); // Форсируем перерендер
+    } catch (error) {
+      console.error('Failed to set base URL:', error);
+      throw error;
+    }
+  }, [api]);
+
+  const setRpc = useCallback((newUrl: string) => {
+    try {
+      api.setRpc(newUrl);
+      setRpcState(api.rpc);
       setUpdateTrigger(prev => prev + 1); // Форсируем перерендер
     } catch (error) {
       console.error('Failed to set base URL:', error);
@@ -192,6 +236,8 @@ export const ApiProvider: React.FC<ApiProviderProps> = ({
     <ApiContext.Provider value={{
       api,
       baseUrl,
+      rpc,
+      setRpc,
       setBaseUrl,
       resetToDefault,
       updateConfig

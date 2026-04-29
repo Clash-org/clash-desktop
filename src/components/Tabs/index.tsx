@@ -7,11 +7,12 @@ type TabsProps<T> = {
     tabs: readonly T[],
     activeTab: T;
     setActiveTab: (val: T)=>void;
+    withoutBottom?: boolean
 }
 
-export default function Tabs<T>({ titles, tabs, activeTab, setActiveTab }:TabsProps<T>) {
+export default function Tabs<T>({ titles, tabs, activeTab, setActiveTab, withoutBottom }:TabsProps<T>) {
     return (
-        <div className={styles.tabs}>
+        <div className={styles.tabs} style={withoutBottom ? { marginBottom: 0 } : {}}>
             {tabs.map((tab, i)=>
                 <Button
                 key={i}

@@ -9,29 +9,35 @@ import { languageAtom } from '@/store';
 
 interface DatePickerProps {
   value?: Date;
-  onChange?: (date: Date) => void;
+  dateEnd?: Date; // новый параметр для конечной даты диапазона
+  onChange?: (date: Date|undefined, dateEnd?: Date) => void; // изменён колбэк
   minDate?: Date;
   maxDate?: Date;
   placeholder?: string;
   disabled?: boolean;
   className?: string;
+  rangeMode?: boolean; // режим выбора диапазона
 }
 
 export default function DatePicker({
   value,
+  dateEnd,
   onChange,
   minDate,
   maxDate,
   placeholder = 'Выберите дату',
   disabled = false,
-  className = ''
+  className = '',
+  rangeMode = false
 }: DatePickerProps) {
   const { t } = useTranslation();
   const [isOpen, setIsOpen] = useState(false);
   const [currentMonth, setCurrentMonth] = useState(value || new Date());
   const [selectedDate, setSelectedDate] = useState<Date | null>(value || null);
+  const [selectedDateEnd, setSelectedDateEnd] = useState<Date | null>(dateEnd || null);
+  const [selectingEnd, setSelectingEnd] = useState(false); // флаг выбора конечной даты
   const wrapperRef = useRef<HTMLDivElement>(null);
-  const lang = useAtomValue(languageAtom)
+  const lang = useAtomValue(languageAtom);
 
   const months = [
     t('january'), t('february'), t('march'), t('april'),
@@ -47,6 +53,8 @@ export default function DatePicker({
     const handleClickOutside = (event: MouseEvent) => {
       if (wrapperRef.current && !wrapperRef.current.contains(event.target as Node)) {
         setIsOpen(false);
+        // сбрасываем режим выбора при закрытии
+        setSelectingEnd(false);
       }
     };
 
@@ -60,6 +68,12 @@ export default function DatePicker({
       setCurrentMonth(value);
     }
   }, [value]);
+
+  useEffect(() => {
+    if (dateEnd) {
+      setSelectedDateEnd(dateEnd);
+    }
+  }, [dateEnd]);
 
   const getDaysInMonth = (date: Date) => {
     return new Date(date.getFullYear(), date.getMonth() + 1, 0).getDate();
@@ -77,15 +91,59 @@ export default function DatePicker({
     setCurrentMonth(new Date(currentMonth.getFullYear(), currentMonth.getMonth() + 1, 1));
   };
 
+  const isDateInRange = (date: Date): boolean => {
+    if (!rangeMode) return false;
+    if (!selectedDate || !selectedDateEnd) return false;
+
+    const start = new Date(selectedDate);
+    const end = new Date(selectedDateEnd);
+    return date >= start && date <= end;
+  };
+
+  const isDateRangeStart = (date: Date): boolean => {
+    if (!rangeMode || !selectedDate) return false;
+    return date.toDateString() === selectedDate.toDateString();
+  };
+
+  const isDateRangeEnd = (date: Date): boolean => {
+    if (!rangeMode || !selectedDateEnd) return false;
+    return date.toDateString() === selectedDateEnd.toDateString();
+  };
+
   const handleDateSelect = (day: number) => {
     const newDate = new Date(currentMonth.getFullYear(), currentMonth.getMonth(), day);
 
     if (minDate && newDate < minDate) return;
     if (maxDate && newDate > maxDate) return;
 
-    setSelectedDate(newDate);
-    onChange?.(newDate);
-    setIsOpen(false);
+    if (rangeMode) {
+      if (!selectingEnd || !selectedDate) {
+        // Начинаем новый диапазон или перевыбираем начало
+        setSelectedDate(newDate);
+        setSelectedDateEnd(null);
+        setSelectingEnd(true);
+        onChange?.(newDate, undefined);
+      } else {
+        // Выбираем конечную дату
+        let start = selectedDate;
+        let end = newDate;
+
+        // Если конечная дата раньше начальной - меняем их местами
+        if (end < start) {
+          [start, end] = [end, start];
+        }
+
+        setSelectedDate(start);
+        setSelectedDateEnd(end);
+        setSelectingEnd(false);
+        onChange?.(start, end);
+        setIsOpen(false);
+      }
+    } else {
+      setSelectedDate(newDate);
+      onChange?.(newDate, undefined);
+      setIsOpen(false);
+    }
   };
 
   const isDateDisabled = (day: number) => {
@@ -93,6 +151,22 @@ export default function DatePicker({
     if (minDate && date < minDate) return true;
     if (maxDate && date > maxDate) return true;
     return false;
+  };
+
+  const getRangeDisplayText = (): string => {
+    if (!rangeMode) {
+      return selectedDate ? formatDate(selectedDate, lang, true) : placeholder;
+    }
+
+    if (selectedDate && selectedDateEnd) {
+      return `${formatDate(selectedDate, lang, true)} - ${formatDate(selectedDateEnd, lang, true)}`;
+    }
+
+    if (selectedDate && !selectedDateEnd) {
+      return `${formatDate(selectedDate, lang, true)} - ${t('selectEndDate') || '...'}`;
+    }
+
+    return placeholder;
   };
 
   const renderCalendar = () => {
@@ -107,7 +181,9 @@ export default function DatePicker({
 
     // Дни текущего месяца
     for (let day = 1; day <= daysInMonth; day++) {
-      const isSelected = selectedDate &&
+      const currentDate = new Date(currentMonth.getFullYear(), currentMonth.getMonth(), day);
+
+      const isSelected = !rangeMode && selectedDate &&
         selectedDate.getDate() === day &&
         selectedDate.getMonth() === currentMonth.getMonth() &&
         selectedDate.getFullYear() === currentMonth.getFullYear();
@@ -115,6 +191,12 @@ export default function DatePicker({
       const isToday = new Date().getDate() === day &&
         new Date().getMonth() === currentMonth.getMonth() &&
         new Date().getFullYear() === currentMonth.getFullYear();
+
+      const isRangeStart = isDateRangeStart(currentDate);
+      const isRangeEnd = isDateRangeEnd(currentDate);
+      const isInRange = isDateInRange(currentDate);
+      const isRangePreview = rangeMode && selectedDate && !selectedDateEnd &&
+        !selectingEnd && currentDate > selectedDate;
 
       const disabled = isDateDisabled(day);
 
@@ -126,6 +208,11 @@ export default function DatePicker({
             ${isSelected ? styles.selectedDay : ''}
             ${isToday ? styles.today : ''}
             ${disabled ? styles.disabledDay : ''}
+            ${rangeMode ? styles.rangeDay : ''}
+            ${isRangeStart ? styles.rangeStart : ''}
+            ${isRangeEnd ? styles.rangeEnd : ''}
+            ${isInRange ? styles.rangeInRange : ''}
+            ${isRangePreview ? styles.rangePreview : ''}
           `}
           onClick={() => handleDateSelect(day)}
           disabled={disabled}
@@ -138,6 +225,13 @@ export default function DatePicker({
     return days;
   };
 
+  const handleResetRange = () => {
+    setSelectedDate(null);
+    setSelectedDateEnd(null);
+    setSelectingEnd(false);
+    onChange?.(undefined, undefined);
+  };
+
   return (
     <div ref={wrapperRef} className={`${styles.wrapper} ${className}`}>
       <div
@@ -146,8 +240,20 @@ export default function DatePicker({
       >
         <Calendar size={18} className={styles.icon} />
         <span className={styles.value}>
-          {selectedDate ? formatDate(selectedDate, lang, true) : placeholder}
+          {getRangeDisplayText()}
         </span>
+        {rangeMode && (selectedDate || selectedDateEnd) && (
+          <button
+            onClick={(e) => {
+              e.stopPropagation();
+              handleResetRange();
+            }}
+            className={styles.clearButton}
+            aria-label="Очистить диапазон"
+          >
+            ×
+          </button>
+        )}
       </div>
 
       {isOpen && !disabled && (
@@ -156,7 +262,6 @@ export default function DatePicker({
             <button
               onClick={handlePrevMonth}
               className={styles.monthNav}
-              aria-label="Предыдущий месяц"
             >
               <ChevronLeft size={18} />
             </button>
@@ -166,7 +271,6 @@ export default function DatePicker({
             <button
               onClick={handleNextMonth}
               className={styles.monthNav}
-              aria-label="Следующий месяц"
             >
               <ChevronRight size={18} />
             </button>
@@ -183,6 +287,11 @@ export default function DatePicker({
           </div>
 
           <div className={styles.footer}>
+            {rangeMode && selectingEnd && selectedDate && (
+              <div className={styles.rangeHint}>
+                {t('selectEndDateHint')}
+              </div>
+            )}
             <Button
               title={t('today')}
               onClick={() => {
@@ -192,9 +301,15 @@ export default function DatePicker({
               }}
               className={styles.todayButton}
               stroke
-            >
-              {t('today')}
-            </Button>
+            />
+            {rangeMode && (selectedDate || selectedDateEnd) && (
+              <Button
+                title={t('clear')}
+                onClick={handleResetRange}
+                className={styles.clearRangeButton}
+                stroke
+              />
+            )}
           </div>
         </div>
       )}

@@ -12,7 +12,7 @@ export enum TournamentSystem {
   SWISS="swiss"
 }
 
-export type LangType = "en"|"ru"|"cn"
+export type LangType = "en"|"ru"|"zh"
 
 export type ParticipantType = {
   id: string;               // уникальный идентификатор
@@ -62,6 +62,7 @@ export type UserType = {
   isAdmin: boolean;
   city: CityType;
   club: ClubType;
+  blockchainId: number;
   totalMatches: number;
   moderatorTournamentsIds: number[]
   createdAt: string;
@@ -94,12 +95,14 @@ export type TournamentType = {
   status: TournamentStatusType;
   image: string,
   date: string;
+  dateEnd?: string;
   city: CityType;
   nominations: NominationType[];
   prices: {[nominationId: string]: number};
   currency: CurrencyType,
   description: string;
   socialMedias: string[];
+  socialMediasText?: string[];
   participants: UserType[];
   participantsCount: {[nominationId: number]: number};
   matchesCount: number[];
@@ -115,7 +118,7 @@ export type NominationUsersType = {[nominationId: string]: NominationUser[]}
 
 export type TournamentShortType = Pick<TournamentType, "image"|"id"|"date"|"title"|"status"> & { city: string, organizer: UserType }
 
-export type TournamentFormData = Omit<TournamentType, "city"|"organizerId"|"matchesCount"|"date"|"createdAt"|"participants"|"nominations"|"id"|"moderators"> & { date: Date, cityId: number, moderatorsIds: string[] }
+export type TournamentFormData = Omit<TournamentType, "city"|"organizerId"|"matchesCount"|"date"|"dateEnd"|"createdAt"|"participants"|"nominations"|"id"|"moderators"> & { date: Date, dateEnd: Date, cityId: number, moderatorsIds: string[] }
 
 export type WeaponType = {
   id: number;
@@ -284,6 +287,7 @@ export type ServerType = {
   id: bigint;
   owner: string;
   host: string;
+  city: string;
   pricePerMonth: bigint;
   status: bigint;
   registeredAt: bigint;
@@ -303,4 +307,10 @@ export type  PaymentType = {
   ownerResponded: boolean;
   refundReason: string;
   expiresAt: bigint;     // timestamp в секундах
+}
+
+export type FiatType = {
+  link: string;
+  price: number;
+  currencyCode: CurrencyType
 }

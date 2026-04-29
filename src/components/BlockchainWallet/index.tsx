@@ -9,12 +9,13 @@ import Section from "@/components/Section";
 import Button from "@/components/Button";
 import InputText from "@/components/InputText";
 import styles from "./index.module.css";
-import { RPC_URL } from "@/constants";
 import Checkbox from "../Checkbox";
 import { storage } from "@/utils/storage";
+import { useApi } from "@/hooks/useApi";
 
 export function BlockchainWallet() {
   const { t } = useTranslation();
+  const { rpc } = useApi()
   const [blockchainData, setBlockchainData] = useAtom(blockchainAtom);
   const [showPrivateKey, setShowPrivateKey] = useState(false);
   const [showWallet, setShowWallet] = useState(false);
@@ -40,7 +41,7 @@ export function BlockchainWallet() {
 
   const fetchBalance = async () => {
     try {
-      const provider = new ethers.JsonRpcProvider(RPC_URL);
+      const provider = new ethers.JsonRpcProvider(rpc);
       const balanceWei = await provider.getBalance(blockchainData.wallet);
       const balanceEth = ethers.formatEther(balanceWei);
       setBalance(parseFloat(balanceEth).toFixed(4));
@@ -52,7 +53,7 @@ export function BlockchainWallet() {
 
   const fetchNetwork = async () => {
     try {
-      const provider = new ethers.JsonRpcProvider(RPC_URL);
+      const provider = new ethers.JsonRpcProvider(rpc);
       const network = await provider.getNetwork();
       setNetwork(`${network.name || "Unknown"} (${Number(network.chainId)})`);
     } catch (error) {

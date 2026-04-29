@@ -73,7 +73,7 @@ export default function Auth({ profileActivate, onClose, setPage }:{ profileActi
             value={isAgree}
             setValue={(val)=>setIsAgree(val)}
             />}
-            <Button onClick={authHandler} title={isLogin ? t("enter") : t("register")} />
+            <Button onClick={authHandler} title={isLogin ? t("enter") : t("register")} disabled={!isLogin && !isAgree} />
             <span onClick={()=>setIsLogin(!isLogin)} style={{ color: "var(--accent)", cursor: "pointer", alignSelf: "center" }}>{!isLogin ? t("enter") : t("register")}</span>
         </div>
     )

@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useState } from 'react';
 import { useTranslation } from 'react-i18next';
-import { MapPin, Calendar, Award, Sword, TrendingUp, Flag, LogOut, Mars, Venus, Swords, Trophy, Trash2 } from 'lucide-react';
+import { MapPin, Calendar, Award, Sword, TrendingUp, Flag, LogOut, Mars, Venus, Swords, Trophy, Trash2, Info, ChartPie } from 'lucide-react';
 import Button from '@/components/Button';
 import Section from '@/components/Section';
 import styles from './index.module.css';
@@ -35,7 +35,7 @@ export default function Profile({ id }:{ id?: string }) {
   const tabs = ['info', 'stats', 'predictions', 'weaponDetails'] as const
   const [activeTab, setActiveTab] = useState<typeof tabs[number]>('info');
   const [lang] = useAtom(languageAtom)
-  const { users } = useUsers(lang)
+  const { users } = useUsers(1, 1000, lang)
   const { user: anotherUser } = useUser(id)
   const [meUser, setUser] = useAtom(userAtom)
   const [predictionsStates, setPredictionsStates] = useState({
@@ -115,7 +115,7 @@ export default function Profile({ id }:{ id?: string }) {
   const isI = meUser?.id === user.id
 
   return !!user && (
-    <div className={styles.container}>
+    <div className={"container " + styles.container}>
       {/* Шапка профиля */}
       <div className={styles.header}>
         <ImageUploader disabled={!isI} name={user.username} type="avatar" value={user.image ? api.profiles + user.image : null} setValue={setAvatar} />
@@ -187,9 +187,10 @@ export default function Profile({ id }:{ id?: string }) {
       {/* Табы с информацией */}
       <Tabs
       tabs={tabs}
-      titles={[t('profileInfo'), t('statistics'), <><TrendingUp size={20} color="var(--fg)" />{t('predictions')}</>, <><Sword size={20} color="var(--fg)" />{t('weaponDetails')}</>]}
+      titles={[<><Info size={20} color="var(--fg)" />{t('profileInfo')}</>, <><ChartPie size={20} color="var(--fg)" />{t('statistics')}</>, <><TrendingUp size={20} color="var(--fg)" />{t('predictions')}</>, <><Sword size={20} color="var(--fg)" />{t('weaponDetails')}</>]}
       activeTab={activeTab}
       setActiveTab={setActiveTab}
+      withoutBottom
       />
 
       {/* Контент табов */}
@@ -213,6 +214,10 @@ export default function Profile({ id }:{ id?: string }) {
               <span className={styles.infoValue}>
                 {user.gender ? <Mars size={20} color="var(--fg)" /> : <Venus size={20} color="var(--fg)" />}
               </span>
+            </div>
+            <div className={styles.infoRow}>
+              <span className={styles.infoLabel}>{t('blockchain')} ID:</span>
+              <span className={styles.infoValue}>{user.blockchainId}</span>
             </div>
           </div>
         )}

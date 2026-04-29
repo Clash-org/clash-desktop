@@ -46,7 +46,7 @@ export const pairsDefault: [ParticipantType, ParticipantType][][] = [[
 // Основные атомы таймера
 export const fightTimeAtom = atom(fightTimeDefault); // Время боя в секундах (по умолчанию 3 минуты)
 export const isRunningAtom = atom(false); // Состояние таймера (запущен/остановлен)
-export const languageAtom = atom<LangType>('ru'); // Язык интерфейса ('en', 'ru', 'cn')
+export const languageAtom = atom<LangType>('ru'); // Язык интерфейса ('en', 'ru', 'zh')
 export const tournamentSystemAtom = atom<TournamentSystem>(TournamentSystem.HYBRID); // Система подсчёта
 
 export const historyAtom = atom<{ score1: number, score2: number }[]>([]);
@@ -98,7 +98,13 @@ export const currentNominationIdAtom = atom<number>()
 
 export const currentPoolIdAtom = atom<number>()
 
+export const isGroupBattleAtom = atom(false)
+
+export const isReverseSidesAtom = atom(false);
+
+export const isSaveParticipantsForPoolsAtom = atom(false);
+
 export const blockchainAtom = atom({
-    wallet: "",
-    privateKey: ""
+    wallet: "0xf39Fd6e51aad88F6F4ce6aB8827279cffFb92266",
+    privateKey: "0xac0974bec39a17e36ba4a6b4d238ff944bacb478cbed5efcae784d7bf4f2ff80"
 })

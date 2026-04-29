@@ -1,4 +1,3 @@
-/* components/ui/DatePicker/index.module.css */
 .wrapper {
   position: relative;
   display: inline-block;
@@ -177,6 +176,94 @@
 
 .todayButton {
   min-width: 100px !important;
+  padding: 8px 16px !important;
+  font-size: 14px !important;
+}
+
+.clearButton {
+  background: transparent;
+  border: none;
+  color: var(--placeholder);
+  font-size: 18px;
+  cursor: pointer;
+  padding: 0 4px;
+  border-radius: 4px;
+  transition: all 0.2s ease;
+  line-height: 1;
+}
+
+.clearButton:hover {
+  color: var(--accent);
+  background: var(--accent-transparent);
+}
+
+/* Стили для режима диапазона */
+.rangeDay {
+  position: relative;
+}
+
+.rangeStart {
+  background: var(--accent) !important;
+  color: white !important;
+  border-radius: 6px 0 0 6px !important;
+  position: relative;
+  z-index: 2;
+}
+
+.rangeEnd {
+  background: var(--accent) !important;
+  color: white !important;
+  border-radius: 0 6px 6px 0 !important;
+  position: relative;
+  z-index: 2;
+}
+
+.rangeInRange {
+  background: var(--accent-transparent);
+  border-radius: 0;
+  position: relative;
+  z-index: 1;
+}
+
+.rangeInRange:hover {
+  background: var(--accent-transparent);
+  border-color: var(--accent);
+}
+
+.rangePreview {
+  background: rgba(253, 80, 3, 0.15);
+  border-radius: 0;
+  position: relative;
+  z-index: 1;
+}
+
+/* Если начало и конец диапазона совпадают */
+.rangeStart.rangeEnd {
+  border-radius: 6px !important;
+}
+
+/* Подсказка в футере */
+.rangeHint {
+  flex: 1;
+  text-align: center;
+  font-size: 12px;
+  color: var(--accent);
+  font-family: var(--font-medium);
+}
+
+.footer {
+  display: flex;
+  justify-content: center;
+  gap: 12px;
+  border-top: 1px solid var(--accent-transparent);
+  padding-top: 16px;
+  align-items: center;
+  flex-wrap: wrap;
+}
+
+.todayButton,
+.clearRangeButton {
+  min-width: 80px !important;
   padding: 8px 16px !important;
   font-size: 14px !important;
 }

@@ -1,9 +1,7 @@
-/* components/Tournament/index.module.css */
 .container {
   padding: 24px;
   padding-left: 20%;
   padding-right: 20%;
-  padding-bottom: 100px;
   gap: 0;
 }
 

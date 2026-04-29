@@ -20,6 +20,7 @@ interface FightData {
   blueName: string;
   nextRedName: string;
   nextBlueName: string;
+  isReverseSides: boolean;
   isFinished?: boolean;
   winner?: string;
 }
@@ -41,6 +42,7 @@ export default function FightViewerWindow() {
     blueName: '',
     nextRedName: '',
     nextBlueName: '',
+    isReverseSides: false,
     isFinished: false,
     winner: ''
   });
@@ -105,7 +107,7 @@ export default function FightViewerWindow() {
   }
 
   return (
-    <div className={styles.viewerContainer}>
+    <div className={styles.viewerContainer} style={fightData.isReverseSides ? { flexDirection: "row" } : {}}>
       {/* Левая сторона - Красный угол */}
       <div className={`${styles.viewerSide} ${styles.red} ${fightData.winner === fightData.redName ? styles.winnerSide : ''}`}>
         <div className={styles.viewerName}>

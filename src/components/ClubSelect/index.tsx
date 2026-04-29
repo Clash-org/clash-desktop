@@ -11,7 +11,7 @@ type ClubSelectProps = {
     required?: boolean;
 }
 
-export default function CitySelect({ club, clubId, setClub, setClubId, required }:ClubSelectProps) {
+export default function ClubSelect({ club, clubId, setClub, setClubId, required }:ClubSelectProps) {
     const { t } = useTranslation()
     const { clubs } = useClubs()
 

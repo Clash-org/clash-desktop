@@ -9,14 +9,21 @@ import { useApi } from '@/hooks/useApi';
 import { useTranslation } from 'react-i18next';
 import { NATIVE_CURRENCIES } from '@/constants';
 import { Wallet } from 'lucide-react';
-import { formatDate, parseContractError } from '@/utils/helpers';
+import { formatDate, getSymbolCurrencyByCode, parseContractError } from '@/utils/helpers';
 import { useAtomValue } from 'jotai';
 import { languageAtom } from '@/store';
+import Tabs from '../Tabs';
+import { openUrl } from '@tauri-apps/plugin-opener';
+import { useFiatPayment } from '@/hooks/useFiatPayment';
 
 export function PaymentForm() {
   const { t } = useTranslation();
+  const { fiat } = useFiatPayment()
   const { baseUrl } = useApi()
   const lang = useAtomValue(languageAtom)
+  const titles = [t("cryptocurrency"), t("fiat")]
+  const tabs = ["cryptocurrency", "fiat"] as const
+  const [activeTab, setActiveTab] = useState<typeof tabs[number]>("cryptocurrency")
   const [showConfirm, setShowConfirm] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [durationMonths, setDurationMonths] = useState(1);
@@ -37,6 +44,7 @@ export function PaymentForm() {
   const { data: payment, mutate: paymentMutate } = getUserLastPayment()
   const [expiresDate, setExpiresDate] = useState<Date|undefined>(payment?.expiresAt ? new Date(Number(payment?.expiresAt) * 1000) : undefined)
   const [refundAmount, setRefundAmount] = useState<string>()
+  const isFiat = activeTab === "fiat" && fiat
 
   const handleConfirmPay = async () => {
     if (server) {
@@ -90,9 +98,11 @@ export function PaymentForm() {
   return (
     <div className={styles.container}>
       <h2 className={styles.title}>{t("payServer")}</h2>
-
+      <Tabs titles={titles} tabs={tabs} activeTab={activeTab} setActiveTab={setActiveTab} />
       {/* Server Info */}
       <div className={styles.serverInfo}>
+        {activeTab === "cryptocurrency" &&
+        <>
         {server ? (
           <>
           <h3 className={styles.serverTitle}>{t("server")} #{server.id}</h3>
@@ -124,11 +134,26 @@ export function PaymentForm() {
           </div>
           </>
         ) : (
-          <p className={styles.errorText}>Server not found</p>
+          <p className={styles.errorText}>{t("serverNotFound")}</p>
         )}
+        </>
+        }
+        {isFiat &&
+        <>
+        <div className={styles.infoRow}>
+          <span className={styles.infoLabel}>URL:</span>
+          <span className={styles.infoValue}>{baseUrl}</span>
+        </div>
+        <div className={styles.infoRow}>
+          <span className={styles.infoLabel}>{t("price")}:</span>
+          <span className={styles.infoValue}>{fiat.price + getSymbolCurrencyByCode(fiat.currencyCode)}</span>
+        </div>
+        </>
+        }
       </div>
 
       {/* Duration Months Input */}
+      {!isFiat &&
       <div className={styles.field}>
         <span className={styles.label}>{t("durationMonths")}</span>
         <InputNumber
@@ -139,17 +164,18 @@ export function PaymentForm() {
           className={styles.full}
         />
       </div>
+      }
 
       {/* Pay Button */}
       <Button
-        onClick={()=>setShowConfirm(true)}
-        disabled={!isActive || serverLoading || isSubmitting}
+        onClick={()=>isFiat ? openUrl(fiat.link) : setShowConfirm(true)}
+        disabled={(!isActive && !isFiat) || (serverLoading && !isFiat) || isSubmitting}
         style={{ width: "100%" }}
       >
         {t("payServer")}
       </Button>
 
-      {!!expiresDate &&
+      {!!expiresDate && !isFiat &&
       <Button
         onClick={handleRefund}
         style={{ width: "100%", marginTop: "15px" }}

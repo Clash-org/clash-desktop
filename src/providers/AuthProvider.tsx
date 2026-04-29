@@ -1,4 +1,3 @@
-// src/providers/AuthProvider.tsx
 import { ReactNode } from 'react';
 import { useAuth } from '@/hooks/useAuth';
 

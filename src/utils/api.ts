@@ -1,4 +1,4 @@
-import { AdditionsFields, LangType, MatchType, ParticipantStatusType, PoolCreatedType, PredictType, TournamentFormData, TournamentMatchType, TournamentResponse, TournamentStatusType, TournamentType, UserType } from '@/typings';
+import { AdditionsFields, CurrencyType, LangType, MatchType, ParticipantStatusType, PoolCreatedType, PredictType, TournamentFormData, TournamentMatchType, TournamentResponse, TournamentStatusType, TournamentType, UserType } from '@/typings';
 import toast from 'react-hot-toast';
 import { mutate } from 'swr';
 import { getApiConfig } from '@/providers/ApiProvider';
@@ -300,10 +300,21 @@ export async function getMathes(tournamentId: number, nominationId: number) {
   const host = getApiConfig().matches
   const result = await fetcher(host + `?tournamentId=${tournamentId}&nominationId=${nominationId}`);
 
+  return result as MatchType[];
+}
+
+// POST /pay-server-link
+export async function createFiatPayment(fiatPrice: number, payServerLink: string, currencyCode: CurrencyType) {
+  const host = getApiConfig().payServerLink
+  const result = await fetcher(host, {
+    method: 'POST',
+    body: JSON.stringify({ fiatPrice, payServerLink, currencyCode })
+  });
+
   // Инвалидируем кэш списка
   await mutate((key) => typeof key === 'string' && key.startsWith(host));
 
-  return result as MatchType[];
+  return result as { success: true };
 }
 
 // Глобальное состояние access токена (в памяти, не localStorage!)

@@ -54,7 +54,10 @@ import {
   currentWeaponIdAtom,
   currentNominationIdAtom,
   currentPoolIdAtom,
-  blockchainAtom
+  blockchainAtom,
+  isGroupBattleAtom,
+  isReverseSidesAtom,
+  isSaveParticipantsForPoolsAtom
 } from "@store";
 import { NominationType, NominationUser, ParticipantStatus, ParticipantType, PoolCreatedType, TournamentStatus, TournamentSystem } from "@typings";
 import { langLabels } from "@constants";
@@ -258,6 +261,9 @@ function App() {
   const { checkForUpdates } = useUpdater()
   /* ---------- атомы ---------- */
   const [user] = useAtom(userAtom);
+  const [isGroupBattle, setIsGroupBattle] = useAtom(isGroupBattleAtom)
+  const [isReverseSides, setIsReverseSides] = useAtom(isReverseSidesAtom);
+  const [isSaveParticipantsForPools, setIsSaveParticipantsForPools] = useAtom(isSaveParticipantsForPoolsAtom);
   const [, setBlockchain] = useAtom(blockchainAtom)
   const [poolCountDelete, setPoolCountDelete] = useAtom(poolCountDeleteAtom);
   const [isPoolRating, setIsPoolRating] = useAtom(isPoolRatingAtom);
@@ -442,7 +448,7 @@ function App() {
   useEffect(() => {
     (async () => {
       try {
-        const [t, z, p, h, s, r, c, lang, isShowUpdates, privateKey] = await Promise.all([
+        const [t, z, p, h, s, r, c, lang, isShowUpdates, privateKey, spp] = await Promise.all([
           storage.get<number>("fightTime"),
           storage.get<HitZonesType>("hitZones"),
           storage.get<ParticipantType[][]>("participants"),
@@ -452,7 +458,8 @@ function App() {
           storage.get<number>("poolCountDelete"),
           storage.get<string>("language"),
           storage.get<boolean>("showUpdates"),
-          storage.get<string>("privateKey")
+          storage.get<string>("privateKey"),
+          storage.get<boolean>("isSaveParticipantsForPools"),
         ]);
 
         if (t) setFightTime(t);
@@ -477,6 +484,7 @@ function App() {
             privateKey
           })
         }
+        if (spp) setIsSaveParticipantsForPools(spp)
         await checkForUpdates(isShowUpdates)
       } catch (error) {
         toast.error(t("settingsLoadError"));
@@ -489,6 +497,7 @@ function App() {
     await storage.set("fightTime", fightTime);
     await storage.set("hitZones", hitZones);
     await storage.set("participants", participants);
+    await storage.set("isSaveParticipantsForPools", isSaveParticipantsForPools)
     await storage.set("hotKeys", hotKeys);
     await storage.set("isPoolRating", isPoolRating);
     await storage.set("poolCountDelete", poolCountDelete);
@@ -695,6 +704,8 @@ function App() {
     setFightTime(fightTimeDefault);
     setHitZones(hitZonesDefault);
     setHotKeys(hotKeysDefault);
+    setIsGroupBattle(false);
+    setIsSaveParticipantsForPools(false);
     setIsPoolRating(true);
     setPoolCountDelete(1);
     await deleteCustomSounds("all", false);
@@ -702,12 +713,6 @@ function App() {
 
     toast.success(t("reset"));
   };
-
-  useEffect(() => {
-    (async () => {
-      await storage.set("isSounds", isSounds);
-    })();
-  }, [isSounds]);
 
   const isSimpleMode = !poolsFromServer || user?.id === currentTournament?.organizerId
 
@@ -749,7 +754,7 @@ function App() {
           <Section title={t("tournaments")}>
             <Select
               placeholder={t("yourTournamets")}
-              setValue={(val)=>setCurrentTournament(JSON.parse(val))}
+              setValue={(val)=>{setCurrentTournament(JSON.parse(val)); setWeaponId(undefined); setNominationId(undefined)}}
               value={JSON.stringify(currentTournament)}
               options={(tournaments.length ? tournaments : tournamentsOfModerator!).filter(t=>t.status === TournamentStatus.ACTIVE).map(t=>({ label: t.title, value: JSON.stringify(t) }))}
             />
@@ -830,9 +835,16 @@ function App() {
                 value={currentPoolIndex + 1}
                 setValue={(pool) => {
                   if (pool - 1 === fighterPairs.length) {
+                    if (isSaveParticipantsForPools) {
+                      setParticipants([
+                        ...participants,
+                        [...participants[currentPoolIndex]],
+                      ]);
+                    } else {
+                      setParticipants([...participants, []]);
+                    }
                     setFighterPairs((state) => [...state, ...pairsDefault]);
                     setPools((state) => [...state, ...pairsDefault]);
-                    setParticipants((state) => [...state, []]);
                     setCurrentPairIndex((state) => [...state, 0]);
                     setDuels((state) => [...state, []]);
                     setIsPoolEnd((state) => [...state, false]);
@@ -852,9 +864,25 @@ function App() {
                 max={!isSimpleMode ? poolsFromServer.length : undefined}
               />
             </div>
-            <RadioGroup disabled={!isSimpleMode} name="system" onChange={(val)=>setTournamentSystem(val)} value={tournamentSystem} options={systems} />
+            <RadioGroup disabled={!isSimpleMode || isGroupBattle} name="system" onChange={(val)=>setTournamentSystem(val)} value={tournamentSystem} options={systems} />
           </>
+          <Switch
+            title={t("groupBattles")}
+            value={isGroupBattle}
+            setValue={(val)=>{setIsGroupBattle(val); setTournamentSystem(TournamentSystem.ROBIN)}}
+          />
+          <Switch
+            title={t("saveParticipantsForPools")}
+            value={isSaveParticipantsForPools}
+            setValue={setIsSaveParticipantsForPools}
+          />
 
+          <Switch
+            title={t("reverseSides")}
+            value={isReverseSides}
+            setValue={setIsReverseSides}
+            className={styles.switchText}
+          />
           <Button
             style={{ marginTop: 10 }}
             title={t("addNewPair")}
@@ -923,7 +951,7 @@ function App() {
           <Switch
             title={t("soundsOn")}
             value={isSounds}
-            setValue={setIsSounds}
+            setValue={async (val) => { setIsSounds(val); await storage.set("isSounds", val) }}
           />
           <Button
             onClick={() => deleteCustomSounds("all")}

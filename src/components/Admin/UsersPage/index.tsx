@@ -26,7 +26,7 @@ export default function UsersPage({ lang, t, setPage: setGlobalPage }:UsersPageP
     const { users, usersCount, isLoading } = useUsers(page, PAGE_SIZE, lang)
     const [currentUsers, setCurrentUsers] = useState<UserType[]>([])
     const [userId, setUserId] = useState("")
-    return users.length && (
+    return !!users.length && (
         <>
         <LoadWrap loading={isLoading} totalCount={usersCount} page={page} setPage={setPage} data={users} setData={setCurrentUsers}>
             <Table

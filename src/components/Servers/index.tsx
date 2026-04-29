@@ -15,20 +15,20 @@ import { PaymentForm } from "../PaymentForm";
 export default function Servers() {
     const { t } = useTranslation()
     const { useContractQuery, contract } = useContract("server")
-    const { data: totalServers } = useContractQuery<bigint>("totalServers")
+    const { data: totalServers, isLoading } = useContractQuery<bigint>("totalServers")
     const totalCount = Number(totalServers)
-    const { setBaseUrl, baseUrl } = useApi()
+    const { setBaseUrl, baseUrl, rpc } = useApi()
     const [serverURL, setServerURL] = useState(baseUrl)
     const [servers, setServers] = useState<string[]>()
     const [globalServers, setGlobalServers] = useState<ServerType[]>()
 
-    const handleChangeBaseURL = async () => {
+    const handleChangeBaseURL = async (url: string) => {
         try {
-            const res = await fetch(serverURL + "health")
+            const res = await fetch(url + "health")
             if (res.ok) {
-                await storage.set("server", serverURL);
-                setBaseUrl(serverURL)
-                setGlobalApiConfig(new ApiConfig(serverURL))
+                await storage.set("server", url);
+                setBaseUrl(url)
+                setGlobalApiConfig(new ApiConfig(url, rpc))
                 toast.success(t("settingsSaved"))
             }
         } catch {
@@ -37,8 +37,7 @@ export default function Servers() {
     }
 
     const saveURL = async () => {
-        const serversArr = await storage.get<string[]>("servers") || []
-        const data = [...serversArr, serverURL]
+        const data = servers ? [...servers, serverURL] : [serverURL]
         await storage.set("servers", data);
         setServers(data)
         setServerURL("")
@@ -47,36 +46,38 @@ export default function Servers() {
 
     useEffect(()=>{
         (async ()=>{
-            setServers(await storage.get<string[]>("servers"))
-            if (totalCount) {
+            if (!isLoading) {
                 const serversArr: ServerType[] = []
                 for (let i = 1; i <= totalCount; i++) {
                     serversArr.push(await contract.getServer(i))
-
                 }
                 setGlobalServers(serversArr)
             }
         })()
+    }, [isLoading])
+
+    useEffect(()=>{
+        storage.get<string[]>("servers").then(res=>setServers(res))
     }, [])
 
     return (
         <div className="container" style={{ paddingBottom: "100px" }}>
             <h1 className="title">{t("server")}</h1>
             <InputText placeholder={t("server")} value={serverURL} setValue={setServerURL} />
-            <Button stroke title={t("change")} onClick={saveURL} style={{ width: "100%" }}>
+            <Button stroke onClick={saveURL} style={{ width: "100%" }}>
                 <Bookmark size={28} color="var(--fg)" />
             </Button>
-            <Button title={t("change")} onClick={handleChangeBaseURL} style={{ width: "100%" }}>
+            <Button onClick={()=>handleChangeBaseURL(serverURL)} style={{ width: "100%" }}>
                 <Save size={28} color="var(--fg)" />
             </Button>
             {servers && <LinksList
-                        onClick={(link)=>{setServerURL(link); handleChangeBaseURL()}}
+                        onClick={(link)=>{setServerURL(link); handleChangeBaseURL(link)}}
                         links={servers}
                         setLinks={async (links)=>{ setServers(links); await storage.set("servers", links) }}
                         />}
             {globalServers && <LinksList
-                        onClick={(link)=>{setServerURL(link); handleChangeBaseURL()}}
-                        links={globalServers.map(ser=>`${Number(ser.status) === ServerStatus.ACTIVE ? "✅" : "❌"} ${ser.host}`)}
+                        onClick={(link)=>{setServerURL(link); handleChangeBaseURL(link)}}
+                        links={globalServers.map(s=>`${Number(s.status) === ServerStatus.ACTIVE ? "✅" : "❌"} ${s.host} – ${s.city}`)}
                         />}
             <PaymentForm />
         </div>

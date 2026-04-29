@@ -1,6 +1,6 @@
 .markdown {
   color: var(--fg);
-  font-family: "OnestRegular", sans-serif;
+  font-family: var(--font-regular);
   line-height: 1.6;
   font-size: 16px;
 }

@@ -4,7 +4,7 @@
   flex-wrap: wrap;
 }
 
-.socialLink {
+.socialLink, .socialLinkText {
   width: 44px;
   height: 44px;
   border-radius: 50%;
@@ -16,6 +16,12 @@
   color: var(--accent);
   transition: all 0.2s ease;
   cursor: pointer;
+}
+
+.socialLinkText {
+  border-radius: 16px;
+  width: fit-content;
+  padding: 10px;
 }
 
 .socialLink:hover {

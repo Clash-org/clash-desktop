@@ -2,6 +2,19 @@
   text-align: center !important;
 }
 
+.teams {
+    display: flex;
+    justify-content: space-around;
+}
+
+.teams span:first-child {
+    color: #E33515;
+}
+
+.teams span:last-child {
+    color: #3B82F6;
+}
+
 .pairItem {
   background-color: var(--accent-transparent);
   border-radius: 8px;
@@ -38,10 +51,11 @@
     background: linear-gradient(135deg, var(--accent-transparent) 0%, rgba(var(--accent-rgb), 0.2) 100%);
     border-radius: 12px;
     padding: 8px;
-    border: 2px solid var(--accent);
+    border: 2px solid transparent;
     transition: all 0.2s ease;
     cursor: pointer;
     position: relative;
+    transition: border 0.1s linear;
 }
 
 .manualPairRow:hover {
@@ -51,7 +65,7 @@
 
 .activeManualPair {
     background: var(--accent-transparent);
-    border-color: transparent;
+    border: 2px solid var(--accent);
 }
 
 .manualParticipant {

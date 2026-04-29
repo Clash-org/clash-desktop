@@ -57,6 +57,14 @@
   border: none;
 }
 
+.switchText {
+  justify-content: space-between;
+}
+
+.switchText > span {
+  max-width: 200px;
+}
+
 .addBtn {
   margin-bottom: 12px;
 }

@@ -1,4 +1,4 @@
-import { langLabels, STORAGE_PREFIX } from "@/constants";
+import { langLabels } from "@/constants";
 import { CurrencyType, LangType, MatchMetadataType, MatchType, MatchTypesType, ParticipantPlayoffType, ParticipantType, TournamentMatchType, TournamentStatusType, TournamentType } from "@/typings";
 import { createMath, uploadImage } from "./api";
 
@@ -13,21 +13,6 @@ export const truncateFullName = (name: string, max = 9) => {
     const nameArray = name.split(" ")
     return truncate(nameArray[0], max) + " " + truncate(nameArray[1], max)
 }
-
-export const LocalStorage = {
-  getItem: async (key: string): Promise<string | null> => {
-    return localStorage.getItem(STORAGE_PREFIX + key);
-  },
-  setItem: async (key: string, value: string): Promise<void> => {
-    localStorage.setItem(STORAGE_PREFIX + key, value);
-  },
-  clear: async (): Promise<void> => {
-    localStorage.clear();
-  },
-  removeItem: async (key: string): Promise<void> => {
-    localStorage.removeItem(STORAGE_PREFIX + key);
-  }
-};
 
 export function getName(name: string) {
   return name.length <= 14 ? name : onlySurname(name, 14)

@@ -59,6 +59,7 @@ export default function CreateTournament() {
   const { info: participantsInfo } = useParticipantsInfo(currentTournament?.id, lang)
   const { participants } = useParticipants(currentTournament?.id, currentTournament?.nominationsIds || [])
   const [socialLink, setSocialLink] = useState('');
+  const [socialLinkText, setSocialLinkText] = useState('');
   const [showMarkdown, setShowMarkdown] = useState(false);
   const [showDelete, setShowDelete] = useState(false);
   const tabs = ["tournaments", "participants"] as const
@@ -72,6 +73,7 @@ export default function CreateTournament() {
     title: '',
     description: '',
     date: new Date(),
+    dateEnd: new Date(),
     cityId: 0,
     image: "",
     prices: {},
@@ -79,6 +81,7 @@ export default function CreateTournament() {
     nominationsIds: [],
     participantsCount: {},
     socialMedias: [],
+    socialMediasText: [],
     isAdditions: {},
     moderatorsIds: [],
     isInternal: false,
@@ -93,12 +96,14 @@ export default function CreateTournament() {
       // @ts-ignore
       handleInputChange("cityId", currentTournament.cityId)
       handleInputChange("date", new Date(currentTournament.date))
+      handleInputChange("dateEnd", currentTournament.dateEnd ? new Date(currentTournament.dateEnd) : new Date(currentTournament.date))
       handleInputChange("description", currentTournament.description)
       handleInputChange("isAdditions", currentTournament.isAdditions)
       handleInputChange("nominationsIds", currentTournament.nominationsIds)
       handleInputChange("participantsCount", currentTournament.participantsCount)
       handleInputChange("prices", currentTournament.prices)
       handleInputChange("socialMedias", currentTournament.socialMedias)
+      handleInputChange("socialMediasText", currentTournament.socialMediasText)
       handleInputChange("title", currentTournament.title)
       handleInputChange("image", currentTournament.image)
       handleInputChange("status", currentTournament.status)
@@ -132,12 +137,26 @@ export default function CreateTournament() {
       }));
       setSocialLink('');
     }
+    if (socialLinkText) {
+      setFormData(prev => ({
+        ...prev,
+        socialMediasText: [...prev.socialMediasText!, socialLinkText],
+      }));
+      setSocialLinkText('');
+    }
   };
 
   const handleRemoveSocialLink = (links: string[]) => {
     setFormData(prev => ({
       ...prev,
       socialMedias: links,
+    }));
+  };
+
+  const handleRemoveSocialLinkText = (texts: string[]) => {
+    setFormData(prev => ({
+      ...prev,
+      socialMediasText: texts,
     }));
   };
 
@@ -191,7 +210,7 @@ export default function CreateTournament() {
   if (!user) return <ErrorPage />
 
   return (
-    <div className={["container", styles.container].join(" ")} style={{ gap: 0 }}>
+    <div className="container" style={{ gap: 0 }}>
       {/* Заголовок */}
       <div className={styles.header}>
         <h1 className="title">{t('createTournament')}</h1>
@@ -319,7 +338,9 @@ export default function CreateTournament() {
                 <label className={styles.label}>{t('date')} *</label>
                 <DatePicker
                   value={formData.date}
-                  onChange={(date) => handleInputChange('date', date)}
+                  dateEnd={formData.dateEnd}
+                  onChange={(date, dateEnd) => {handleInputChange('date', date); handleInputChange('dateEnd', dateEnd)}}
+                  rangeMode
                 />
               </div>
             </div>
@@ -327,6 +348,7 @@ export default function CreateTournament() {
             <div className={styles.formGroup}>
               <label className={styles.label}>{t('moderator')}</label>
               <Select
+                placeholder={t("username")}
                 options={users.filter(u=>u.id !== user.id).map(u=>({ label: u.username, value: u.id }))}
                 value={formData.moderatorsIds}
                 setValue={(val)=>handleInputChange("moderatorsIds", val)}
@@ -474,6 +496,12 @@ export default function CreateTournament() {
                   placeholder="https://vk.com/..."
                   className={styles.socialInputField}
                 />
+                <InputText
+                  value={socialLinkText}
+                  setValue={setSocialLinkText}
+                  placeholder={t("linkText")}
+                  className={styles.socialInputField}
+                />
                 <Button
                   title={t('add')}
                   onClick={handleAddSocialLink}
@@ -484,7 +512,12 @@ export default function CreateTournament() {
                 </Button>
               </div>
 
-              <LinksList links={formData.socialMedias} setLinks={(links)=>handleRemoveSocialLink(links)} />
+              <LinksList
+              links={formData.socialMedias}
+              texts={formData.socialMediasText}
+              setLinks={handleRemoveSocialLink}
+              setTexts={handleRemoveSocialLinkText}
+              />
             </div>
           </div>
         )}

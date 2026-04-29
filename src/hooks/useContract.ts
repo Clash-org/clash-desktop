@@ -1,15 +1,20 @@
-import { contractType, RPC_URL } from '@/constants';
 import { blockchainAtom } from '@/store';
 import { ethers, Overrides } from 'ethers';
 import { useAtomValue } from 'jotai';
 import useSWR, { mutate } from 'swr';
+import { useContracts } from './useContracts';
+import { ContractConfig } from '@/providers/ContractProvider';
+import { useApi } from './useApi';
 
-export function useContract(type: keyof typeof contractType) {
+export function useContract(type: keyof ContractConfig) {
   const userData = useAtomValue(blockchainAtom)
+  const { manager } = useContracts()
+  const { rpc } = useApi()
 
-  const provider = new ethers.JsonRpcProvider(RPC_URL);
+  const provider = new ethers.JsonRpcProvider(rpc);
   const signer = new ethers.Wallet(userData.privateKey, provider);
-  const contract = new ethers.Contract(contractType[type].address, contractType[type].abi, signer);
+  const contractData = manager.getContract(type);
+  const contract = new ethers.Contract(contractData.address, contractData.abi, signer);
   const fetcher = async (method: string, ...args: any[]) => {
     try {
       const result = await contract[method](...args);

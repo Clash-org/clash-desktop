@@ -21,7 +21,7 @@ import { useAtomValue } from 'jotai';
 import { languageAtom, userAtom } from '@/store';
 import Checkbox from '../Checkbox';
 import Tabs from '../Tabs';
-import { getMatchesByPools, getSymbolCurrencyByCode } from '@/utils/helpers';
+import { formatDate, getMatchesByPools, getSymbolCurrencyByCode } from '@/utils/helpers';
 import InputText from '../InputText';
 import InputNumber from '../InputNumber';
 import CitySelect from '../CitySelect';
@@ -171,7 +171,11 @@ export default function Tournament({ id }:{id: number|undefined}) {
         <div className={styles.metaInfo}>
           <div className={styles.metaItem}>
             <Calendar size={18} />
-            <span>{new Date(tournamentData.date).toLocaleDateString()}</span>
+            {tournamentData.date === tournamentData.dateEnd ?
+            <span>{formatDate(tournamentData.date, lang, true)}</span>
+            :
+            <span>{formatDate(tournamentData.date, lang, true)} – {formatDate(tournamentData.dateEnd!, lang, true)}</span>
+            }
           </div>
           <div className={styles.metaItem}>
             <MapPin size={18} />
@@ -201,7 +205,10 @@ export default function Tournament({ id }:{id: number|undefined}) {
               <h3>{t('aboutTournament')}</h3>
               <Markdown text={tournamentData.description} />
             </div>
-
+            <div className={styles.socialBlock}>
+              <h3>{t('socialMedia')}</h3>
+              <SocialMedias socialMedias={tournamentData.socialMedias} socialMediasText={tournamentData.socialMediasText} />
+            </div>
             <div className={styles.actionBlock}>
               <h3>{t('participation')}</h3>
               <div className={styles.actionButtons}>
@@ -223,11 +230,6 @@ export default function Tournament({ id }:{id: number|undefined}) {
                   <span>{t('viewApplications')}</span>
                 </Button>
               </div>
-            </div>
-
-            <div className={styles.socialBlock}>
-              <h3>{t('socialMedia')}</h3>
-              <SocialMedias socialMedias={tournamentData.socialMedias} />
             </div>
           </div>
         )}

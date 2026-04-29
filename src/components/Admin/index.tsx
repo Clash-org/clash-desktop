@@ -19,7 +19,7 @@ import WeaponsCreate from "./WeaponsCreate";
 import LoadWrap from "../LoadWrap";
 import toast from "react-hot-toast";
 import CityUpdate from "./CityUpdate";
-import Blockchain from "./Blockchain";
+import MyServer from "./Server";
 import { PAGE_SIZE } from "@/constants";
 
 export default function Admin() {
@@ -81,7 +81,7 @@ export default function Admin() {
             {activeTab === "users" && <UsersPage lang={lang} t={t} setPage={setGlobalPage} />}
             {activeTab === "weapons" && <WeaponsCreate lang={lang} t={t} />}
             {activeTab === "cities" && <CityUpdate lang={lang} t={t} />}
-            {activeTab === "servers" && <Blockchain t={t} />}
+            {activeTab === "servers" && <MyServer t={t} />}
             </Section>
         </div>
     )

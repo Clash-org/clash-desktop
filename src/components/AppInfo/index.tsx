@@ -1,5 +1,5 @@
 import { useTranslation } from "react-i18next"
-import { useEffect, useState } from "react";
+import { CSSProperties, useEffect, useState } from "react";
 import Section from "../Section";
 import Markdown from "../Markdown";
 import { useApi } from "@/hooks/useApi";
@@ -8,6 +8,17 @@ import { languageAtom } from "@/store";
 import { useUpdater } from "@/hooks/useUpdater";
 import Button from "../Button";
 import { Download } from "lucide-react";
+
+const TutorialRU = () => {
+    const styles: CSSProperties = { width: "100%", borderRadius: "12px" }
+    return (
+        <>
+        <iframe src="https://vkvideo.ru/video_ext.php?oid=-231799221&id=456239017&hash=e9a0190bee125ebd" style={styles} height="360" frameBorder="0" allowFullScreen="1" allow="autoplay; encrypted-media; fullscreen; picture-in-picture"></iframe>
+        <iframe src="https://vkvideo.ru/video_ext.php?oid=-231799221&id=456239020&hash=c5535dd9189748e4" style={styles} height="360" frameBorder="0" allowFullScreen="1" allow="autoplay; encrypted-media; fullscreen; picture-in-picture"></iframe>
+        <iframe src="https://vkvideo.ru/video_ext.php?oid=-231799221&id=456239023&hash=fa1689aa98fe192b" style={styles} height="360" frameBorder="0" allowFullScreen="1" allow="autoplay; encrypted-media; fullscreen; picture-in-picture"></iframe>
+        </>
+    )
+}
 
 export default function AppInfo() {
     const { t } = useTranslation()
@@ -33,6 +44,11 @@ export default function AppInfo() {
                     <Download size={28} color="var(--fg)" />
                     {updateInfo.version}
                 </Button>
+                }
+            </Section>
+            <Section title={t("manual")}>
+                {lang === "ru" ? <TutorialRU /> :
+                (lang === "en" ? <></> : <></>)
                 }
             </Section>
             <Section>

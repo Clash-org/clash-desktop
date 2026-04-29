@@ -10,6 +10,7 @@ import {
   doubleHitsAtom,
   duelsAtom,
   fighterPairsAtom,
+  isGroupBattleAtom,
   isPoolEndAtom,
   isPoolRatingAtom,
   playoffAtom,
@@ -42,6 +43,7 @@ import FightersScores from "../FightersScores";
 
 export default function TournamentGridScreen() {
   const { t } = useTranslation();
+  const [isGroupBattle] = useAtom(isGroupBattleAtom)
   const [currentTournament] = useAtom(currentTournamentAtom)
   const [currentWeaponId] = useAtom(currentWeaponIdAtom)
   const [currentNominationId] = useAtom(currentNominationIdAtom)
@@ -59,8 +61,8 @@ export default function TournamentGridScreen() {
   const [, setProtests2] = useAtom(protests2Atom);
   const [, setWarnings1] = useAtom(warnings1Atom);
   const [, setWarnings2] = useAtom(warnings2Atom);
-  const [, setScore1] = useAtom(score1Atom);
-  const [, setScore2] = useAtom(score2Atom);
+  const [score1, setScore1] = useAtom(score1Atom);
+  const [score2, setScore2] = useAtom(score2Atom);
   const [playoff, setPlayoff] = useAtom(playoffAtom);
   const [isEnd, setIsEnd] = useAtom(isPoolEndAtom);
   const [showRank, setShowRank] = useState(false)
@@ -213,13 +215,15 @@ export default function TournamentGridScreen() {
       endTournament();
     }
 
-    setDoubleHits(0);
-    setProtests1(0);
-    setProtests2(0);
-    setWarnings1(0);
-    setWarnings2(0);
-    setScore1(0);
-    setScore2(0);
+    if (!isGroupBattle) {
+      setProtests1(0);
+      setProtests2(0);
+      setWarnings1(0);
+      setWarnings2(0);
+      setScore1(0);
+      setScore2(0);
+      setDoubleHits(0);
+    }
   };
 
   const getDataTable = (data: ParticipantType[][]) => {
@@ -290,7 +294,7 @@ export default function TournamentGridScreen() {
         />
       )}
 
-      {!!winners.length && tournamentSystem !== TournamentSystem.HYBRID && (
+      {!!winners.length && !isGroupBattle && tournamentSystem !== TournamentSystem.HYBRID && (
         <div className={styles.winners}>
           <span className={styles.winner}>
             <span>2</span>
@@ -309,6 +313,11 @@ export default function TournamentGridScreen() {
             <ChartColumn size={28} />
           </Button>
           }
+        </div>
+      )}
+      {!!winners.length && isGroupBattle && tournamentSystem !== TournamentSystem.HYBRID && (
+        <div className={styles.winners}>
+          <span className={styles.first}>🏆{score1 > score2 ? t("redTeam") : t("blueTeam")}🏆</span>
         </div>
       )}
       {sections.map((item, index) => (
