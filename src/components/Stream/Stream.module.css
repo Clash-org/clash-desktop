@@ -1,0 +1,404 @@
+.broadcasterContainer {
+    max-width: 800px;
+    margin: 0 auto;
+}
+
+.videoPreview {
+    position: relative;
+    background: #000;
+    border-radius: 12px;
+    overflow: hidden;
+    margin-bottom: 20px;
+    aspect-ratio: 16 / 9;
+}
+
+.videoElement {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+}
+
+.previewOverlay {
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: rgba(0, 0, 0, 0.5);
+    color: var(--placeholder);
+    font-size: 14px;
+}
+
+.liveIndicator {
+    position: absolute;
+    top: 12px;
+    left: 12px;
+    background: #ef4444;
+    color: white;
+    padding: 4px 10px;
+    border-radius: 20px;
+    font-size: 12px;
+    font-weight: bold;
+    font-family: "IBMPlexSansBold", sans-serif;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+}
+
+.liveDot {
+    animation: pulse 1.5s infinite;
+}
+
+@keyframes pulse {
+    0%,
+    100% {
+        opacity: 1;
+    }
+    50% {
+        opacity: 0.5;
+    }
+}
+
+.controlButtons {
+    display: flex;
+    gap: 10px;
+    margin-bottom: 16px;
+}
+
+.startBtn {
+    background: var(--accent);
+    color: white;
+}
+
+.startBtn:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+}
+
+.mediaControls {
+    display: flex;
+    gap: 12px;
+    margin-bottom: 16px;
+}
+
+.mediaBtn {
+    background: var(--surface);
+    border: none;
+    border-radius: 50%;
+    width: 48px;
+    height: 48px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    color: var(--fg);
+    transition: all 0.2s;
+}
+
+.mediaBtn:hover {
+    background: var(--surface-2);
+}
+
+.mediaBtn.disabled {
+    background: #ef4444;
+    color: white;
+}
+
+.streamInfo {
+    display: flex;
+    gap: 20px;
+    padding: 12px;
+    background: var(--surface);
+    border-radius: 8px;
+    margin-bottom: 16px;
+}
+
+.infoRow {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 14px;
+    font-family: "IBMPlexSansMedium", sans-serif;
+}
+
+.statusDot {
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+}
+
+.urlSection {
+    display: flex;
+    gap: 8px;
+}
+
+.hint {
+    font-size: 12px;
+    color: var(--placeholder);
+    margin-top: 8px;
+    font-family: "IBMPlexSansRegular", sans-serif;
+}
+
+/* Список трансляций */
+.streamGroup {
+    margin-bottom: 24px;
+}
+
+.groupTitle {
+    font-size: 14px;
+    font-family: "IBMPlexSansSemiBold", sans-serif;
+    margin-bottom: 12px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.streamCard.selected {
+    background: var(--accent);
+    color: white;
+}
+
+.streamCard.waiting {
+    opacity: 0.7;
+}
+
+.streamThumbnail img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+}
+
+.streamInfo {
+    flex: 1;
+    padding: 0;
+    margin: 0;
+    background: transparent;
+}
+
+.waitingBadge {
+    background: #f59e0b;
+    padding: 2px 6px;
+    border-radius: 4px;
+    font-size: 10px;
+    color: white;
+}
+
+.connectionStatus {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 16px;
+  padding: 8px 12px;
+  background: var(--surface);
+  border-radius: 8px;
+  font-size: 12px;
+}
+
+.connected {
+  color: #10b981;
+}
+
+.disconnected {
+  color: #ef4444;
+}
+
+.streamSettings {
+  margin-bottom: 16px;
+}
+
+.deviceSelect {
+  margin-bottom: 12px;
+}
+
+.deviceSelect label {
+  display: block;
+  margin-bottom: 4px;
+  font-size: 12px;
+  color: var(--placeholder);
+}
+
+.select {
+  width: 100%;
+  padding: 8px;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  color: var(--fg);
+  font-family: inherit;
+}
+
+.cameraSelect {
+  padding: 6px 8px;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  color: var(--fg);
+  font-size: 12px;
+}
+
+.clientId {
+  font-family: monospace;
+  color: var(--placeholder);
+  font-size: 11px;
+}
+
+.customConnect {
+  display: flex;
+  gap: 8px;
+  margin-bottom: 16px;
+  flex-wrap: wrap;
+}
+
+.customConnect > div {
+  flex: 1;
+}
+
+.error {
+  color: #ef4444;
+  font-size: 12px;
+  margin-top: 4px;
+  display: block;
+}
+
+.streamsList {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  max-height: 500px;
+  overflow-y: auto;
+  overflow-x: hidden;
+}
+
+.streamCard {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 12px;
+  background: var(--surface);
+  border-radius: 8px;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.streamCard:hover {
+  background: var(--surface-2);
+  transform: translateX(4px);
+}
+
+.streamThumbnail {
+  position: relative;
+  width: 80px;
+  height: 60px;
+  background: #1a1a1a;
+  border-radius: 6px;
+  overflow: hidden;
+  flex-shrink: 0;
+}
+
+.thumbnailPlaceholder {
+  width: 100%;
+  height: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--placeholder);
+}
+
+.viewerBadge {
+  position: absolute;
+  bottom: 4px;
+  right: 4px;
+  background: rgba(0, 0, 0, 0.7);
+  border-radius: 4px;
+  padding: 2px 6px;
+  font-size: 10px;
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.streamInfo {
+  flex: 1;
+  min-width: 0;
+}
+
+.streamTitle {
+  font-size: 14px;
+  font-weight: 600;
+  margin-bottom: 4px;
+  white-space: nowrap;
+  overflow: hidden;
+  word-wrap: break-word;
+  overflow-wrap: break-word;
+}
+
+.streamMeta {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 11px;
+  color: var(--placeholder);
+}
+
+.streamTime {
+  text-align: center;
+}
+
+.broadcasterName {
+  font-weight: 500;
+}
+
+.watchBtn {
+  flex-shrink: 0;
+  padding: 6px 12px;
+  font-size: 12px;
+}
+
+.emptyStreams {
+  text-align: center;
+  padding: 40px 20px;
+  color: var(--placeholder);
+}
+
+.emptyStreams p {
+  margin: 0 0 16px 0;
+}
+
+.startStreamBtn {
+  margin-top: 8px;
+}
+
+.loadingStreams {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 12px;
+  padding: 40px;
+  color: var(--placeholder);
+}
+
+.spinner {
+  width: 20px;
+  height: 20px;
+  border: 2px solid var(--surface);
+  border-top-color: var(--accent);
+  border-radius: 50%;
+  animation: spin 1s linear infinite;
+}
+
+.reconnectingHint {
+  text-align: center;
+  padding: 16px;
+  margin-top: 16px;
+  background: rgba(239, 68, 68, 0.1);
+  border-radius: 8px;
+  font-size: 12px;
+  color: #ef4444;
+}
+
+@keyframes spin {
+  to { transform: rotate(360deg); }
+}

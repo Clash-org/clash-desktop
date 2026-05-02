@@ -1,0 +1,256 @@
+/* DraggableVideo.module.css */
+
+.draggableVideo {
+    position: fixed;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    width: 500px;
+    background: #1a1a1a;
+    border-radius: 12px;
+    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.3);
+    z-index: 999999;
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    will-change: top, left;
+    transition: none;
+}
+
+/* Полноэкранный режим */
+.draggableVideo.fullscreen {
+    top: 0 !important;
+    left: 0 !important;
+    transform: none !important;
+    width: 100vw !important;
+    height: 100vh !important;
+    border-radius: 0;
+}
+
+/* Заголовок */
+.videoHeader {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 10px 12px;
+    background: rgba(0, 0, 0, 0.7);
+    user-select: none;
+    flex-shrink: 0;
+    display: inline-flex;
+}
+
+.gripIcon {
+    color: rgba(255, 255, 255, 0.6);
+    flex-shrink: 0;
+}
+
+.videoTitle {
+    flex: 1;
+    font-size: 13px;
+    font-family: "IBMPlexSansMedium", sans-serif;
+    color: white;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.streamId {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    padding: 2px 6px;
+    background: rgba(255, 255, 255, 0.1);
+    border-radius: 4px;
+    font-size: 10px;
+    font-family: monospace;
+    cursor: pointer;
+    transition: background 0.2s;
+}
+
+.streamId:hover {
+    background: rgba(255, 255, 255, 0.2);
+}
+
+.headerButtons {
+    display: flex;
+    gap: 6px;
+    flex-shrink: 0;
+}
+
+.headerBtn,
+.closeBtn {
+    background: none;
+    border: none;
+    color: white;
+    cursor: pointer;
+    padding: 6px;
+    border-radius: 6px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: background 0.2s;
+}
+
+.headerBtn:hover {
+    background: rgba(255, 255, 255, 0.15);
+}
+
+.closeBtn:hover {
+    background: #ef4444;
+}
+
+/* Контейнер видео */
+.videoContainer {
+    position: relative;
+    background: #000;
+    width: 100%;
+    aspect-ratio: 16 / 9;
+    overflow: hidden;
+    flex-shrink: 0;
+}
+
+.videoElement {
+    width: 100%;
+    height: 100%;
+    object-fit: contain;
+    background: #000;
+}
+
+/* Оверлей загрузки */
+.loadingOverlay {
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 12px;
+    background: rgba(0, 0, 0, 0.85);
+    color: white;
+    font-size: 13px;
+    z-index: 10;
+}
+
+.spinner {
+    width: 40px;
+    height: 40px;
+    border: 3px solid rgba(255, 255, 255, 0.2);
+    border-top-color: var(--accent, #3b82f6);
+    border-radius: 50%;
+    animation: spin 1s linear infinite;
+}
+
+.connectionDetails {
+    font-size: 11px;
+    font-family: monospace;
+    margin-top: 8px;
+    color: rgba(255, 255, 255, 0.7);
+    text-align: center;
+}
+
+/* Оверлей ошибки */
+.errorOverlay {
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 16px;
+    background: rgba(0, 0, 0, 0.95);
+    color: #ef4444;
+    font-size: 13px;
+    z-index: 10;
+    text-align: center;
+    padding: 20px;
+}
+
+.retryBtn {
+    padding: 8px 20px;
+    background: rgba(255, 255, 255, 0.1);
+    border: 1px solid rgba(255, 255, 255, 0.2);
+    border-radius: 8px;
+    color: white;
+    cursor: pointer;
+    font-size: 13px;
+    transition: all 0.2s;
+}
+
+.retryBtn:hover {
+    background: rgba(255, 255, 255, 0.2);
+    transform: scale(1.02);
+}
+
+/* Футер */
+.videoFooter {
+    padding: 8px 12px;
+    background: rgba(0, 0, 0, 0.7);
+    font-size: 11px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    flex-shrink: 0;
+}
+
+.liveBadge {
+    color: #ef4444;
+    font-weight: bold;
+    font-size: 10px;
+    font-family: "IBMPlexSansBold", sans-serif;
+    animation: pulse 1.5s infinite;
+}
+
+.connectionBadge {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    color: #10b981;
+    font-size: 10px;
+}
+
+/* Анимации */
+@keyframes spin {
+    from {
+        transform: rotate(0deg);
+    }
+    to {
+        transform: rotate(360deg);
+    }
+}
+
+@keyframes pulse {
+    0%, 100% {
+        opacity: 1;
+    }
+    50% {
+        opacity: 0.6;
+    }
+}
+
+/* Мобильная адаптация */
+@media (max-width: 768px) {
+    .draggableVideo {
+        width: calc(100vw - 32px);
+        max-width: 400px;
+        top: auto !important;
+        bottom: 16px !important;
+        left: 50% !important;
+        right: auto !important;
+        transform: translateX(-50%) !important;
+    }
+
+    .draggableVideo.fullscreen {
+        top: 0 !important;
+        bottom: 0 !important;
+        left: 0 !important;
+        transform: none !important;
+        width: 100vw !important;
+    }
+}

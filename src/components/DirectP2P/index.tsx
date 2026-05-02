@@ -11,26 +11,7 @@ import { useTranslation } from 'react-i18next';
 import { encodeToBase64, decodeFromBase64, generateId } from '@/utils/helpers';
 import { Users, Wifi } from 'lucide-react';
 import toast from 'react-hot-toast';
-
-const STUNservers: RTCIceServer[] = [
-  { urls: 'stun:stun.l.google.com:19302' },
-  { urls: 'stun:stun1.l.google.com:19302' },
-  { urls: 'stun:stun2.l.google.com:19302' },
-  { urls: 'stun:stun3.l.google.com:19302' },
-  { urls: 'stun:stun4.l.google.com:19302' },
-  { urls: 'stun:stun.voipstunt.com:3478' },
-  { urls: 'stun:stun.ekiga.net:3478' },
-  { urls: 'stun:stun.ideasip.com:3478' },
-  { urls: 'stun:stun.schlund.de:3478' },
-  { urls: 'stun:stun.voipbuster.com:3478' },
-  { urls: 'stun:stun.1und1.de:3478' },
-  { urls: 'stun:stun.gmx.net:3478' },
-  { urls: 'stun:stun.rt.ru:3478' },
-  { urls: 'stun:stun.mts.ru:3478' },
-  { urls: 'stun:stun.sipnet.ru:3478' },
-  { urls: 'stun:stun.chinaunix.com:3478' },
-  { urls: 'stun:stun.qq.com:3478' },
-];
+import { STUN_SERVERS } from '@/constants';
 
 interface PeerConnection {
   peer: any;
@@ -136,7 +117,7 @@ export default function DirectP2P({ onPeerConnected }: DirectP2PProps) {
         initiator: true,
         trickle: false,
         config: {
-          iceServers: STUNservers
+          iceServers: STUN_SERVERS
         }
       });
 
@@ -180,7 +161,7 @@ export default function DirectP2P({ onPeerConnected }: DirectP2PProps) {
         initiator: false,
         trickle: false,
         config: {
-          iceServers: STUNservers
+          iceServers: STUN_SERVERS
         }
       });
 

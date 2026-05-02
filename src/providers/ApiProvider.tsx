@@ -21,6 +21,10 @@ export class ApiConfig {
     return this._rpcUrl;
   }
 
+  get ws(): string {
+    return `${this._baseUrl}ws`
+  }
+
   get deeplink(): string {
     return `${this.base}open/`
   }
