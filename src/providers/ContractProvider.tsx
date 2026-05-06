@@ -1,6 +1,7 @@
 import TournamentABI from "../../blockchain/abi/ClashTournament.json"
 import UserABI from "../../blockchain/abi/ClashUser.json"
 import ServerABI from "../../blockchain/abi/ClashServer.json"
+import BetABI from "../../blockchain/abi/ClashBet.json";
 import addresses from "../../blockchain/addresses.json"
 import { storage } from "@/utils/storage";
 import { createContext, ReactNode, useCallback, useEffect, useState } from "react";
@@ -30,6 +31,11 @@ export interface ContractConfig {
         currentIndex: number;
         abi: any[];
     };
+    bet: {
+        addresses: ContractAddress[];
+        currentIndex: number;
+        abi: any[];
+    }
 }
 
 const defaultAddresses: ContractConfig = {
@@ -47,6 +53,11 @@ const defaultAddresses: ContractConfig = {
         addresses: [{ address: addresses.Server || "", note: "" }],
         abi: ServerABI || [],
         currentIndex: 0
+    },
+    bet: {
+        addresses: [{ address: "", note: "" }],
+        abi: BetABI || [],
+        currentIndex: 0
     }
 };
 
@@ -61,18 +72,21 @@ export const loadContractConfig = async (): Promise<ContractConfig> => {
         return {
             tournament: { ...saved.tournament, abi: TournamentABI || [] },
             user: { ...saved.user, abi: UserABI || [] },
-            server: { ...saved.server, abi: ServerABI || [] }
+            server: { ...saved.server, abi: ServerABI || [] },
+            bet: { ...saved.bet, abi: BetABI || [] },
         };
     }
 
     const tournamentAddresses = [{ address: addresses.Tournament || "", note: i18n.t("baseTournamentContract") }]
     const userAddresses = [{ address: addresses.User || "", note: i18n.t("baseUserContract") }]
     const serverAddresses = [{ address: addresses.Server || "", note: i18n.t("baseServerContract") }]
+    const betAddresses = [{ address: "", note: i18n.t("betContract") }]
     // Инициализация с дефолтными адресами
     return {
         tournament: { ...defaultAddresses.tournament, addresses: tournamentAddresses },
         user: { ...defaultAddresses.user, addresses: userAddresses },
-        server: { ...defaultAddresses.server, addresses: serverAddresses }
+        server: { ...defaultAddresses.server, addresses: serverAddresses },
+        bet: { ...defaultAddresses.bet, addresses: betAddresses }
     };
 };
 
@@ -196,18 +210,23 @@ export interface ContractContextType {
     tournament: ReturnType<ContractManager['getContract']>;
     user: ReturnType<ContractManager['getContract']>;
     server: ReturnType<ContractManager['getContract']>;
+    bet: ReturnType<ContractManager['getContract']>;
     switchTournamentAddress: (index: number) => void;
     switchUserAddress: (index: number) => void;
     switchServerAddress: (index: number) => void;
+    switchBetAddress: (index: number) => void;
     addTournamentAddress: (address: string, note: string) => void;
     addUserAddress: (address: string, note: string) => void;
     addServerAddress: (address: string, note: string) => void;
+    addBetAddress: (address: string, note: string) => void;
     removeTournamentAddress: (index: number) => void;
     removeUserAddress: (index: number) => void;
     removeServerAddress: (index: number) => void;
+    removeBetAddress: (index: number) => void;
     updateTournamentAddress: (index: number, address: string, note: string) => void;
     updateUserAddress: (index: number, address: string, note: string) => void;
     updateServerAddress: (index: number, address: string, note: string) => void;
+    updateBetAddress: (index: number, address: string, note: string) => void;
     saveConfig: () => Promise<void>;
     reloadConfig: () => Promise<void>;
 }
@@ -298,24 +317,30 @@ export const ContractProvider: React.FC<ContractProviderProps> = ({
     const tournamentWrapper = createContractWrapper('tournament');
     const userWrapper = createContractWrapper('user');
     const serverWrapper = createContractWrapper('server');
+    const betWrapper = createContractWrapper('bet');
 
     const contextValue: ContractContextType = {
         manager,
         tournament: manager.getContract('tournament'),
         user: manager.getContract('user'),
         server: manager.getContract('server'),
+        bet: manager.getContract('bet'),
         switchTournamentAddress: tournamentWrapper.switchAddress,
         switchUserAddress: userWrapper.switchAddress,
         switchServerAddress: serverWrapper.switchAddress,
+        switchBetAddress: betWrapper.switchAddress,
         addTournamentAddress: tournamentWrapper.addAddress,
         addUserAddress: userWrapper.addAddress,
         addServerAddress: serverWrapper.addAddress,
+        addBetAddress: betWrapper.addAddress,
         removeTournamentAddress: tournamentWrapper.removeAddress,
         removeUserAddress: userWrapper.removeAddress,
         removeServerAddress: serverWrapper.removeAddress,
+        removeBetAddress: betWrapper.removeAddress,
         updateTournamentAddress: tournamentWrapper.updateAddress,
         updateUserAddress: userWrapper.updateAddress,
         updateServerAddress: serverWrapper.updateAddress,
+        updateBetAddress: betWrapper.updateAddress,
         saveConfig,
         reloadConfig
     };

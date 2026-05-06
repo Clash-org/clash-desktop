@@ -6,9 +6,10 @@ import Section from "@/components/Section";
 import InputText from "@/components/InputText";
 import styles from "./Stream.module.css";
 import { useApi } from "@/hooks/useApi";
-import { formatDate } from "@/utils/helpers";
-import { useAtomValue } from "jotai";
-import { languageAtom } from "@/store";
+import { formatDate, truncate } from "@/utils/helpers";
+import { useAtom } from "jotai";
+import { fightIdAtom, languageAtom } from "@/store";
+import { useContracts } from "@/hooks/useContracts";
 
 interface StreamInfo {
   id: string;
@@ -16,10 +17,13 @@ interface StreamInfo {
   viewerCount: number;
   startedAt: string;
   broadcaster: string;
+  cover: string;
+  betAddress: string;
+  fightId: number;
 }
 
 interface StreamListProps {
-  onSelectStream: (streamId: string) => void;
+  onSelectStream: (streamId: string, streamName: string) => void;
   onStartNewStream?: () => void;
 }
 
@@ -29,7 +33,9 @@ export function StreamList({
 }: StreamListProps) {
   const { t } = useTranslation();
   const { api } = useApi()
-  const lang = useAtomValue(languageAtom)
+  const { addBetAddress, switchBetAddress, bet } = useContracts()
+  const [, setFightId] = useAtom(fightIdAtom)
+  const [lang] = useAtom(languageAtom)
   const [streams, setStreams] = useState<StreamInfo[]>([]);
   const [loading, setLoading] = useState(true);
   const [isConnected, setIsConnected] = useState(false);
@@ -139,7 +145,7 @@ export function StreamList({
   }, [connectWebSocket]);
 
   // Регистрация как зритель при выборе стрима - с защитой от дублирования
-  const joinStream = useCallback((streamId: string) => {
+  const joinStream = useCallback((streamId: string, streamName?: string, broadcaster?: string, betAddress?: string, fightId?: number) => {
     if (isJoining) {
       return;
     }
@@ -152,7 +158,19 @@ export function StreamList({
         streamId: streamId
       }));
 
-      onSelectStream(streamId);
+      onSelectStream(streamId, streamName || "");
+
+      const isBetExist = bet.addresses.map(addr=>addr.address).includes(betAddress || "")
+      if (betAddress && broadcaster && !isBetExist) {
+        addBetAddress(betAddress, broadcaster)
+        switchBetAddress(bet.addresses.length - 1)
+      } else if (betAddress && isBetExist) {
+        switchBetAddress(bet.addresses.findIndex(addr=>addr.address === betAddress))
+      }
+
+      if (fightId) {
+        setFightId(fightId)
+      }
 
       // Сбрасываем флаг через 2 секунды
       setTimeout(() => {
@@ -214,7 +232,6 @@ export function StreamList({
           placeholder={t("enterStreamId")}
           value={customStreamId}
           setValue={setCustomStreamId}
-          onKeyDown={(e) => e.key === "Enter" && connectToCustomStream()}
         />
         <Button style={{ width: "100%" }} onClick={connectToCustomStream} stroke disabled={!isConnected || isJoining}>
           <Eye size={18} />
@@ -224,17 +241,17 @@ export function StreamList({
       </div>
 
       {/* Список активных стримов */}
-      {streams.length > 0 && (
+      {streams.length > 0 ? (
         <div className={styles.streamsList}>
           {streams.map((stream) => (
             <div
               key={stream.id}
               className={styles.streamCard}
-              onClick={() => joinStream(stream.id)}
+              onClick={() => joinStream(stream.id, stream.name, stream.broadcaster, stream.betAddress, stream.fightId)}
             >
               <div className={styles.streamThumbnail}>
-                <div className={styles.thumbnailPlaceholder}>
-                  <Eye size={24} />
+                <div className={styles.thumbnailPlaceholder} style={{ backgroundImage: `url('${stream.cover}')` }}>
+                  {!stream.cover && <Eye size={24} color="var(--placeholder)" />}
                 </div>
                 <div className={styles.viewerBadge}>
                   <Users size={12} />
@@ -243,7 +260,7 @@ export function StreamList({
               </div>
 
               <div className={styles.streamInfo}>
-                <div className={styles.streamTitle}>{stream.name}</div>
+                <div className={styles.streamTitle}>{truncate(stream.name, 18)}</div>
                 <div className={styles.streamMeta}>
                   <span className={styles.broadcasterName}>
                     {stream.broadcaster}
@@ -260,10 +277,9 @@ export function StreamList({
             </div>
           ))}
         </div>
-      )}
+      ) : <p style={{ textAlign: "center" }}>{t("noActiveStreams")}</p>}
 
       <div className={styles.emptyStreams}>
-        <p>{t("noActiveStreams")}</p>
         {onStartNewStream && (
           <Button
             onClick={onStartNewStream}

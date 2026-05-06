@@ -11,7 +11,7 @@ import { getFileNameFromPath } from '@/utils/helpers';
 interface ImageUploaderProps {
   value?: string | null;
   setValue?: (formData: FormData) => void;
-  onChange?: (base64: string | null) => void;
+  onChange?: (base64: string) => void;
   setFileName?: (name: string) => void;
   className?: string;
   placeholder?: string;
@@ -37,7 +37,7 @@ export default function ImageUploader({
 }: ImageUploaderProps) {
   const { t } = useTranslation();
   const [isDragging, setIsDragging] = useState(false);
-  const [previewUrl, setPreviewUrl] = useState<string | null>(value || null);
+  const [previewUrl, setPreviewUrl] = useState<string>(value || "");
   const dropZoneRef = useRef<HTMLDivElement>(null);
 
   const defaultPlaceholder = t('imageUploaderPlaceholder');
@@ -156,8 +156,8 @@ export default function ImageUploader({
   };
 
   const handleRemove = () => {
-    setPreviewUrl(null);
-    onChange?.(null);
+    setPreviewUrl("");
+    onChange?.("");
   };
 
   if (type === "avatar")

@@ -20,16 +20,22 @@ import Select from '../Select';
 import { STUN_SERVERS } from '@/constants';
 import { useAtomValue } from 'jotai';
 import { userAtom } from '@/store';
+import InputNumber from '../InputNumber';
+import ImageUploader from '../ImageUploader';
+import Switch from '../Switch';
+import toast from 'react-hot-toast';
+import { useContractAddress } from '@/hooks/useContracts';
 
 interface StreamBroadcasterProps {
-  onStreamStart?: (streamId: string) => void;
   onStreamStop?: () => void;
+  onStreamProcess: (isProcess: boolean) => void;
 }
 
-export function StreamBroadcaster({ onStreamStart, onStreamStop }: StreamBroadcasterProps) {
+export function StreamBroadcaster({ onStreamStop, onStreamProcess }: StreamBroadcasterProps) {
   const { t } = useTranslation();
   const { api } = useApi();
-  const user = useAtomValue(userAtom)
+  const user = useAtomValue(userAtom);
+  const currentBetAddress = useContractAddress("bet")
 
   const [isStreaming, setIsStreaming] = useState(false);
   const [streamId, setStreamId] = useState('');
@@ -43,13 +49,16 @@ export function StreamBroadcaster({ onStreamStart, onStreamStop }: StreamBroadca
   const [selectedCamera, setSelectedCamera] = useState<string>('');
   const [availableMics, setAvailableMics] = useState<MediaDeviceInfo[]>([]);
   const [selectedMic, setSelectedMic] = useState<string>('');
-  const [broadcaster, setBroadcaster] = useState(user?.username || "")
+  const [broadcaster, setBroadcaster] = useState(user?.username || '');
+  const [betAddress, setBetAddress] = useState(currentBetAddress);
+  const [fightId, setFightId] = useState<number>(NaN);
+  const [cover, setCover] = useState('');
+  const [isStreamHidden, setIsStreamHidden] = useState(false);
 
   const videoRef = useRef<HTMLVideoElement>(null);
   const localStreamRef = useRef<MediaStream | null>(null);
   const peerConnectionRef = useRef<RTCPeerConnection | null>(null);
   const wsRef = useRef<WebSocket | null>(null);
-  // @ts-ignore
   const reconnectTimeoutRef = useRef<NodeJS.Timeout>();
   const streamIdRef = useRef<string>('');
 
@@ -57,6 +66,7 @@ export function StreamBroadcaster({ onStreamStart, onStreamStop }: StreamBroadca
     iceServers: STUN_SERVERS,
   };
 
+  // Подключение к WebSocket
   const connectWebSocket = useCallback(() => {
     try {
       const ws = new WebSocket(api.ws);
@@ -82,23 +92,15 @@ export function StreamBroadcaster({ onStreamStart, onStreamStop }: StreamBroadca
               break;
 
             case 'offer':
-              // Получили offer от зрителя, нужно отправить answer
               await handleOffer(data.payload, data.fromId);
               break;
 
             case 'ice_candidate':
-              // Получили ICE кандидата от зрителя
               await handleIceCandidate(data.payload);
               break;
 
             case 'viewer_joined':
-              setViewerCount(data.payload.viewerCount);
-              break;
-
             case 'viewer_left':
-              setViewerCount(data.payload.viewerCount);
-              break;
-
             case 'viewer_count_update':
               setViewerCount(data.payload.viewerCount);
               break;
@@ -121,7 +123,6 @@ export function StreamBroadcaster({ onStreamStart, onStreamStop }: StreamBroadca
 
       ws.onclose = () => {
         setIsConnected(false);
-
         reconnectTimeoutRef.current = setTimeout(() => {
           connectWebSocket();
         }, 3000);
@@ -139,6 +140,40 @@ export function StreamBroadcaster({ onStreamStart, onStreamStop }: StreamBroadca
       if (reconnectTimeoutRef.current) clearTimeout(reconnectTimeoutRef.current);
     };
   }, [connectWebSocket]);
+
+  // Предпросмотр камеры (только видео)
+  const startPreview = useCallback(async () => {
+    if (isStreaming) return;
+
+    try {
+      // Останавливаем старый поток
+      if (localStreamRef.current) {
+        localStreamRef.current.getTracks().forEach(track => track.stop());
+        localStreamRef.current = null;
+      }
+
+      const constraints: MediaStreamConstraints = {
+        video: selectedCamera ? { deviceId: { exact: selectedCamera } } : true,
+        audio: false,
+      };
+
+      const stream = await navigator.mediaDevices.getUserMedia(constraints);
+      localStreamRef.current = stream;
+
+      if (videoRef.current) {
+        videoRef.current.srcObject = stream;
+      }
+    } catch (error) {
+      console.error('Failed to start preview:', error);
+    }
+  }, [selectedCamera, isStreaming]);
+
+  // Запуск предпросмотра при выборе камеры
+  useEffect(() => {
+    if (!isStreaming) {
+      startPreview();
+    }
+  }, [selectedCamera, isStreaming, startPreview]);
 
   // Получение списка устройств
   useEffect(() => {
@@ -164,11 +199,15 @@ export function StreamBroadcaster({ onStreamStart, onStreamStop }: StreamBroadca
     return () => navigator.mediaDevices.removeEventListener('devicechange', getDevices);
   }, []);
 
-  const getLocalStream = async () => {
+  // Получение полного потока с аудио для трансляции
+  const getFullStream = useCallback(async () => {
+    // Останавливаем предпросмотр
     if (localStreamRef.current) {
       localStreamRef.current.getTracks().forEach(track => track.stop());
+      localStreamRef.current = null;
     }
 
+    // Создаем новый полный поток
     const constraints: MediaStreamConstraints = {
       video: selectedCamera ? { deviceId: { exact: selectedCamera } } : true,
       audio: selectedMic ? { deviceId: { exact: selectedMic } } : true,
@@ -182,10 +221,10 @@ export function StreamBroadcaster({ onStreamStart, onStreamStop }: StreamBroadca
     }
 
     return stream;
-  };
+  }, [selectedCamera, selectedMic]);
 
   // Обработка offer от зрителя
-  const handleOffer = async (offer: RTCSessionDescriptionInit, fromId: string) => {
+  const handleOffer = useCallback(async (offer: RTCSessionDescriptionInit, fromId: string) => {
     if (!peerConnectionRef.current) return;
 
     try {
@@ -193,7 +232,6 @@ export function StreamBroadcaster({ onStreamStart, onStreamStop }: StreamBroadca
       const answer = await peerConnectionRef.current.createAnswer();
       await peerConnectionRef.current.setLocalDescription(answer);
 
-      // Отправляем answer обратно зрителю
       if (wsRef.current?.readyState === WebSocket.OPEN) {
         wsRef.current.send(JSON.stringify({
           type: 'answer',
@@ -205,10 +243,10 @@ export function StreamBroadcaster({ onStreamStart, onStreamStop }: StreamBroadca
     } catch (error) {
       console.error('Failed to handle offer:', error);
     }
-  };
+  }, []);
 
   // Обработка ICE кандидата
-  const handleIceCandidate = async (candidate: RTCIceCandidateInit) => {
+  const handleIceCandidate = useCallback(async (candidate: RTCIceCandidateInit) => {
     if (peerConnectionRef.current) {
       try {
         await peerConnectionRef.current.addIceCandidate(new RTCIceCandidate(candidate));
@@ -216,17 +254,16 @@ export function StreamBroadcaster({ onStreamStart, onStreamStop }: StreamBroadca
         console.error('Failed to add ICE candidate:', error);
       }
     }
-  };
+  }, []);
 
   // Настройка WebRTC peer connection
-  const setupPeerConnection = async () => {
+  const setupPeerConnection = useCallback(async (stream: MediaStream) => {
     const peerConnection = new RTCPeerConnection(rtcConfig);
     peerConnectionRef.current = peerConnection;
 
-    // Добавляем локальные треки
-    const localStream = await getLocalStream();
-    localStream.getTracks().forEach(track => {
-      peerConnection.addTrack(track, localStream);
+    // Добавляем все треки из потока
+    stream.getTracks().forEach(track => {
+      peerConnection.addTrack(track, stream);
     });
 
     // Обработка ICE кандидатов
@@ -240,49 +277,79 @@ export function StreamBroadcaster({ onStreamStart, onStreamStop }: StreamBroadca
       }
     };
 
-    return peerConnection;
-  };
+    // Отслеживаем состояние соединения
+    peerConnection.onconnectionstatechange = () => {
+      if (peerConnection.connectionState === 'failed') {
+        setConnectionError('WebRTC connection failed');
+      }
+    };
 
-  const startStream = async () => {
+    return peerConnection;
+  }, []);
+
+  // Начать трансляцию
+  const startStream = useCallback(async () => {
     if (!isConnected) {
       setConnectionError('Not connected to server');
       return;
     }
 
     try {
-      const name = streamName.trim();
+      // Создаем полный поток с видео и аудио
+      const fullStream = await getFullStream();
+
+      if (!fullStream || fullStream.getVideoTracks().length === 0) {
+        throw new Error('No video track available');
+      }
+
+      // Сохраняем состояние микрофона и камеры
+      const videoTrack = fullStream.getVideoTracks()[0];
+      const audioTrack = fullStream.getAudioTracks()[0];
+      if (videoTrack) videoTrack.enabled = isCameraEnabled;
+      if (audioTrack) audioTrack.enabled = isMicEnabled;
 
       // Регистрируемся как стример на сервере
       wsRef.current?.send(JSON.stringify({
         type: 'register_broadcaster',
         payload: {
-          name,
-          broadcaster: broadcaster.trim()
+          name: streamName.trim(),
+          broadcaster: broadcaster.trim(),
+          cover,
+          betAddress: betAddress.trim(),
+          fightId,
+          isStreamHidden
         }
       }));
 
       // Настраиваем WebRTC
-      await setupPeerConnection();
+      await setupPeerConnection(fullStream);
 
       setIsStreaming(true);
 
       // Ждём, пока сервер вернёт streamId
+      let attempts = 0;
+      const maxAttempts = 50;
       const waitForStreamId = setInterval(() => {
-        if (streamId) {
+        attempts++;
+        if (streamIdRef.current) {
           clearInterval(waitForStreamId);
-          onStreamStart?.(streamId);
+          onStreamProcess(true);
+        } else if (attempts >= maxAttempts) {
+          clearInterval(waitForStreamId);
+          console.error('Timeout waiting for streamId');
+          setConnectionError('Timeout waiting for stream registration');
+          stopStream();
         }
       }, 100);
-
-      setTimeout(() => clearInterval(waitForStreamId), 5000);
-
     } catch (error) {
       console.error('Failed to start broadcast:', error);
-      setConnectionError('Failed to start broadcast');
+      setConnectionError('Failed to start broadcast: ' + (error as Error).message);
     }
-  };
+  }, [isConnected, streamName, broadcaster, cover, betAddress, fightId, isStreamHidden, getFullStream, setupPeerConnection, onStreamProcess, isCameraEnabled, isMicEnabled]);
 
-  const stopStream = async () => {
+  // Остановить трансляцию
+  const stopStream = useCallback(async () => {
+    // Отправляем сигнал о завершении стрима
     if (wsRef.current?.readyState === WebSocket.OPEN && streamIdRef.current) {
       wsRef.current.send(JSON.stringify({
         type: 'stream_end',
@@ -293,79 +360,102 @@ export function StreamBroadcaster({ onStreamStart, onStreamStop }: StreamBroadca
     // Небольшая задержка, чтобы сообщение успело уйти
     await new Promise(resolve => setTimeout(resolve, 100));
 
+    // Закрываем WebRTC соединение
     if (peerConnectionRef.current) {
       peerConnectionRef.current.close();
       peerConnectionRef.current = null;
     }
 
+    // Останавливаем все треки
     if (localStreamRef.current) {
       localStreamRef.current.getTracks().forEach(track => track.stop());
       localStreamRef.current = null;
     }
 
+    // Очищаем видео элемент
     if (videoRef.current) {
       videoRef.current.srcObject = null;
     }
 
     setIsStreaming(false);
     setStreamId('');
+    streamIdRef.current = '';
     setViewerCount(0);
     onStreamStop?.();
-  };
+    onStreamProcess(false);
+  }, [onStreamStop, onStreamProcess]);
 
-  const toggleMic = () => {
+  // Переключение микрофона
+  const toggleMic = useCallback(() => {
     if (localStreamRef.current) {
       const audioTracks = localStreamRef.current.getAudioTracks();
       audioTracks.forEach(track => {
         track.enabled = !track.enabled;
       });
-      setIsMicEnabled(!isMicEnabled);
+      setIsMicEnabled(prev => !prev);
     }
-  };
+  }, []);
 
-  const toggleCamera = () => {
+  // Переключение камеры
+  const toggleCamera = useCallback(() => {
     if (localStreamRef.current) {
       const videoTracks = localStreamRef.current.getVideoTracks();
       videoTracks.forEach(track => {
         track.enabled = !track.enabled;
       });
-      setIsCameraEnabled(!isCameraEnabled);
+      setIsCameraEnabled(prev => !prev);
     }
-  };
+  }, []);
 
-  const changeCamera = async (deviceId: string) => {
+  // Смена камеры во время стрима
+  const changeCamera = useCallback(async (deviceId: string) => {
     setSelectedCamera(deviceId);
-    if (isStreaming) {
-      const newStream = await navigator.mediaDevices.getUserMedia({
-        video: { deviceId: { exact: deviceId } },
-        audio: true,
-      });
 
-      const videoTrack = newStream.getVideoTracks()[0];
-      const oldVideoTrack = localStreamRef.current?.getVideoTracks()[0];
+    if (isStreaming && localStreamRef.current) {
+      try {
+        const newStream = await navigator.mediaDevices.getUserMedia({
+          video: { deviceId: { exact: deviceId } },
+          audio: false,
+        });
 
-      if (oldVideoTrack) {
-        localStreamRef.current?.removeTrack(oldVideoTrack);
-        oldVideoTrack.stop();
-      }
+        const newVideoTrack = newStream.getVideoTracks()[0];
+        const oldVideoTrack = localStreamRef.current.getVideoTracks()[0];
 
-      localStreamRef.current?.addTrack(videoTrack);
+        // Сохраняем состояние включения
+        const wasEnabled = oldVideoTrack?.enabled ?? true;
+        newVideoTrack.enabled = wasEnabled;
 
-      if (peerConnectionRef.current) {
-        const senders = peerConnectionRef.current.getSenders();
-        const videoSender = senders.find(sender => sender.track?.kind === 'video');
-        if (videoSender) {
-          videoSender.replaceTrack(videoTrack);
+        if (oldVideoTrack) {
+          localStreamRef.current.removeTrack(oldVideoTrack);
+          oldVideoTrack.stop();
         }
-      }
-    }
-  };
 
-  const copyStreamId = () => {
+        localStreamRef.current.addTrack(newVideoTrack);
+
+        // Обновляем WebRTC sender
+        if (peerConnectionRef.current) {
+          const senders = peerConnectionRef.current.getSenders();
+          const videoSender = senders.find(sender => sender.track?.kind === 'video');
+          if (videoSender) {
+            await videoSender.replaceTrack(newVideoTrack);
+          }
+        }
+      } catch (error) {
+        console.error('Failed to change camera:', error);
+      }
+    } else {
+      // Если не в стриме, просто перезапускаем предпросмотр
+      startPreview();
+    }
+  }, [isStreaming, startPreview]);
+
+  // Копирование ID стрима
+  const copyStreamId = useCallback(() => {
     if (streamId) {
       navigator.clipboard.writeText(streamId);
+      toast.success(t("copied"))
     }
-  };
+  }, [streamId]);
 
   return (
     <div className={styles.broadcasterContainer}>
@@ -387,7 +477,7 @@ export function StreamBroadcaster({ onStreamStart, onStreamStop }: StreamBroadca
           className={styles.videoElement}
         />
 
-        {!isStreaming && !localStreamRef.current && (
+        {!isStreaming && !localStreamRef?.current?.getVideoTracks()?.length && (
           <div className={styles.previewOverlay}>
             <span>{t('cameraPreview')}</span>
           </div>
@@ -400,45 +490,67 @@ export function StreamBroadcaster({ onStreamStart, onStreamStop }: StreamBroadca
         )}
       </div>
 
-      {/* Настройка имени стрима */}
+      {/* Настройка стрима (только до начала) */}
       {!isStreaming && (
-        <Section title={t('streamSettings')}>
-          <InputText
-            placeholder={t('streamName')}
-            value={streamName}
-            setValue={setStreamName}
-          />
-          <InputText
-            placeholder={t('organizerName')}
-            value={broadcaster}
-            setValue={setBroadcaster}
-          />
-        </Section>
-      )}
-
-      {/* Выбор устройств (до начала стрима) */}
-      {!isStreaming && (
-        <Section title={t('devices')}>
-          <div className={styles.deviceSelect}>
-            <label>{t('camera')}</label>
-            <Select
-              value={selectedCamera}
-              setValue={(val) => setSelectedCamera(val)}
-              className={styles.select}
-              options={availableCameras.map(camera=>({ label: camera.label || t('camera') + ' ' + (availableCameras.indexOf(camera) + 1), value: camera.deviceId }))}
+        <>
+          <Section title={t('streamSettings')}>
+            <InputText
+              placeholder={t('streamName')}
+              value={streamName}
+              setValue={setStreamName}
             />
-          </div>
-
-          <div className={styles.deviceSelect}>
-            <label>{t('microphone')}</label>
-            <Select
-              value={selectedMic}
-              setValue={(val) => setSelectedMic(val)}
-              className={styles.select}
-              options={availableMics.map(mic=>({ label: mic.label || t('microphone') + ' ' + (availableCameras.indexOf(mic) + 1), value: mic.deviceId }))}
+            <InputText
+              placeholder={t('organizerName')}
+              value={broadcaster}
+              setValue={setBroadcaster}
             />
-          </div>
-        </Section>
+            <InputText
+              placeholder={t('smartContractAddress')}
+              value={betAddress}
+              setValue={setBetAddress}
+            />
+            <InputNumber
+              placeholder={t('fightId')}
+              value={fightId}
+              setValue={setFightId}
+            />
+            <ImageUploader onChange={setCover} />
+            <Switch
+              value={isStreamHidden}
+              setValue={setIsStreamHidden}
+              title={t("streamHidden")}
+            />
+          </Section>
+
+          {/* Выбор устройств */}
+          <Section title={t('devices')}>
+            <div className={styles.deviceSelect}>
+              <label>{t('camera')}</label>
+              <Select
+                value={selectedCamera}
+                setValue={changeCamera}
+                className={styles.select}
+                options={availableCameras.map((camera, idx) => ({
+                  label: camera.label || t('camera') + ' ' + (idx + 1),
+                  value: camera.deviceId
+                }))}
+              />
+            </div>
+
+            <div className={styles.deviceSelect}>
+              <label>{t('microphone')}</label>
+              <Select
+                value={selectedMic}
+                setValue={setSelectedMic}
+                className={styles.select}
+                options={availableMics.map((mic, idx) => ({
+                  label: mic.label || t('microphone') + ' ' + (idx + 1),
+                  value: mic.deviceId
+                }))}
+              />
+            </div>
+          </Section>
+        </>
       )}
 
       {/* Элементы управления */}
@@ -483,9 +595,12 @@ export function StreamBroadcaster({ onStreamStart, onStreamStop }: StreamBroadca
               {availableCameras.length > 1 && (
                 <Select
                   value={selectedCamera}
-                  setValue={(val) => changeCamera(val)}
+                  setValue={changeCamera}
                   className={styles.cameraSelect}
-                  options={availableCameras.map(camera => ({ label: camera.label?.slice(0, 30) || t('camera'), value: camera.deviceId }))}
+                  options={availableCameras.map(camera => ({
+                    label: camera.label?.slice(0, 30) || t('camera'),
+                    value: camera.deviceId
+                  }))}
                 />
               )}
             </div>
@@ -504,8 +619,6 @@ export function StreamBroadcaster({ onStreamStart, onStreamStop }: StreamBroadca
             <div className={styles.urlSection}>
               <InputText
                 value={streamId}
-                setValue={() => {}}
-                placeholder={t('streamId')}
                 disabled
               />
               <Button onClick={copyStreamId} stroke>

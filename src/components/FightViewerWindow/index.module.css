@@ -31,12 +31,10 @@
 }
 
 .viewerSide.red {
-  background: #8B0000;
   border-right: 2px solid var(--accent-transparent);
 }
 
 .viewerSide.blue {
-  background: #00008B;
   border-left: 2px solid var(--accent-transparent);
 }
 

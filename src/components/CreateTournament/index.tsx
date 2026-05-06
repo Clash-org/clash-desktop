@@ -29,7 +29,7 @@ import ImageUploader from '../ImageUploader';
 import toast from 'react-hot-toast';
 import { useAtomValue } from 'jotai';
 import { blockchainAtom, languageAtom, userAtom } from '@/store';
-import { getNewImageName, translateStatus } from '@/utils/helpers';
+import { getNewImageName } from '@/utils/helpers';
 import { useCities } from '@/hooks/useCities';
 import { useOrganizerTournaments } from '@/hooks/useTournaments';
 import { useNominations } from '@/hooks/useNominations';
@@ -237,7 +237,7 @@ export default function CreateTournament() {
         <ShareButton type="tournament" id={currentTournament.id} />
         <Select
         placeholder={t("status")}
-        options={Object.values(TournamentStatus).map(s=>({ label: translateStatus(s, lang), value: s }))}
+        options={Object.values(TournamentStatus).map(s=>({ label: t(s), value: s }))}
         value={formData.status}
         setValue={(val)=>handleInputChange("status", val)}
         />

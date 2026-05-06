@@ -6,7 +6,7 @@ import { useTournaments } from "@/hooks/useTournaments";
 import { useAtom } from "jotai";
 import { languageAtom } from "@/store";
 import Table from "../Table";
-import { formatDate, translateStatus } from "@/utils/helpers";
+import { formatDate } from "@/utils/helpers";
 import styles from "./index.module.css"
 import { TournamentShortType } from "@/typings";
 import { Pages, usePage } from "@/hooks/usePage";
@@ -51,14 +51,14 @@ export default function Admin() {
                 <LoadWrap loading={isLoading} totalCount={tournamentsCount} page={page} setPage={setPage} data={tournaments} setData={setCurrentTournaments}>
                     <Table
                     titles={["ID", t("tournamentTitle"), t("city"), t("date"), t("status"), t("organizer")]}
-                    data={currentTournaments.map(t=>[
-                        String(t.id),
-                        t.title,
-                        t.city,
-                        formatDate(t.date, lang, true),
-                        translateStatus(t.status, lang),
-                        <span className="link" onClick={()=>setGlobalPage(Pages.PROFILE, { id: t.organizer.id })}>{t.organizer.username}</span>,
-                        <Trash2 size={20} color="var(--fg)" className={styles.controller} onClick={()=>{setTournamentId(t.id); setShowDelete(true)}} />
+                    data={currentTournaments.map(ct=>[
+                        String(ct.id),
+                        ct.title,
+                        ct.city,
+                        formatDate(ct.date, lang, true),
+                        t(ct.status),
+                        <span className="link" onClick={()=>setGlobalPage(Pages.PROFILE, { id: ct.organizer.id })}>{ct.organizer.username}</span>,
+                        <Trash2 size={20} color="var(--fg)" className={styles.controller} onClick={()=>{setTournamentId(ct.id); setShowDelete(true)}} />
                     ])}
                     />
                 </LoadWrap>

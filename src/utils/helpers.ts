@@ -144,20 +144,6 @@ export function getSymbolCurrencyByCode(code: CurrencyType) {
   }
 }
 
-export function translateStatus(status: TournamentStatusType, lang: LangType): string {
-  switch(status) {
-    case "active": {
-      return lang === "en" ? status : (lang === "ru" ? "активный" : "活动中")
-    }
-    case "pending": {
-      return lang === "en" ? status : (lang === "ru" ? "ожидаемый" : "预期的")
-    }
-    case "completed": {
-      return lang === "en" ? status : (lang === "ru" ? "завершённый" : "已完成")
-    }
-  }
-}
-
 export function capitalizeFirstLetter(str: string) { return str.charAt(0).toUpperCase() + str.slice(1); }
 
 export function getFileNameFromPath(path: string) {
@@ -258,4 +244,9 @@ export function parseContractError(error: any): string {
   }
 
   return "";
+}
+
+export const truncateAddress = (address: string) => {
+  if (!address) return '';
+  return `${address.slice(0, 6)}...${address.slice(-4)}`;
 }

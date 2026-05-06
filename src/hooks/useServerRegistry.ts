@@ -1,4 +1,3 @@
-import { NATIVE_CURRENCIES } from '@/constants';
 import { useContract } from './useContract';
 import { ethers } from 'ethers';
 import { useCallback } from 'react';
@@ -48,15 +47,6 @@ export function useServerRegistry() {
       status: server?.status,
     };
   };
-
-  // Query: Получение информации о токене сети
-  const getToken = async () => {
-    const network = await provider.getNetwork()
-    const token = NATIVE_CURRENCIES[Number(network.chainId)]
-    if (!token)
-      throw new Error()
-    return token
-  }
 
   // Query: Получение даты конца аренды за сервер
   const getExpiresDate = async (paymentId: number) => {
@@ -171,7 +161,6 @@ export function useServerRegistry() {
     getServerStatus,
     setServerPrice,
     setServerHost,
-    getToken,
     address,
     contract,
   };

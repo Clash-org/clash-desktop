@@ -194,3 +194,11 @@ button:disabled {
   font-size: 60px;
   text-align: center;
 }
+
+.red {
+  background: #8B0000;
+}
+
+.blue {
+  background: #00008B;
+}

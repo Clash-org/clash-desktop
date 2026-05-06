@@ -1,0 +1,323 @@
+.fightSelector {
+  display: flex;
+  gap: 16px;
+  align-items: center;
+  flex-wrap: wrap;
+}
+
+.fightStatus {
+  display: flex;
+  gap: 8px;
+}
+
+.statusBadge {
+  padding: 4px 12px;
+  border-radius: 20px;
+  font-size: 12px;
+  font-family: var(--font-medium);
+}
+
+.statusPending {
+  background: rgba(255, 193, 7, 0.2);
+  color: #ffc107;
+  border: 1px solid #ffc107;
+}
+
+.statusActive {
+  background: rgba(76, 175, 80, 0.2);
+  color: #4caf50;
+  border: 1px solid #4caf50;
+}
+
+.statusEnded {
+  background: rgba(244, 67, 54, 0.2);
+  color: #f44336;
+  border: 1px solid #f44336;
+}
+
+.progress {
+  margin-bottom: 32px;
+  background: var(--accent-transparent);
+  padding: 20px;
+  border-radius: 12px;
+  border: 1px solid var(--accent);
+}
+
+.steps {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.step {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  background: none;
+  border: none;
+}
+
+.step:hover .stepNumber {
+  transform: scale(1.1);
+}
+
+.stepNumber {
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  background: var(--bg);
+  border: 2px solid var(--placeholder);
+  color: var(--placeholder);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-family: var(--font-bold);
+  transition: all 0.2s ease;
+}
+
+.activeStep .stepNumber {
+  background: var(--accent);
+  border-color: var(--accent);
+  color: white;
+}
+
+.stepLabel {
+  font-size: 14px;
+  color: var(--placeholder);
+}
+
+.activeStep .stepLabel {
+  color: var(--accent);
+}
+
+.stepLine {
+  flex: 1;
+  height: 2px;
+  background: var(--placeholder);
+  opacity: 0.3;
+  margin: 0 12px;
+}
+
+.stepContent {
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
+}
+
+.formGroup {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.label {
+  font-family: var(--font-medium);
+  font-size: 14px;
+  color: var(--fg);
+}
+
+.row {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 16px;
+}
+
+.sides {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  overflow: hidden;
+  border-radius: 16px;
+}
+
+.sides > div {
+  display: grid;
+  justify-items: center;
+  align-items: center;
+  font-family: var(--font-bold);
+  font-size: 30px;
+  height: 100px;
+
+}
+
+.infoGrid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+  gap: 16px;
+}
+
+.infoCard {
+  background: var(--accent-transparent);
+  border-radius: 12px;
+  padding: 16px;
+  border: 1px solid var(--border);
+}
+
+.infoLabel {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 12px;
+  color: var(--placeholder);
+  margin-bottom: 8px;
+}
+
+.infoValue {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-family: var(--font-mono);
+  font-size: 14px;
+  color: var(--fg);
+  word-break: break-all;
+}
+
+.copyIcon {
+  cursor: pointer;
+  opacity: 0.6;
+  transition: opacity 0.2s;
+}
+
+.copyIcon:hover {
+  opacity: 1;
+}
+
+.navigation {
+  display: flex;
+  justify-content: space-between;
+  margin-top: 16px;
+  gap: 16px;
+}
+
+.betOptions {
+  display: flex;
+  gap: 16px;
+}
+
+.betOption {
+  flex: 1;
+  padding: 12px;
+  background: var(--accent-transparent);
+  border: 2px solid var(--border);
+  border-radius: 12px;
+  cursor: pointer;
+  transition: all 0.2s;
+  font-family: var(--font-medium);
+}
+
+.betOption:hover {
+  border-color: var(--accent);
+}
+
+.betOption.selected {
+  background: var(--accent);
+  border-color: var(--accent);
+  color: white;
+}
+
+.manageContainer {
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
+}
+
+.warning {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 16px;
+  background: rgba(244, 67, 54, 0.1);
+  border-radius: 12px;
+  border: 1px solid #f44336;
+  color: #f44336;
+  margin-top: 24px;
+}
+
+.drawMessage {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 16px;
+  text-align: center;
+  padding: 32px;
+}
+
+.betsList {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  max-height: 400px;
+  overflow-y: auto;
+}
+
+.betItem {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 12px;
+  background: var(--accent-transparent);
+  border-radius: 8px;
+  font-family: var(--font-mono);
+  font-size: 14px;
+}
+
+.redText {
+  color: #f44336;
+  font-family: var(--font-medium);
+}
+
+.blueText {
+  color: #2196f3;
+  font-family: var(--font-medium);
+}
+
+.emptyList {
+  text-align: center;
+  padding: 32px;
+  color: var(--placeholder);
+}
+
+.spinner {
+  animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+  from {
+    transform: rotate(0deg);
+  }
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+/* Адаптивность */
+@media (max-width: 768px) {
+  .row {
+    grid-template-columns: 1fr;
+  }
+
+  .steps {
+    flex-direction: column;
+    gap: 16px;
+  }
+
+  .stepLine {
+    width: 2px;
+    height: 20px;
+    margin: 8px 0;
+  }
+
+  .navigation {
+    flex-direction: column;
+  }
+
+  .infoGrid {
+    grid-template-columns: 1fr;
+  }
+
+  .betOptions {
+    flex-direction: column;
+  }
+}

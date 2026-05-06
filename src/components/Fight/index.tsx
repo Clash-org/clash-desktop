@@ -361,7 +361,7 @@ export default function FightScreen() {
       setProtests: setProtests1,
       warnings: warnings1,
       setWarnings: setWarnings1,
-      styleWrap: styles.red
+      styleWrap: "red"
     },
     {
       name: blueName,
@@ -371,7 +371,7 @@ export default function FightScreen() {
       setProtests: setProtests2,
       warnings: warnings2,
       setWarnings: setWarnings2,
-      styleWrap: styles.blue
+      styleWrap: "blue"
     }
   ];
 

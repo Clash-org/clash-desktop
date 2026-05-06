@@ -259,7 +259,7 @@ export function DraggableVideo({
               await addIceCandidate(data.payload);
               break;
 
-            case 'stream_ended':
+            case 'stream_end':
               setConnectionError(t('streamEnded'));
               setTimeout(() => onClose(), 3000);
               break;

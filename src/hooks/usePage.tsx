@@ -15,6 +15,7 @@ import AppInfo from '@/components/AppInfo';
 import Admin from '@/components/Admin';
 import { DeepLinkHandler } from '@/components/DeepLinkHandler';
 import Blockchain from '@/components/Blockchain';
+import Bet from '@/components/Bet';
 
 // Перечисление всех страниц
 export enum Pages {
@@ -31,7 +32,8 @@ export enum Pages {
     LEADERBOARD,
     INFO,
     ADMIN,
-    BLOCKCHAIN
+    BLOCKCHAIN,
+    BET
 }
 
 // Типы параметров для каждой страницы
@@ -50,6 +52,7 @@ export type PageParams = {
     [Pages.INFO]: undefined;
     [Pages.ADMIN]: undefined;
     [Pages.BLOCKCHAIN]: undefined;
+    [Pages.BET]: undefined;
 };
 
 // Тип для состояния страницы
@@ -199,6 +202,8 @@ export const PageRenderer: React.FC<{
                 return <Admin />
             case Pages.BLOCKCHAIN:
                 return <Blockchain />
+            case Pages.BET:
+                return <Bet />
             default:
                 return <Settings />;
         }

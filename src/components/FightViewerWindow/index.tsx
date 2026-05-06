@@ -108,27 +108,16 @@ export default function FightViewerWindow() {
 
   return (
     <div className={styles.viewerContainer} style={fightData.isReverseSides ? { flexDirection: "row" } : {}}>
-      {/* Левая сторона - Красный угол */}
-      <div className={`${styles.viewerSide} ${styles.red} ${fightData.winner === fightData.redName ? styles.winnerSide : ''}`}>
-        <div className={styles.viewerName}>
-          {fightData.redName ? truncateFullName(fightData.redName, 15).split(' ').map((line, idx) => (
-            <span key={idx}>{line}<br /></span>
-          )) : '—'}
-        </div>
-        <div className={styles.viewerScore}>{fightData.score1}</div>
-
-        <div className={styles.viewerStats}>
-          <div className={styles.viewerStat}>
-            <span className={styles.statLabel}>{t('protests')}</span>
-            <span className={styles.statValue}>{fightData.protests1}</span>
-          </div>
-          <div className={styles.viewerStat}>
-            <span className={styles.statLabel}>{t('warnings')}</span>
-            <span className={styles.statValue}>{fightData.warnings1}</span>
-          </div>
-        </div>
-        <span className={styles.nextPair}>{truncateFullName(fightData.nextRedName, 15)}</span>
-      </div>
+      <FighterSide
+        side="red"
+        name={fightData.redName}
+        score={fightData.score1}
+        protests={fightData.protests1}
+        warnings={fightData.warnings1}
+        nextName={fightData.nextRedName}
+        winner={fightData.winner}
+        t={t}
+      />
 
       {/* Центральная панель */}
       <div className={styles.viewerCenter}>
@@ -152,27 +141,66 @@ export default function FightViewerWindow() {
         )}
       </div>
 
-      {/* Правая сторона - Синий угол */}
-      <div className={`${styles.viewerSide} ${styles.blue} ${fightData.winner === fightData.blueName ? styles.winnerSide : ''}`}>
-        <div className={styles.viewerName}>
-          {fightData.blueName ? truncateFullName(fightData.blueName, 15).split(' ').map((line, idx) => (
-            <span key={idx}>{line}<br /></span>
-          )) : '—'}
-        </div>
-        <div className={styles.viewerScore}>{fightData.score2}</div>
-
-        <div className={styles.viewerStats}>
-          <div className={styles.viewerStat}>
-            <span className={styles.statLabel}>{t('protests')}</span>
-            <span className={styles.statValue}>{fightData.protests2}</span>
-          </div>
-          <div className={styles.viewerStat}>
-            <span className={styles.statLabel}>{t('warnings')}</span>
-            <span className={styles.statValue}>{fightData.warnings2}</span>
-          </div>
-        </div>
-        <span className={styles.nextPair}>{truncateFullName(fightData.nextBlueName, 15)}</span>
-      </div>
+      <FighterSide
+        side="blue"
+        name={fightData.blueName}
+        score={fightData.score2}
+        protests={fightData.protests2}
+        warnings={fightData.warnings2}
+        nextName={fightData.nextBlueName}
+        winner={fightData.winner}
+        t={t}
+      />
     </div>
   );
 }
+
+type FighterSideProps = {
+  side: 'red' | 'blue';
+  name: string | null | undefined;
+  score: number | string;
+  protests: number;
+  warnings: number;
+  nextName: string;
+  winner: string | null | undefined;
+  t: (key: string) => string;
+}
+
+const FighterSide = ({
+  side, // 'red' или 'blue'
+  name,
+  score,
+  protests,
+  warnings,
+  nextName,
+  winner,
+  t // функция перевода
+}:FighterSideProps) => {
+  const sideClass = side === 'red' ? styles.red : styles.blue;
+  const isWinner = winner === name;
+
+  return (
+    <div className={`${styles.viewerSide} ${side} ${sideClass} ${isWinner ? styles.winnerSide : ''}`}>
+      <div className={styles.viewerName}>
+        {name ? truncateFullName(name, 15).split(' ').map((line, idx) => (
+          <span key={idx}>{line}<br /></span>
+        )) : '—'}
+      </div>
+
+      <div className={styles.viewerScore}>{score}</div>
+
+      <div className={styles.viewerStats}>
+        <div className={styles.viewerStat}>
+          <span className={styles.statLabel}>{t('protests')}</span>
+          <span className={styles.statValue}>{protests}</span>
+        </div>
+        <div className={styles.viewerStat}>
+          <span className={styles.statLabel}>{t('warnings')}</span>
+          <span className={styles.statValue}>{warnings}</span>
+        </div>
+      </div>
+
+      <span className={styles.nextPair}>{truncateFullName(nextName, 15)}</span>
+    </div>
+  );
+};

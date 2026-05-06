@@ -9,24 +9,24 @@ import { parseContractError } from "@/utils/helpers";
 import { TFunction } from "i18next";
 import { useAtomValue } from "jotai";
 import { Power, PowerOff } from "lucide-react";
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import toast from "react-hot-toast";
-import { NATIVE_CURRENCIES } from "@/constants";
 import { CURRENCY_CODES, CurrencyType } from "@/typings";
 import Tabs from "@/components/Tabs";
 import { createFiatPayment } from "@/utils/api";
 import { useFiatPayment } from "@/hooks/useFiatPayment";
+import { useToken } from "@/hooks/useToken";
 
 export default function Server({ t }:{ t: TFunction<"translation", undefined> }) {
     const { fiat } = useFiatPayment()
     const { wallet } = useAtomValue(blockchainAtom)
+    const { token } = useToken()
     const {
         activateServer,
         deactivateServer,
         useServersIdsByOwner,
         useServer,
         getServerStatus,
-        getToken,
         setServerPrice,
         setServerHost,
         releaseDaily
@@ -41,7 +41,6 @@ export default function Server({ t }:{ t: TFunction<"translation", undefined> })
     const [host, setHost] = useState(String(server?.host))
     const { isActive } = getServerStatus(server)
     const [totalAmount, setTotalAmount] = useState<string>()
-    const [token, setToken] = useState(NATIVE_CURRENCIES[137]);
     const [payLink, setPayLink] = useState(fiat?.link)
     const [currencyCode, setCurrencyCode] = useState<CurrencyType>(fiat?.currencyCode || "RUB")
     const [fiatPrice, setFiatPrice] = useState<number>(fiat?.price || 0)
@@ -69,10 +68,6 @@ export default function Server({ t }:{ t: TFunction<"translation", undefined> })
             }
         }
     }
-
-    useEffect(()=>{
-        getToken().then(res=>setToken(res)).catch(()=>setToken(NATIVE_CURRENCIES[137]))
-    }, [])
 
     return (
         <div className={styles.content}>

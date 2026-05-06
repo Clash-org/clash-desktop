@@ -17,26 +17,34 @@ export default function Blockchain() {
     const { rpc, setRpc, baseUrl } = useApi()
     const [rpcURL, setRpcURL] = useState(rpc)
     const [rpcs, setRpcs] = useState<string[]>()
-    const [contractAddresses, setContractAddresses] = useState(["", "", ""])
-    const [notes, setNotes] = useState(["", "", ""])
+    const [contractAddresses, setContractAddresses] = useState(["", "", "", ""])
+    const [notes, setNotes] = useState(["", "", "", ""])
     const { t } = useTranslation()
     const {
         tournament,
         user,
         server,
+        bet,
         switchTournamentAddress,
         switchServerAddress,
         switchUserAddress,
+        switchBetAddress,
         updateServerAddress,
         updateTournamentAddress,
         updateUserAddress,
+        updateBetAddress,
         addServerAddress,
         addTournamentAddress,
         addUserAddress,
+        addBetAddress,
+        removeTournamentAddress,
+        removeServerAddress,
+        removeUserAddress,
+        removeBetAddress,
         saveConfig
     } = useContracts();
 
-    const currentContracts = [server, tournament, user]
+    const currentContracts = [server, tournament, user, bet]
     const contractHandlers = [
         {
             update: updateServerAddress,
@@ -49,12 +57,17 @@ export default function Blockchain() {
         {
             update: updateUserAddress,
             add: addUserAddress
-        }
+        },
+        {
+            update: updateBetAddress,
+            add: addBetAddress
+        },
     ]
     const otherAddresses = [
         server.addresses,
         tournament.addresses,
-        user.addresses
+        user.addresses,
+        bet.addresses
     ]
 
     const handleChangeRpc = async (url: string) => {
@@ -107,7 +120,7 @@ export default function Blockchain() {
                 </Button>
                 {contractHandlers.map((handler, i)=>(
                     <>
-                    <span style={{ marginTop: "10px" }}>{currentContracts[i].addresses[0].note}</span>
+                    <span style={{ marginTop: "10px" }}>{currentContracts[i].addresses?.[0]?.note}</span>
                     <InputText placeholder={t("smartContractAddress")} value={contractAddresses[i]} setValue={val=>setContractAddresses(state=>{ const buf = [...state]; buf[i] = val; return buf })} />
                     <InputText placeholder={t("description")} value={notes[i]} setValue={val=>setNotes(state=>{ const buf = [...state]; buf[i] = val; return buf })} />
                     <Button onClick={()=>handler.add(contractAddresses[i], notes[i])}>
@@ -118,14 +131,22 @@ export default function Blockchain() {
                 <LinksList
                 links={otherAddresses[0].map(addr=>`${addr.note}: ${addr.address}`)}
                 onClick={(_, idx)=>{ switchServerAddress(idx) }}
+                setLinks={(_, idx)=>removeServerAddress(idx)}
                 />
                 <LinksList
                 links={otherAddresses[1].map(addr=>`${addr.note}: ${addr.address}`)}
                 onClick={(_, idx)=>{ switchTournamentAddress(idx) }}
+                setLinks={(_, idx)=>removeTournamentAddress(idx)}
                 />
                 <LinksList
                 links={otherAddresses[2].map(addr=>`${addr.note}: ${addr.address}`)}
                 onClick={(_, idx)=>{ switchUserAddress(idx) }}
+                setLinks={(_, idx)=>removeUserAddress(idx)}
+                />
+                <LinksList
+                links={otherAddresses[3].map(addr=>`${addr.note}: ${addr.address}`)}
+                onClick={(_, idx)=>{ switchBetAddress(idx) }}
+                setLinks={(_, idx)=>removeBetAddress(idx)}
                 />
             </Section>
             <BlockchainWallet />

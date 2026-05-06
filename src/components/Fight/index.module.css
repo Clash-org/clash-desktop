@@ -17,14 +17,6 @@
   position: relative;
 }
 
-.red {
-  background-color: #8B0000;
-}
-
-.blue {
-  background-color: #00008B;
-}
-
 .name {
   color: var(--fg);
   font-size: 21px;

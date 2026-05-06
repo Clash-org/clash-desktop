@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useState } from 'react';
 import { useServerRegistry } from '@/hooks/useServerRegistry';
 import Button from '@/components/Button';
 import ModalWindow from '@/components/ModalWindow';
@@ -7,7 +7,6 @@ import InputNumber from '../InputNumber';
 import toast from 'react-hot-toast';
 import { useApi } from '@/hooks/useApi';
 import { useTranslation } from 'react-i18next';
-import { NATIVE_CURRENCIES } from '@/constants';
 import { Wallet } from 'lucide-react';
 import { formatDate, getSymbolCurrencyByCode, parseContractError } from '@/utils/helpers';
 import { useAtomValue } from 'jotai';
@@ -15,6 +14,7 @@ import { languageAtom } from '@/store';
 import Tabs from '../Tabs';
 import { openUrl } from '@tauri-apps/plugin-opener';
 import { useFiatPayment } from '@/hooks/useFiatPayment';
+import { useToken } from '@/hooks/useToken';
 
 export function PaymentForm() {
   const { t } = useTranslation();
@@ -27,7 +27,7 @@ export function PaymentForm() {
   const [showConfirm, setShowConfirm] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [durationMonths, setDurationMonths] = useState(1);
-  const [token, setToken] = useState(NATIVE_CURRENCIES[137]);
+  const { token } = useToken()
 
   const {
     useServerByHost,
@@ -36,7 +36,6 @@ export function PaymentForm() {
     getExpiresDate,
     payWithNative,
     requestRefund,
-    getToken
   } = useServerRegistry();
 
   const { data: server, isLoading: serverLoading } = useServerByHost(baseUrl)
@@ -90,10 +89,6 @@ export function PaymentForm() {
   };
 
   const statusInfo = getStatusInfo();
-
-  useEffect(()=>{
-    getToken().then(res=>setToken(res)).catch(()=>setToken(NATIVE_CURRENCIES[137]))
-  }, [])
 
   return (
     <div className={styles.container}>

@@ -19,6 +19,33 @@
         "label": "main",
         "url": "index.html",
         "dragDropEnabled": false
+      },
+      {
+        "title": "Clash 2",
+        "width": 1200,
+        "height": 1000,
+        "maximized": true,
+        "label": "main2",
+        "url": "index.html",
+        "dragDropEnabled": false
+      },
+      {
+        "title": "Clash 3",
+        "width": 1200,
+        "height": 1000,
+        "maximized": true,
+        "label": "main3",
+        "url": "index.html",
+        "dragDropEnabled": false
+      },
+      {
+        "title": "Clash 4",
+        "width": 1200,
+        "height": 1000,
+        "maximized": true,
+        "label": "main4",
+        "url": "index.html",
+        "dragDropEnabled": false
       }
     ],
     "security": {

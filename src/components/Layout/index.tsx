@@ -1,6 +1,7 @@
 import {
   Boxes,
   ChartNoAxesCombined,
+  Coins,
   Crown,
   Info,
   Network,
@@ -40,13 +41,15 @@ function LayoutContent() {
   const pageRef = useRef(page);
   const [isDraggableOpen, setIsDraggableOpen] = useState(false);
   const [currentStreamId, setCurrentStreamId] = useState<string | null>(null);
+  const [currentStreamName, setCurrentStreamName] = useState("");
   const [showStreamList, setShowStreamList] = useState(false);
   const [showBroadcaster, setShowBroadcaster] = useState(false);
+  const [isBroadcastProcess, setIsBroadcastProcess] = useState(false);
   const [pendingStreamId, setPendingStreamId] = useState<string | null>(null);
   const tempWsRef = useRef<WebSocket | null>(null);
 
   // Подключение к стриму по ID (WebRTC)
-  const handleSelectStream = (streamId: string) => {
+  const handleSelectStream = (streamId: string, streamName: string) => {
     setPendingStreamId(streamId);
     setShowStreamList(false);
 
@@ -57,7 +60,7 @@ function LayoutContent() {
     ws.onopen = () => {
       ws.send(JSON.stringify({
         type: 'register_viewer',
-        streamId: streamId
+        streamId
       }));
     };
 
@@ -66,6 +69,7 @@ function LayoutContent() {
 
       if (data.type === 'viewer_registered') {
         setCurrentStreamId(streamId);
+        setCurrentStreamName(streamName)
         setIsDraggableOpen(true);
         setPendingStreamId(null);
         ws.close();
@@ -214,6 +218,13 @@ function LayoutContent() {
             >
               <ChartNoAxesCombined size={28} color="var(--fg)" />
             </Button>
+            <Button
+              stroke={page !== Pages.BET}
+              onClick={() => setPage(Pages.BET)}
+              style={btnStyle}
+            >
+              <Coins size={28} color="var(--fg)" />
+            </Button>
           </div>
           <nav className={styles.nav}>
             <fieldset
@@ -249,7 +260,7 @@ function LayoutContent() {
             )}
             <Button
               stroke
-              onClick={() => setShowStreamList(!showStreamList)}
+              onClick={() =>{ isBroadcastProcess ? setShowBroadcaster(!showBroadcaster) : setShowStreamList(!showStreamList) }}
               style={btnStyle}
             >
               <Video size={28} color="var(--fg)" />
@@ -287,9 +298,9 @@ function LayoutContent() {
         goBack={goBack}
         params={params}
       />
-      {/* Модальное окно со списком */}
+
       <ModalWindow
-        isOpen={showStreamList}
+        isOpen={showStreamList && !isBroadcastProcess}
         onClose={() => setShowStreamList(false)}
       >
          <StreamList
@@ -301,26 +312,24 @@ function LayoutContent() {
           />
       </ModalWindow>
 
-      {/* Модальное окно со списком */}
       <ModalWindow
         isOpen={showBroadcaster}
         onClose={() => setShowBroadcaster(false)}
+        hidden
       >
+        {((showBroadcaster && isBroadcastProcess) || (showBroadcaster && !isBroadcastProcess) || (!showBroadcaster && isBroadcastProcess)) &&
           <StreamBroadcaster
-            onStreamStart={(streamId) => {
-              setCurrentStreamId(streamId);
-              setIsDraggableOpen(true);
-            }}
             onStreamStop={() => {
               handleCloseVideo();
             }}
+            onStreamProcess={setIsBroadcastProcess}
           />
+        }
       </ModalWindow>
 
-      {/* Draggable видео плеер */}
       <DraggableVideo
         streamId={currentStreamId || undefined}
-        streamName={currentStreamId ? `Stream ${currentStreamId.slice(-8)}` : "Мой стрим"}
+        streamName={currentStreamName}
         isOpen={isDraggableOpen}
         onClose={handleCloseVideo}
       />
