@@ -5,8 +5,8 @@ export function useBet() {
 
   // =========================== WRITE FUNCTIONS ===========================
 
-  const createFight = async (fighterRed: string, fighterBlue: string, fighterStake: bigint, spectatorStake: bigint) => {
-    return mutateData('createFight', [fighterRed, fighterBlue, fighterStake, spectatorStake], 'nextFightId');
+  const createFight = async (fighterRed: string, fighterBlue: string, fighterStake: bigint, spectatorStake: bigint, streamUrl: string) => {
+    return mutateData('createFight', [fighterRed, fighterBlue, fighterStake, spectatorStake, streamUrl], 'nextFightId');
   };
 
   const payFighterStake = async (fightId: number) => {
@@ -29,6 +29,26 @@ export function useBet() {
 
   const fightEnd = async (fightId: number, scoreRed: number, scoreBlue: number) => {
     return mutateData('fightEnd', [fightId, scoreRed, scoreBlue], [`getFightInfo`]);
+  };
+
+  const withdrawJudgeFee = async (fightId: number) => {
+    return mutateData('withdrawJudgeFee', [fightId], [`getFightInfo`]);
+  };
+
+  const withdrawSpectator = async (fightId: number) => {
+    return mutateData('withdrawSpectator', [fightId], [`getFightInfo`]);
+  };
+
+  const withdrawFighter = async (fightId: number) => {
+    return mutateData('withdrawFighter', [fightId], [`getFightInfo`]);
+  };
+
+  const setFightFighterStake = async (fightId: number, stake: bigint) => {
+    await mutateData("setFightFighterStake", [fightId, stake], ['getFightInfo'])
+  };
+
+  const setFightSpectatorStake = async (fightId: number, stake: bigint) => {
+    await mutateData("setFightSpectatorStake", [fightId, stake], ['getFightInfo'])
   };
 
   // =========================== VIEW FUNCTIONS ===========================
@@ -56,22 +76,6 @@ export function useBet() {
   const getSpectatorWalletsCount = async (fightId: number) => {
     if (!contract) throw new Error("Contract not initialized");
     return contract.getSpectatorWalletsCount(fightId);
-  };
-
-  const getFightInfoFormatted = async (fightId: number) => {
-    if (!contract) throw new Error("Contract not initialized");
-    const info = await contract.getFightInfo(fightId);
-    return {
-      judge: info[0],
-      fighterRed: info[1],
-      fighterBlue: info[2],
-      fighterStake: info[3],
-      spectatorStake: info[4],
-      started: info[5],
-      withdrawn: info[6],
-      isDraw: info[7],
-      totalSpectatorPool: info[8]
-    };
   };
 
   // =========================== EVENT LISTENERS ===========================
@@ -147,9 +151,13 @@ export function useBet() {
     placeBet,
     closeBetting,
     fightEnd,
+    withdrawJudgeFee,
+    withdrawSpectator,
+    withdrawFighter,
+    setFightFighterStake,
+    setFightSpectatorStake,
     // View функции
     getFightInfo,
-    getFightInfoFormatted,
     getBetsCount,
     getBetInfo,
     getFighterId,

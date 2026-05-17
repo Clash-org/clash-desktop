@@ -373,5 +373,8 @@
   "claimed": "已领取",
   "noBets": "暂无投注",
   "manageFight": "管理比赛",
-  "notBettingAfterStart": "你不能在比赛开始后下注"
+  "notBettingAfterStart": "你不能在比赛开始后下注",
+  "streamUrl": "链接到流",
+  "warningBets": "在进行投注之前，请确保您所在的国家/地区允许赌博。",
+  "withdrawFunds": "提取资金"
 }

@@ -6,9 +6,10 @@ interface SectionProps {
   children: React.ReactNode;
   row?: boolean;
   className?: string;
+  classNameContent?: string;
 }
 
-export default function Section({ title, children, row = false, className = '' }: SectionProps) {
+export default function Section({ title, children, row = false, className = '', classNameContent = '' }: SectionProps) {
   return (
     <div
       className={`${styles.section} ${className}`}
@@ -21,7 +22,7 @@ export default function Section({ title, children, row = false, className = '' }
         </h3>
       )}
       <div
-        className={row ? styles.sectionRow : styles.sectionContent}
+        className={row ? styles.sectionRow : styles.sectionContent + ` ${classNameContent}`}
       >
         {children}
       </div>

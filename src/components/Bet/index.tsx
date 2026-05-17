@@ -5,19 +5,18 @@ import {
   Eye,
   Users,
   Wallet,
-  CheckCircle,
   Loader2,
   RefreshCw,
   Copy,
   Medal,
   Star,
-  Hash,
   DollarSign,
   AlertCircle,
   Trophy,
   Handshake,
   Percent,
-  Gavel
+  Gavel,
+  Video
 } from 'lucide-react';
 import Button from '@/components/Button';
 import Section from '@/components/Section';
@@ -27,7 +26,7 @@ import Select from '@/components/Select';
 import styles from './index.module.css';
 import ModalWindow from '@/components/ModalWindow';
 import toast from 'react-hot-toast';
-import { useAtomValue } from 'jotai';
+import { useAtom } from 'jotai';
 import { fightIdAtom, isReverseSidesAtom, score1Atom, score2Atom } from '@/store';
 import { formatEther, parseEther } from 'ethers';
 import { useBet } from '@/hooks/useBet';
@@ -35,6 +34,7 @@ import CryptoRestrictions from '../CryptoRestrictions';
 import Tabs from '../Tabs';
 import { useToken } from '@/hooks/useToken';
 import { parseContractError, truncateAddress } from '@/utils/helpers';
+import { openUrl } from '@tauri-apps/plugin-opener';
 
 type BetType = {
   better: string;
@@ -43,26 +43,26 @@ type BetType = {
 }
 
 type FightType = {
-  fightId: number;
   judge: string;
   fighterRed: string;
   fighterBlue: string;
   fighterStake: bigint;
   spectatorStake: bigint;
   started: boolean;
-  withdrawn: boolean;
+  ended: boolean;
   isDraw: boolean;
   totalSpectatorPool: bigint;
   winnerSpectatorPool: bigint;
   winnerFighterId: bigint;
+  streamUrl: string;
 }
 
 export default function Bet() {
   const { t } = useTranslation();
-  const scoreRed = useAtomValue(score1Atom)
-  const scoreBlue = useAtomValue(score2Atom)
-  const isReverseSides = useAtomValue(isReverseSidesAtom)
-  const fightId = useAtomValue(fightIdAtom)
+  const [scoreRed] = useAtom(score1Atom)
+  const [scoreBlue] = useAtom(score2Atom)
+  const [isReverseSides] = useAtom(isReverseSidesAtom)
+  const [selectedFightId, setSelectedFightId] = useAtom(fightIdAtom)
   const { token } = useToken()
   const {
     useContractQuery,
@@ -73,17 +73,21 @@ export default function Bet() {
     closeBetting,
     fightEnd,
     getBetsCount,
-    getBetInfo
+    getBetInfo,
+    withdrawJudgeFee,
+    withdrawSpectator,
+    withdrawFighter,
+    setFightFighterStake,
+    setFightSpectatorStake
   } = useBet();
 
     // Получаем список боёв
   const { data: nextFightId, mutate: mutateNextFightId } = useContractQuery<bigint>('nextFightId');
   const totalFights = nextFightId ? Number(nextFightId) : 0;
-  const [selectedFightId, setSelectedFightId] = useState(fightId);
   const { data: currentFightInfo, mutate: mutateFightInfo } = useContractQuery<FightType>(
     'getFightInfo',
     [selectedFightId],
-    { shouldFetch: (selectedFightId !== undefined) && totalFights > 0, refreshInterval: 5000 }
+    { shouldFetch: (selectedFightId !== undefined) && totalFights > 0, refreshInterval: 300_000 }
   );
 
   const [fighterRed, setFighterRed] = useState(currentFightInfo?.fighterRed || '');
@@ -93,11 +97,14 @@ export default function Bet() {
   const [betFighterId, setBetFighterId] = useState<0 | 1>(0);
   const [showBetsModal, setShowBetsModal] = useState(false);
   const [betsList, setBetsList] = useState<BetType[]>([]);
+  const [streamUrl, setStreamUrl] = useState(currentFightInfo?.streamUrl || "")
   const [loading, setLoading] = useState(false);
 
   const isJudge = currentFightInfo?.judge === address;
   const isFighterRed = currentFightInfo?.fighterRed === address;
   const isFighterBlue = currentFightInfo?.fighterBlue === address;
+  const isWinner = address === (currentFightInfo && currentFightInfo.winnerFighterId ? fighterBlue : fighterRed)
+  const isSpectator = address !== fighterRed && address !== fighterBlue && !isJudge
 
   const titles = [t("createFight"), currentFightInfo && t("bets"), isJudge && t("manageFight")].filter(Boolean)
   const tabs = ["createFight", "bets", "manageFight"] as const
@@ -132,10 +139,10 @@ export default function Bet() {
     }
     setLoading(true);
     try {
-      await createFight(fighterRed, fighterBlue, parseEther(String(fighterStake)), parseEther(String(spectatorStake)));
+      await createFight(fighterRed, fighterBlue, parseEther(String(fighterStake)), parseEther(String(spectatorStake)), streamUrl);
       toast.success(t('fightCreated'));
-      mutateNextFightId();
-      mutateFightInfo();
+      await mutateNextFightId();
+      await mutateFightInfo();
       setFighterRed('');
       setFighterBlue('');
       setFighterStake(0);
@@ -153,7 +160,7 @@ export default function Bet() {
     try {
       await payFighterStake(selectedFightId);
       toast.success(t('stakePaid'));
-      mutateFightInfo();
+      await mutateFightInfo();
     } catch (error: any) {
       toast.error(parseContractError(error));
     } finally {
@@ -166,7 +173,7 @@ export default function Bet() {
     try {
       await placeBet(selectedFightId, betFighterId);
       toast.success(t('betPlaced'));
-      mutateFightInfo();
+      await mutateFightInfo();
     } catch (error: any) {
       toast.error(parseContractError(error));
     } finally {
@@ -179,7 +186,30 @@ export default function Bet() {
     try {
       await closeBetting(selectedFightId);
       toast.success(t('bettingClosed'));
-      mutateFightInfo();
+      await mutateFightInfo();
+    } catch (error: any) {
+      toast.error(parseContractError(error));
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleWithdraw = async () => {
+    if (currentFightInfo && !currentFightInfo.ended) return
+    setLoading(true);
+    try {
+      if (isJudge && !currentFightInfo.isDraw) {
+        await withdrawJudgeFee(selectedFightId);
+      } else if (!isFighterRed && !isFighterBlue) {
+        await withdrawSpectator(selectedFightId);
+      } else if (isFighterRed || isFighterBlue) {
+        if (isWinner)
+          await withdrawFighter(selectedFightId)
+        else
+          return
+      }
+      toast.success(t('checkWallet'));
+      await mutateFightInfo();
     } catch (error: any) {
       toast.error(parseContractError(error));
     } finally {
@@ -191,14 +221,31 @@ export default function Bet() {
     setLoading(true);
     try {
       await fightEnd(selectedFightId, scoreRed, scoreBlue);
-      toast.success(t('scoresSet'));
-      mutateFightInfo();
+      toast.success(t('dataUpdated'));
+      await mutateFightInfo();
     } catch (error: any) {
       toast.error(parseContractError(error));
     } finally {
       setLoading(false);
     }
   };
+
+  const handleStake = async (isFighter=true) => {
+    setLoading(true);
+    try {
+      if (isFighter) {
+        await setFightFighterStake(selectedFightId, parseEther(String(fighterStake)))
+      } else {
+        await setFightSpectatorStake(selectedFightId, parseEther(String(spectatorStake)))
+      }
+      await mutateFightInfo();
+      toast.success("dataUpdated")
+    } catch (error: any) {
+      toast.error(parseContractError(error));
+    } finally {
+      setLoading(false);
+    }
+  }
 
   const copyToClipboard = (text: string) => {
     navigator.clipboard.writeText(text);
@@ -210,6 +257,7 @@ export default function Bet() {
     setSpectatorStake(Number(formatEther(currentFightInfo?.spectatorStake || 0)))
     setFighterRed(currentFightInfo?.fighterRed || "")
     setFighterBlue(currentFightInfo?.fighterBlue || "")
+    setStreamUrl(currentFightInfo?.streamUrl || "")
   }, [currentFightInfo])
 
   return (
@@ -218,8 +266,19 @@ export default function Bet() {
         {t('bets')}
       </h1>
       <CryptoRestrictions />
+      <div className={styles.warning} style={{ marginBottom: "15px" }}>
+        <AlertCircle size={20} />
+        <span>{t('warningBets')}</span>
+      </div>
       {/* Выбор боя */}
       <Section title={t('selectFight')}>
+        {(isJudge || !currentFightInfo) &&
+        <InputText
+          value={streamUrl}
+          setValue={setStreamUrl}
+          placeholder={t("streamUrl")}
+        />
+        }
         <div className={styles.fightSelector}>
           <Select
             placeholder={t('fightId')}
@@ -229,12 +288,16 @@ export default function Bet() {
           />
           {currentFightInfo && (
             <div className={styles.fightStatus}>
-              <span className={`${styles.statusBadge} ${currentFightInfo.started ? styles.statusActive : styles.statusPending}`}>
+              {!currentFightInfo.ended &&
+              <span className={`${styles.statusBadge} ${currentFightInfo.started ? styles.statusActive :  styles.statusPending}`}>
                 {currentFightInfo.started ? t('started') : t('pending')}
               </span>
-              <span className={`${styles.statusBadge} ${currentFightInfo.withdrawn ? styles.statuswithdrawn : styles.statusActive}`}>
-                {currentFightInfo.withdrawn ? (currentFightInfo.isDraw ? t('draw') : t('completed')) : t('active')}
+              }
+              {currentFightInfo.started &&
+              <span className={`${styles.statusBadge} ${currentFightInfo.ended ? styles.statusEnded : styles.statusActive}`}>
+                {currentFightInfo.ended ? (currentFightInfo.isDraw ? t('draw') : t('completed')) : t('active')}
               </span>
+              }
             </div>
           )}
         </div>
@@ -332,7 +395,7 @@ export default function Bet() {
                 </div>
               </div>
             )}
-            {currentFightInfo.isDraw && currentFightInfo.withdrawn &&
+            {currentFightInfo.isDraw && currentFightInfo.ended &&
             <div className={styles.infoCard} style={{ gridColumn: "1 / 3" }}>
                 <div className={styles.infoLabel} style={{ position: "relative", top: "5px" }}>
                   <Handshake size={16} />
@@ -340,7 +403,7 @@ export default function Bet() {
                 </div>
             </div>
             }
-            {!currentFightInfo.isDraw && currentFightInfo.withdrawn &&
+            {!currentFightInfo.isDraw && currentFightInfo.ended &&
               <div className={styles.infoCard} style={{ gridColumn: "1 / 3" }}>
                 <div className={styles.infoLabel}>
                   <Trophy size={16} />
@@ -352,6 +415,17 @@ export default function Bet() {
                 </div>
               </div>
             }
+            {currentFightInfo.streamUrl &&
+            <div className={styles.infoCard} style={{ gridColumn: "1 / 3" }}>
+              <div className={styles.infoLabel}>
+                <Video size={16} />
+                {t('streamUrl')}
+              </div>
+              <div className={styles.infoValue}>
+                <span className='link' onClick={async ()=>await openUrl(currentFightInfo.streamUrl)}>{currentFightInfo.streamUrl}</span>
+              </div>
+            </div>
+            }
           </div>
         </Section>
       )}
@@ -361,95 +435,103 @@ export default function Bet() {
 
       {/* Шаг 1: Создание боя */}
       {activeTab === "createFight" && (
-        <Section title={t('createNewFight')}>
-          <div className={styles.stepContent}>
-            <div className={styles.formGroup}>
-              <label className={styles.label}>{t('fighterStake')} ({token.symbol}) *</label>
-              <InputNumber
-                value={fighterStake}
-                setValue={setFighterStake}
-                placeholder="1.0"
-                step={0.1}
-              />
-            </div>
-            <div className={styles.formGroup}>
-              <label className={styles.label}>{t('spectatorStake')} ({token.symbol}) *</label>
-              <InputNumber
-                value={spectatorStake}
-                setValue={setSpectatorStake}
-                placeholder="0.1"
-                step={0.01}
-              />
-            </div>
-            <div className={styles.formGroup}>
-              <label className={styles.label}>{t('fighterRedAddress')} *</label>
-              <InputText
-                value={fighterRed}
-                setValue={setFighterRed}
-                placeholder="0x..."
-              />
-            </div>
-            <div className={styles.formGroup}>
-              <label className={styles.label}>{t('fighterBlueAddress')} *</label>
-              <InputText
-                value={fighterBlue}
-                setValue={setFighterBlue}
-                placeholder="0x..."
-              />
-            </div>
+        <Section title={t('createNewFight')} classNameContent={styles.content}>
+          <div className={styles.formGroup}>
+            <label className={styles.label}>{t('fighterStake')} ({token.symbol}) *</label>
+            <InputNumber
+              value={fighterStake}
+              setValue={setFighterStake}
+              placeholder="1.0"
+              step={0.1}
+            />
+            {isJudge && currentFightInfo && !currentFightInfo.started &&
             <Button
-              title={t('createFight')}
-              onClick={handleCreateFight}
-              disabled={loading || !fighterStake || !spectatorStake || !fighterRed || !fighterBlue}
-            >
-              {loading ? <Loader2 size={20} className={styles.spinner} /> : <Plus size={20} />}
-              <span>{t('createFight')}</span>
-            </Button>
+            title={t("updateData")}
+            onClick={handleStake}
+            />
+            }
           </div>
-          <div className={styles.stepContent}>
+          <div className={styles.formGroup}>
+            <label className={styles.label}>{t('spectatorStake')} ({token.symbol}) *</label>
+            <InputNumber
+              value={spectatorStake}
+              setValue={setSpectatorStake}
+              placeholder="0.1"
+              step={0.01}
+            />
+            {isJudge && currentFightInfo && !currentFightInfo.started &&
             <Button
-              title={t('closeBetting')}
-              onClick={handleCloseBetting}
-              disabled={loading || !currentFightInfo || currentFightInfo?.started || !isJudge}
-              stroke
-            >
-              {loading ? <Loader2 size={20} className={styles.spinner} /> : <RefreshCw size={20} />}
-              <span>{t('closeBetting')}</span>
-            </Button>
-            {!isJudge && currentFightInfo && !currentFightInfo.started && (
-              <div className={styles.warning}>
-                <AlertCircle size={20} />
-                <span>{t('onlyJudgeCanRegister')}</span>
-              </div>
-            )}
+            title={t("updateData")}
+            onClick={()=>handleStake(false)}
+            />
+            }
           </div>
+          <div className={styles.formGroup}>
+            <label className={styles.label}>{t('fighterRedAddress')} *</label>
+            <InputText
+              value={fighterRed}
+              setValue={setFighterRed}
+              placeholder="0x..."
+            />
+          </div>
+          <div className={styles.formGroup}>
+            <label className={styles.label}>{t('fighterBlueAddress')} *</label>
+            <InputText
+              value={fighterBlue}
+              setValue={setFighterBlue}
+              placeholder="0x..."
+            />
+          </div>
+          <Button
+            title={t('createFight')}
+            onClick={handleCreateFight}
+            disabled={loading || !fighterStake || !spectatorStake || !fighterRed || !fighterBlue}
+          >
+            {loading ? <Loader2 size={20} className={styles.spinner} /> : <Plus size={20} />}
+            <span>{t('createFight')}</span>
+          </Button>
+          <Button
+            title={t('closeBetting')}
+            onClick={handleCloseBetting}
+            disabled={loading || !currentFightInfo || currentFightInfo?.started || !isJudge}
+            stroke
+          >
+            {loading ? <Loader2 size={20} className={styles.spinner} /> : <RefreshCw size={20} />}
+            <span>{t('closeBetting')}</span>
+          </Button>
+          {!isJudge && currentFightInfo && !currentFightInfo.started && (
+            <div className={styles.warning}>
+              <AlertCircle size={20} />
+              <span>{t('onlyJudgeCanRegister')}</span>
+            </div>
+          )}
         </Section>
       )}
 
       {/* Шаг 3: Управление боем */}
       {activeTab === "bets" && currentFightInfo && (
         <div className={styles.manageContainer}>
-          <Section title={t('placeBet')}>
+          <Section title={t('placeBet')} classNameContent={styles.content}>
           {/* Ставка бойца */}
-          {(isFighterRed || isFighterBlue) && !currentFightInfo.withdrawn && !currentFightInfo.started && (
-              <div className={styles.stepContent}>
-                <div className={styles.infoCard}>
-                  <div className={styles.infoLabel}>{t('yourStake')}</div>
-                  <div className={styles.infoValue}>{formatEther(currentFightInfo.fighterStake)} {token.symbol}</div>
-                </div>
-                <Button
-                  title={t('placeBet')}
-                  onClick={handlePayFighterStake}
-                  disabled={loading}
-                >
-                  {loading ? <Loader2 size={20} className={styles.spinner} /> : <Wallet size={20} />}
-                  <span>{t('placeBet')}</span>
-                </Button>
+          {(isFighterRed || isFighterBlue) && !currentFightInfo.ended && !currentFightInfo.started && (
+            <>
+              <div className={styles.infoCard}>
+                <div className={styles.infoLabel}>{t('yourStake')}</div>
+                <div className={styles.infoValue}>{formatEther(currentFightInfo.fighterStake)} {token.symbol}</div>
               </div>
+              <Button
+                title={t('placeBet')}
+                onClick={handlePayFighterStake}
+                disabled={loading}
+              >
+                {loading ? <Loader2 size={20} className={styles.spinner} /> : <Wallet size={20} />}
+                <span>{t('placeBet')}</span>
+              </Button>
+            </>
           )}
           {/* Ставка зрителя */}
-          {!isFighterRed && !isFighterBlue && !currentFightInfo.withdrawn && !currentFightInfo.started && (
-            <div className={styles.stepContent}>
+          {!isFighterRed && !isFighterBlue && !currentFightInfo.ended && !currentFightInfo.started && (
+            <>
               <div className={styles.formGroup}>
                 <label className={styles.label}>{t('fighters')}</label>
                 <div className={styles.betOptions}>
@@ -471,6 +553,7 @@ export default function Bet() {
                 <div className={styles.infoLabel}>{t('betAmount')}</div>
                 <div className={styles.infoValue}>{formatEther(currentFightInfo.spectatorStake)} {token.symbol}</div>
               </div>
+              {!isJudge &&
               <Button
                 title={t('placeBet')}
                 onClick={handlePlaceBet}
@@ -479,47 +562,48 @@ export default function Bet() {
                 {loading ? <Loader2 size={20} className={styles.spinner} /> : <Plus size={20} />}
                 <span>{t('placeBet')}</span>
               </Button>
-            </div>
+              }
+            </>
           )}
-          {currentFightInfo.started && (
+          {currentFightInfo.ended && (
+            <Button title={t('withdrawFunds')} onClick={handleWithdraw} disabled={loading || (!isWinner && !isSpectator && !isJudge)} />
+          )}
+          {currentFightInfo.started && !currentFightInfo.ended && (
             <div className={styles.warning}>
               <AlertCircle size={20} />
               <span>{t('notBettingAfterStart')}</span>
             </div>
           )}
           </Section>
-
         </div>
       )}
       {/* Установка счёта (только судья) */}
       {activeTab === "manageFight" && !!currentFightInfo && (
-        <Section title={t('fightEnd')}>
-          <div className={styles.stepContent}>
-            <div className={styles.sides} style={isReverseSides ? { flexDirection: "row-reverse" } : {}}>
-              <div className="red">{scoreRed}</div>
-              <div className="blue">{scoreBlue}</div>
-            </div>
-            <Button
-              title={t('fightEnd')}
-              onClick={handleFightEnd}
-              disabled={loading}
-            >
-              {loading ? <Loader2 size={20} className={styles.spinner} /> : <Trophy size={20} />}
-              <span>{t('fightEnd')}</span>
-            </Button>
-            {currentFightInfo.withdrawn &&
-            <div className={styles.infoCard}>
-              <div className={styles.infoLabel}>{currentFightInfo.isDraw ? t('draw') : t('win')}</div>
-              {!currentFightInfo.isDraw && currentFightInfo.withdrawn &&
-              <div className={styles.infoValue}>
-                {Number(currentFightInfo.winnerFighterId) === 0 ?
-                  currentFightInfo.fighterRed :
-                  currentFightInfo.fighterBlue}
-              </div>
-              }
+        <Section title={t('fightEnd')} classNameContent={styles.content}>
+          <div className={styles.sides} style={isReverseSides ? { flexDirection: "row-reverse" } : {}}>
+            <div className="red">{scoreRed}</div>
+            <div className="blue">{scoreBlue}</div>
+          </div>
+          <Button
+            title={t('fightEnd')}
+            onClick={handleFightEnd}
+            disabled={loading}
+          >
+            {loading ? <Loader2 size={20} className={styles.spinner} /> : <Trophy size={20} />}
+            <span>{t('fightEnd')}</span>
+          </Button>
+          {currentFightInfo.ended &&
+          <div className={styles.infoCard}>
+            <div className={styles.infoLabel}>{currentFightInfo.isDraw ? t('draw') : t('win')}</div>
+            {!currentFightInfo.isDraw && currentFightInfo.ended &&
+            <div className={styles.infoValue}>
+              {Number(currentFightInfo.winnerFighterId) === 0 ?
+                currentFightInfo.fighterRed :
+                currentFightInfo.fighterBlue}
             </div>
             }
           </div>
+          }
         </Section>
       )}
 

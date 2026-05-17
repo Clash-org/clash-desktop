@@ -101,9 +101,7 @@
   margin: 0 12px;
 }
 
-.stepContent {
-  display: flex;
-  flex-direction: column;
+.content {
   gap: 24px;
 }
 

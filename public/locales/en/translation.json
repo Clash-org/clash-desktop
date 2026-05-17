@@ -373,5 +373,8 @@
   "claimed": "Claimed",
   "noBets": "No bets",
   "manageFight": "Manage Fight",
-  "notBettingAfterStart": "You cannot place a bet after the start of the fight"
+  "notBettingAfterStart": "You cannot place a bet after the start of the fight",
+  "streamUrl": "Link to stream",
+  "warningBets": "Before making bets, make sure that gambling is allowed in your country.",
+  "withdrawFunds": "Withdraw funds"
 }

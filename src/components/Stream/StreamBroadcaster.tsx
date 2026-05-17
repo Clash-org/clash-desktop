@@ -18,8 +18,8 @@ import { useApi } from '@/hooks/useApi';
 import styles from './Stream.module.css';
 import Select from '../Select';
 import { STUN_SERVERS } from '@/constants';
-import { useAtomValue } from 'jotai';
-import { userAtom } from '@/store';
+import { useAtom } from 'jotai';
+import { fightIdAtom, userAtom } from '@/store';
 import InputNumber from '../InputNumber';
 import ImageUploader from '../ImageUploader';
 import Switch from '../Switch';
@@ -34,7 +34,7 @@ interface StreamBroadcasterProps {
 export function StreamBroadcaster({ onStreamStop, onStreamProcess }: StreamBroadcasterProps) {
   const { t } = useTranslation();
   const { api } = useApi();
-  const user = useAtomValue(userAtom);
+  const [user] = useAtom(userAtom);
   const currentBetAddress = useContractAddress("bet")
 
   const [isStreaming, setIsStreaming] = useState(false);
@@ -51,7 +51,7 @@ export function StreamBroadcaster({ onStreamStop, onStreamProcess }: StreamBroad
   const [selectedMic, setSelectedMic] = useState<string>('');
   const [broadcaster, setBroadcaster] = useState(user?.username || '');
   const [betAddress, setBetAddress] = useState(currentBetAddress);
-  const [fightId, setFightId] = useState<number>(NaN);
+  const [fightId, setFightId] = useAtom<number>(fightIdAtom);
   const [cover, setCover] = useState('');
   const [isStreamHidden, setIsStreamHidden] = useState(false);
 
